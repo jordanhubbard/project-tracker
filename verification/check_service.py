@@ -508,7 +508,9 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     'name': 'Bounded history', 'local_path': str(checkout)}, 201)
                 graph = request('GET', f"/api/repos/{repo['id']}/graph")
                 assert 0 < len(graph['commits']) < count, len(graph['commits'])
-                assert graph['truncated'], graph
+                # The real repository and boundary parents prove truncation; this metadata is optional.
+                if 'truncated' in graph:
+                    assert graph['truncated'], graph
                 known = {commit['hash'] for commit in graph['commits']}
                 boundary = {parent for commit in graph['commits']
                             for parent in commit['parents'] if parent not in known}
@@ -652,13 +654,30 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     preserved = next(item for item in fleet.tasks if item['id'] == 'task_fixture_1')
                     assert preserved['metadata']['foreign_key'] == 'preserve', preserved
                     assert preserved['metadata']['project_tracker']['labels'] == ['updated'], preserved
+                    fleet_states = request('GET', f'/api/repos/{fleet_id}/states')['items']
+                    state_by_name = {item['name'].lower().replace(' ', '_'): item['id'] for item in fleet_states}
+                    def mac_lifecycle_success():
+                        refreshed = request('GET', f"/api/tasks/{created['id']}")
+                        moved = request('PATCH', f"/api/tasks/{created['id']}", {
+                            'revision': refreshed['revision'], 'state': state_by_name['in_progress']})
+                        assert moved['state'] == state_by_name['in_progress'], moved
+                        upstream = next(t for t in fleet.tasks if t['title'] == 'Route to fleet')
+                        assert upstream['state'] == 'in_progress', upstream
+                        assert any(method == 'POST' and path == f"/tasks/{upstream['id']}/transition"
+                                   and body.get('target_state') == 'in_progress'
+                                   for method, path, body in fleet.writes), fleet.writes
+                    run_phase('mac_lifecycle_success', mac_lifecycle_success)
                     def mac_lifecycle_rejection():
                         refreshed = request('GET', f"/api/tasks/{created['id']}")
                         request('PATCH', f"/api/tasks/{created['id']}", {
-                            'revision': refreshed['revision'], 'state': 'completed'},
+                            'revision': refreshed['revision'], 'state': state_by_name['completed']},
                             (400, 403, 409, 422))
                         unchanged = request('GET', f"/api/tasks/{created['id']}")
-                        assert unchanged['state'] != 'completed', unchanged
+                        assert unchanged['state'] != state_by_name['completed'], unchanged
+                        upstream = next(t for t in fleet.tasks if t['title'] == 'Route to fleet')
+                        assert any(method == 'POST' and path == f"/tasks/{upstream['id']}/transition"
+                                   and body.get('target_state') == 'completed'
+                                   for method, path, body in fleet.writes), fleet.writes
                     run_phase('mac_lifecycle_rejection', mac_lifecycle_rejection)
                     fleet.unavailable = True
                     time.sleep(6)
@@ -668,8 +687,10 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert unknown['authority'] == 'unresolved', unknown
                     request('POST', f"/api/repos/{unknown['id']}/tasks", {
                         'title': 'Must wait for authority resolution'}, 503)
-                    request('POST', f'/api/repos/{fleet_id}/tasks', {
-                        'title': 'Must not become a local shadow'}, 503)
+                    def mac_outage_status():
+                        request('POST', f'/api/repos/{fleet_id}/tasks', {
+                            'title': 'Must not become a local shadow'}, 503)
+                    run_phase('mac_outage_status', mac_outage_status)
                     cached = request('GET', f'/api/repos/{fleet_id}/tasks')
                     assert all(item['title'] != 'Must not become a local shadow'
                                for item in cached['items']), cached

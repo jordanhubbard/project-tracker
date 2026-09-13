@@ -186,6 +186,34 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 ).write_text(page.locator("body").aria_snapshot())
                                 page.keyboard.press("Escape")
 
+                        def board_scroll():
+                            handle = page.locator('main').evaluate_handle("""root => [...root.querySelectorAll('*')].find(e =>
+                                e.clientWidth > 100 && e.scrollWidth > e.clientWidth + 32 &&
+                                ['auto','scroll'].includes(getComputedStyle(e).overflowX))""")
+                            scroller = handle.as_element()
+                            assert scroller is not None, 'Board has no local horizontal scroll container'
+                            scroller.hover()
+                            page.mouse.wheel(10000, 0)
+                            try:
+                                deadline = time.monotonic() + 2
+                                while time.monotonic() < deadline:
+                                    position = scroller.evaluate('e=>({left:e.scrollLeft,width:e.clientWidth,total:e.scrollWidth})')
+                                    if position['left'] + position['width'] >= position['total'] - 2:
+                                        break
+                                    page.wait_for_timeout(100)
+                                assert position['left'] > 0, position
+                                assert position['left'] + position['width'] >= position['total'] - 2, position
+                                after = page.evaluate('({viewport:innerWidth,document:document.documentElement.scrollWidth})')
+                                (out / f'{name}-board-scroll.json').write_text(json.dumps({'scroll':position,'dimensions':after}, indent=2))
+                                assert after['document'] <= after['viewport'], after
+                            finally:
+                                page.mouse.wheel(-10000, 0)
+                                deadline = time.monotonic() + 2
+                                while scroller.evaluate('e=>e.scrollLeft') > 1 and time.monotonic() < deadline:
+                                    page.wait_for_timeout(100)
+
+                        check('board horizontal scrolling stays inside the viewport', board_scroll)
+
                         def create():
                             page.get_by_role(
                                 "button", name="Add task", exact=True
