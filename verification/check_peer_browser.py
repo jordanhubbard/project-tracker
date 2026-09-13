@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+import argparse, json, os, socket, subprocess, sys, tempfile, time, urllib.request
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+from service_response import entity_response
+parser = argparse.ArgumentParser(description="Verify peer registration and remote task creation through Chrome.")
+parser.add_argument('entrypoint', type=Path)
+parser.add_argument('--node', default='/opt/homebrew/opt/node@22/bin/node')
+parser.add_argument('--output', type=Path, default=Path('_build/peer-browser'))
+args = parser.parse_args()
+entry = args.entrypoint.resolve(strict=True)
+out = args.output; out.mkdir(parents=True, exist_ok=True)
+processes=[]
+with tempfile.TemporaryDirectory() as root:
+  log=(out/'server.log').open('w')
+  def request(base, method, path, body=None, token=None):
+    headers={'Content-Type':'application/json'}
+    if token: headers['Authorization']='Bearer '+token
+    req=urllib.request.Request(base+path, method=method, headers=headers,
+          data=None if body is None else json.dumps(body).encode())
+    with urllib.request.urlopen(req, timeout=5) as r:return entity_response(json.load(r))
+  def start(name, token=''):
+    with socket.socket() as s:s.bind(('127.0.0.1',0)); port=s.getsockname()[1]
+    env={k:v for k,v in os.environ.items() if not k.startswith(('TRACKER_','MAC_','OPENAI_'))}
+    env.update(TRACKER_DATA_DIR=str(Path(root)/name),TRACKER_MAC_URL='',TRACKER_ACCESS_TOKEN=token)
+    p=subprocess.Popen([args.node,str(entry),'--litai-serve','--host','127.0.0.1','--port',str(port)],env=env,stdout=log,stderr=log);processes.append(p)
+    base=f'http://127.0.0.1:{port}'
+    for _ in range(100):
+      try:request(base,'GET','/health');return base
+      except OSError:time.sleep(.1)
+    raise AssertionError('startup failed')
+  try:
+    a=start('a'); token='disposable-ui-peer-token'; b=start('b',token)
+    local=request(a,'POST','/api/repos',{'name':'Local only','remote_url':'https://example.test/local/only.git'})
+    remote=request(b,'POST','/api/repos',{'name':'Remote only','remote_url':'https://example.test/remote/only.git'},token)
+    with sync_playwright() as p:
+      browser=p.chromium.launch(executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
+      page=browser.new_page(viewport={'width':1440,'height':1000});page.set_default_timeout(5000)
+      errors=[]
+      page.on('pageerror', lambda e: errors.append(str(e)))
+      page.goto(a)
+      page.get_by_role('heading',name='Project overview').wait_for()
+      page.get_by_role('button',name='Agents & peers',exact=True).click()
+      page.get_by_role('button',name='Register a peer',exact=True).click()
+      page.get_by_label('Peer base URL',exact=True).fill(b)
+      page.get_by_label('Peer token (stored backend-only)',exact=True).fill(token)
+      page.get_by_role('button',name='Register',exact=True).click()
+      page.get_by_role('button',name='Send message',exact=True).click()
+      control=page.get_by_role('combobox',name='Remote repository id',exact=True).or_(page.get_by_role('textbox',name='Remote repository id',exact=True))
+      page.wait_for_timeout(500)
+      (out/'dialog.aria.txt').write_text(page.locator('body').aria_snapshot())
+      page.screenshot(path=str(out/'remote-selection.png'),full_page=True)
+      evidence={'local_id':local['id'],'remote_id':remote['id'], 'control':control.evaluate('(e)=>({tag:e.tagName,options:[...e.querySelectorAll("option")].map(o=>({value:o.value,label:o.textContent}))})')}
+      (out/'result.json').write_text(json.dumps(evidence,indent=2))
+      page.screenshot(path=str(out/'remote-selection.png'),full_page=True)
+      if evidence['control']['tag']=='SELECT':
+        assert any(o['value']==remote['id'] for o in evidence['control']['options']), 'Remote repository is absent; selector contains only local IDs'
+        control.select_option(remote['id'])
+      else:control.fill(remote['id'])
+      page.get_by_label('Task title',exact=True).fill('Created through peer UI')
+      page.get_by_role('button',name='Send',exact=True).click();page.wait_for_timeout(1000)
+      tasks=request(b,'GET',f"/api/repos/{remote['id']}/tasks",token=token)['items']
+      assert any(t['title']=='Created through peer UI' for t in tasks), tasks
+      assert token not in json.dumps(request(a,'GET','/api/peers'))
+      page.get_by_role('button',name='Remove',exact=True).click()
+      deadline=time.monotonic()+2
+      while request(a,'GET','/api/peers')['items'] and time.monotonic()<deadline:page.wait_for_timeout(100)
+      assert not request(a,'GET','/api/peers')['items']
+      assert not errors, errors
+      evidence.update(ok=True, remote_task_created=True, peer_removed=True, page_errors=errors)
+      (out/'result.json').write_text(json.dumps(evidence,indent=2))
+      browser.close()
+  finally:
+    for p in processes:
+      p.terminate()
+      try:p.wait(timeout=5)
+      except subprocess.TimeoutExpired:p.kill();p.wait()
+    log.close()

@@ -22,6 +22,8 @@ def main():
         ('service', [str(scripts / 'check_service.py'), '--', args.node, str(entrypoint)]),
         ('board', [str(scripts / 'check_browser.py'), str(entrypoint), '--node', args.node,
                    '--output', str(output / 'board')]),
+        ('peer-ui', [str(scripts / 'check_peer_browser.py'), str(entrypoint), '--node', args.node,
+                     '--output', str(output / 'peer-ui')]),
         ('equal-time-graph', [str(scripts / 'check_graph_browser.py'), str(entrypoint),
                               '--node', args.node, '--output', str(output / 'equal-time-graph')]),
         ('irregular-time-graph', [str(scripts / 'check_graph_browser.py'), str(entrypoint),

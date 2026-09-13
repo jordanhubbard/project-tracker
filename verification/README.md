@@ -8,8 +8,10 @@ Node 22+, Git, and Google Chrome installed. The local verification environment i
 _build/browser-qa/bin/python verification/check_all.py /absolute/path/to/main.js
 ```
 
-The command runs service/protocol checks, desktop/mobile board interactions, and
-real Git graph checks with equal and unequal commit timestamps. Each phase starts
+The command runs service/protocol checks, desktop/mobile board interactions, a
+two-instance peer UI check, and real Git graph checks with equal and unequal commit
+timestamps. The graph check also displays an actual reporter child in Fleet and
+requires its stopped status to arrive live. Each phase starts
 isolated temporary databases and local fixtures. Results and browser screenshots
 are written beneath `_build/independent-checks`; `summary.json` records every phase
 and remains incomplete until all phases finish. A failed phase produces a nonzero

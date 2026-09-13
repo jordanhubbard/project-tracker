@@ -219,7 +219,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             assert 'other' in row.inner_text() and 'main' in row.inner_text(), row.inner_text()
                             release_file.touch()
                             assert reporter.wait(timeout=8) == 0
-                            row.get_by_text("stopped", exact=True).wait_for(timeout=4000)
+                            row.get_by_text(re.compile(r"^stopped$", re.I)).wait_for(timeout=4000)
                             page.screenshot(path=str(out / "desktop-reporter-fleet.png"), full_page=True)
                             reporter_verified = True
                         finally:
