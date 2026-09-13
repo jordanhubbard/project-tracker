@@ -295,7 +295,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert settings['llm_model'] == 'fixture-model', settings
                     request('PUT', '/api/settings', {'llm_key': ''})
                     assert request('GET', '/api/settings')['llm_key_configured'] is True
-                    request('PUT', '/api/settings', {'llm_key_clear': True})
+                    request('PUT', '/api/settings', {'clear_llm_key': True})
                     stop()
                     start()
                     cleared = request('GET', '/api/settings')
@@ -410,7 +410,9 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     'name': 'Git DAG fixture', 'local_path': str(git_root)}, 201)
                 empty_graph = request('GET', f"/api/repos/{git_repo['id']}/graph")
                 assert not empty_graph['commits'], empty_graph
-                assert empty_graph.get('state', empty_graph.get('status')) in ('empty', 'unborn'), empty_graph
+                def check_unborn_state():
+                    assert empty_graph.get('state', empty_graph.get('status')) in ('empty', 'unborn'), empty_graph
+                run_phase('unborn_git_state', check_unborn_state)
                 (git_root / 'base.txt').write_text('base')
                 git('add', '.')
                 git('commit', '-m', 'Base commit')

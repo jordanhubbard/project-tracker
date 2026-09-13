@@ -1,13 +1,14 @@
 # Product completion evidence
 
-Current checkpoint: the interaction generation passes all seven independent phases
-in `_build/interactions-independent/summary.json`, including desktop/mobile workflow
-migration, zoom, label spacing and actual branch task/session associations. Final
-application code matches that tested snapshot. Native admission failed on the
-source SBOM's unresolved Node range; runtime authority now pins the observed exact
-22.23.2. Rebuild, native acceptance and public launch verification remain pending.
-See the latest [active work](../docs/roadmap/active-work.md). Earlier sections below
-are historical evidence and do not claim delivery.
+Current checkpoint: exact-runtime generation passed native admission with 19 tests
+(`_build/runtime-exact-native-result.json`). Independent checks retain a real
+empty-repository defect: successful `git log --all` with empty output incorrectly
+produces state `ok` and no visible empty-history message. Board interactions at
+both widths, peer UI, real expiry and irregular timeline checks pass. The final
+unmodified source is bound by `_build/runtime-exact-final-provenance.json`.
+Regeneration with the explicit empty-history fixture, complete final checks and
+public launch remain pending. See the latest [active work](../docs/roadmap/active-work.md).
+Earlier sections below are historical evidence and do not claim delivery.
 
 
 The latest complete retained source is `_build/contained-final-diagnostic`.

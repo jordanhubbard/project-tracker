@@ -243,3 +243,14 @@ returning the key. Project the same effective configuration used by the request,
 not only persisted database settings. Blank secret edits retain the effective
 credential; an explicit clear must suppress the environment fallback until the
 operator configures a replacement. Test these behaviors through HTTP.
+
+
+## Actual empty Git history regression
+
+The generated native tests must create a disposable `git init -b main` repository
+without committing, register/read it through the actual Git reader or service, and
+assert explicit unborn/empty state, no commits and a no-commits message. This test
+must exercise actual Git, not a mocked nonzero `git log` result. Verify the successful
+empty-output path of `git log --all --topo-order`; zero exit status alone does not
+mean history exists. Do not mark an unborn branch as detached. Retain nonempty and
+true detached-HEAD fixtures so the empty fix does not suppress valid history.

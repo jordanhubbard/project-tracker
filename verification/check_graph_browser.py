@@ -236,6 +236,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_role('button', name=re.compile(r'^(?:Back to board|Board)$')).or_(page.get_by_role('tab', name='Board', exact=True)).or_(page.get_by_role('link', name='Board', exact=True)).first.click()
                             page.get_by_role('button', name='Graph', exact=True).or_(page.get_by_role('tab', name='Graph', exact=True)).or_(page.get_by_role('link', name='Graph', exact=True)).click()
                             page.wait_for_timeout(400)
+                            commit_circle(page.locator('svg').get_by_role('button', name=re.compile(mergehash[:8]))).click()
+                            page.wait_for_timeout(100)
                             if socket.gethostname() not in page.locator('main').inner_text():
                                 issues.append('Graph omits the active coding-session host association')
                             page.screenshot(path=str(out / 'desktop-active-session-graph.png'), full_page=True)
@@ -301,7 +303,10 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 commit_circle(node).click()
                                 label = node.get_attribute("aria-label") or ""
                                 short_hash = re.search(r"[a-f0-9]{7,64}", label)
-                                if short_hash:
+                                expected_hash = node.get_attribute('data-hash')
+                                if expected_hash:
+                                    expect(page.locator("#commit-inspector, .commit-inspector, .inspector").get_by_text(expected_hash, exact=True)).to_be_visible(timeout=2000)
+                                elif short_hash:
                                     expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(re.escape(short_hash.group())), timeout=2000)
                                 details = page.locator("#commit-inspector, .commit-inspector, .inspector").inner_text()
                                 match = re.search(r"\b([a-f0-9]{40,64})\b", details)

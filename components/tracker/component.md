@@ -150,6 +150,13 @@ backend outages without killing the coding CLI. Expose install/run instructions.
 `GET /api/repos/{id}/graph` returns bounded commits (hash, parent hashes, author,
 subject, authored_at, committed_at), refs and heads, and worktrees. Use `git log --all
 --topo-order` and `for-each-ref`; detached HEAD and unborn repositories are handled.
+A freshly initialized repository with no commits must return explicit `unborn`
+(or `empty`) state and a human-readable no-commits message, with empty commits and
+no invented detached commit. `git log --all` can exit successfully with empty
+stdout in this case: do not condition unborn detection solely on log failure.
+Inspect actual commit/ref availability and HEAD, preserving history on other refs
+when HEAD itself is unborn. Both Graph and Timeline render the empty message while
+retaining navigation back to the board.
 Include parents outside the bounded window as boundary nodes. Display actual merge
 edges, forks, branch tip labels, timestamps and active task/session branch overlays.
 Graph mode draws SVG node-edge DAG; timeline mode positions by time with lanes and

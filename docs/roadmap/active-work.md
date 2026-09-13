@@ -389,3 +389,19 @@ queue item or let `docs/roadmap/` become a plan archive.
 - Next action: rebuild with exact runtime metadata, require native admission and
   final artifact checks, then verify the supported build/run path before delivery.
   Independent test success does not stand in for native acceptance.
+
+
+### Empty repository regression after runtime admission
+
+- Exact-runtime generation passed LitAI native admission (19 tests); retain
+  `_build/runtime-exact-native-result.json` and final per-file provenance.
+- Independent backend checks found an empty-history regression: `git log --all`
+  succeeds with no output on a newly initialized repository. The generated reader
+  probes unborn HEAD only after a failed log command, returning state `ok` with no
+  commits; both browser widths consequently omit the required empty-state message.
+- Desktop/mobile board interactions, peer UI, real session expiry, and irregular
+  timeline spacing/selection/zoom/branch associations pass. The timeline checker
+  now waits for the exact selected full hash to avoid matching a previous parent.
+- Next action: specify successful-empty-log behavior and an actual `git init`
+  regression fixture, regenerate, then require final independent checks and the
+  supported public build/run path. Native acceptance alone remains insufficient.
