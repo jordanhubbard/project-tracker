@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Independent black-box service checks, always against a disposable local database.
 
-Usage: python verification/check_service.py -- /path/to/python /path/to/main.py
+Usage: python verification/check_service.py -- /path/to/node /path/to/main.js
 The command is launched with --litai-serve, --host and --port appended.
 """
 from __future__ import annotations
@@ -272,6 +272,13 @@ def check(command: list[str]) -> None:
                 'real Git fork and merge parent edges', 'MAC discovery and task routing',
                 'MAC metadata preservation', 'MAC lifecycle rejection',
                 'MAC outage without local fallback']}))
+        except BaseException:
+            stop()
+            log.flush()
+            log.seek(0)
+            print('Disposable service log (last 12000 characters):', file=sys.stderr)
+            print(log.read()[-12000:], file=sys.stderr)
+            raise
         finally:
             stop()
             log.close()
