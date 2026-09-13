@@ -240,7 +240,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         )
 
                         def remote():
-                            api(
+                            created = api(
                                 "POST",
                                 f"/api/repos/{repo['id']}/tasks",
                                 {
@@ -252,6 +252,13 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 f"Remote change visible {name}", exact=True
                             ).wait_for(timeout=2000)
 
+                            updated_title = f"Remote attribute update visible {name}"
+                            api("PATCH", f"/api/tasks/{created['id']}", {
+                                "revision": created['revision'], "title": updated_title,
+                                "description": "Updated by an independent HTTP client"})
+                            page.get_by_text(updated_title, exact=True).wait_for(timeout=2000)
+                            assert not page.get_by_text(f"Remote change visible {name}", exact=True).is_visible()
+
                         check("second-client SSE update", remote)
 
                         def search_tasks():
@@ -259,9 +266,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             search.fill(f"Browser-created task {name}")
                             page.get_by_text(f"Browser-created task {name}", exact=True).wait_for()
                             page.wait_for_timeout(300)
-                            assert not page.get_by_text(f"Remote change visible {name}", exact=True).is_visible()
+                            assert not page.get_by_text(f"Remote attribute update visible {name}", exact=True).is_visible()
                             search.fill("")
-                            page.get_by_text(f"Remote change visible {name}", exact=True).wait_for()
+                            page.get_by_text(f"Remote attribute update visible {name}", exact=True).wait_for()
 
                         check("search filters and restores task cards", search_tasks)
 
@@ -377,7 +384,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 "heading", name=re.compile("Activity", re.I)
                             ).wait_for()
                             assert (
-                                "Remote change visible"
+                                "Remote attribute update visible"
                                 in page.locator("main").inner_text()
                             )
                             if name == "mobile":

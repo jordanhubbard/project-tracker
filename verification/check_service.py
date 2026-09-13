@@ -111,16 +111,28 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
             workflow = request('GET', f'/api/repos/{repo_id}/states')['items']
             in_progress = next(state['id'] for state in workflow
                                if state.get('name', '').lower().replace(' ', '_') == 'in_progress')
+            prerequisite = request('POST', f'/api/repos/{repo_id}/tasks', {
+                'title': 'Independent prerequisite'}, 201)
             task = request('POST', f'/api/repos/{repo_id}/tasks', {
                 'title': 'Persist and edit', 'description': 'Initial description'}, 201)
             task_id = task['id']
             changed = request('PATCH', f'/api/tasks/{task_id}', {
                 'revision': task['revision'], 'title': 'Edited title',
                 'state': in_progress, 'labels': ['integration'],
+                'assignee': 'fixture-owner', 'branch': 'feature/verification',
+                'cover_color': 'purple', 'due_date': '2026-10-01',
+                'dependencies': [prerequisite['id']],
                 'checklist': [{'text': 'Restart proof', 'done': True}]})
             assert changed['title'] == 'Edited title', changed
             assert changed['state'] == in_progress, changed
             assert changed['revision'] > task['revision'], changed
+            for field, expected in {'assignee': 'fixture-owner', 'branch': 'feature/verification',
+                                    'cover_color': 'purple', 'due_date': '2026-10-01',
+                                    'dependencies': [prerequisite['id']],
+                                    'checklist': [{'text': 'Restart proof', 'done': True}]}.items():
+                assert changed[field] == expected, (field, changed)
+            request('PATCH', f"/api/tasks/{prerequisite['id']}", {
+                'revision': prerequisite['revision'], 'dependencies': [task_id]}, (400, 409, 422))
             request('PATCH', f'/api/tasks/{task_id}', {
                 'revision': task['revision'], 'title': 'Stale writer'}, 409)
             stop()
