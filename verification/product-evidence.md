@@ -21,6 +21,12 @@ rows below where noted. Evidence: `_build/ui-final-browser.log`,
 `_build/ui-service-alias.log`, `_build/ui-expiry-browser/result.json`,
 `_build/ui-final-peer/page-errors.json`, `_build/ui-final-graph-ready.log`.
 
+Replacement backend snapshot `_build/polish-backend-diagnostic` now passes all
+27 generated native cases and the full independent backend suite, including alias
+identity, authenticated peer retries, real reporter sessions and MAC containment.
+Evidence: `_build/polish-native-diagnostic.log` and `_build/polish-backend-ready.log`.
+This is an in-progress snapshot; its frontend and LitAI admission remain unverified.
+
 | Requirement | Current evidence | Remaining work |
 | --- | --- | --- |
 | LitAI project and native build | Authoritative Component, flavors and lock; native npm build and 33 generated tests passed | Current lifecycle acceptance, committed receipt and reusable admitted source |

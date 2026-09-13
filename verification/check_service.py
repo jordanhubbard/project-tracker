@@ -346,7 +346,9 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     sent = request('POST', f"/api/peers/{registered['id']}/messages",
                                    {'message': peer_message})
                     def peer_task(response):
-                        result = response.get('result', response.get('task', response))
+                        envelope = response.get('response', response)
+                        assert isinstance(envelope, dict) and 'error' not in envelope, response
+                        result = envelope.get('result', envelope.get('task', envelope))
                         assert isinstance(result, dict) and result.get('kind') == 'task', response
                         return result
                     sent_task = peer_task(sent)
