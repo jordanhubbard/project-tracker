@@ -22,6 +22,7 @@ import time
 import uuid
 import urllib.error
 import urllib.request
+from service_response import entity_response
 
 
 def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
@@ -65,7 +66,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                 text = response.read().decode()
                 allowed = expected if isinstance(expected, tuple) else (expected,)
                 assert response.status in allowed, (method, path, response.status, text)
-            return json.loads(text) if text else None
+            return entity_response(json.loads(text)) if text else None
 
         def start():
             nonlocal process
@@ -107,7 +108,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
             repo_id = repo['id']
             workflow = request('GET', f'/api/repos/{repo_id}/states')['items']
             in_progress = next(state['id'] for state in workflow
-                               if state.get('name') == 'in_progress')
+                               if state.get('name', '').lower().replace(' ', '_') == 'in_progress')
             task = request('POST', f'/api/repos/{repo_id}/tasks', {
                 'title': 'Persist and edit', 'description': 'Initial description'}, 201)
             task_id = task['id']
@@ -298,7 +299,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     with response:
                         raw = response.read().decode()
                         assert response.status == expected, (path, response.status, raw)
-                        return json.loads(raw) if raw else None
+                        return entity_response(json.loads(raw)) if raw else None
                 try:
                     deadline = time.monotonic() + 20
                     while time.monotonic() < deadline:

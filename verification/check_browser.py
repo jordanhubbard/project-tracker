@@ -8,6 +8,7 @@ This checks board behavior; graph and protocol checks remain separate.
 import argparse, json, os, re, socket, subprocess, tempfile, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+from service_response import entity_response
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("entrypoint", type=Path)
@@ -51,7 +52,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
             headers={"Content-Type": "application/json"},
         )
         with urllib.request.urlopen(r, timeout=5) as response:
-            return json.load(response)
+            return entity_response(json.load(response))
 
     try:
         for _ in range(100):
