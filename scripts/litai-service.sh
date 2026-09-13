@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
-# Run LitAI with the application's isolated, pinned service interpreter.
+# Run the supported Node/npm service lifecycle with the installed Node toolchain.
 set -euo pipefail
 tracker_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-tracker_runtime="$tracker_root/_build/service-runtime"
 cd "$tracker_root"
-if [[ ! -x "$tracker_runtime/bin/python" ]]; then
-  uv venv "$tracker_runtime" --python '>=3.11'
+if [[ -x /opt/homebrew/opt/node@22/bin/node ]]; then
+  export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 fi
-uv pip sync --python "$tracker_runtime/bin/python" flavors/python-service/requirements.txt
-export PATH="$tracker_runtime/bin:$PATH"
+node -e 'if (Number(process.versions.node.split(".")[0]) < 22) throw Error("Node 22+ is required")'
 if [[ $# -eq 0 ]]; then
   set -- rebuild components/tracker --allow-host-execution --keep-runtime
 fi

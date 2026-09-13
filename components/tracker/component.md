@@ -3,6 +3,7 @@ namespace: project-tracker
 version: 1.0.0
 display_name: Project Tracker
 profiles: ["application", "service", "full-stack"]
+specification_roots: ["component.md", "runtime.md"]
 sample: false
 inheritable: false
 provides:
@@ -15,7 +16,7 @@ authoring_inputs:
   - kind: specification-to-source-skill
     uri: skills/specification-to-source/portable-specification-planning/SKILL.md
   - kind: specification-to-source-skill
-    uri: skills/specification-to-source/backend-application/python-service-application/SKILL.md
+    uri: skills/specification-to-source/mcp-application/SKILL.md
 workflow_definition: workflows/production/staging/dev/workflow.md
 routing_policy: routing/production/staging/dev/routing.json
 flavor_slots:
@@ -46,11 +47,12 @@ source_dependencies: []
 ---
 # Project Tracker
 
-Implement a complete usable application, with a Python ASGI backend and semantic HTML,
+Implement a complete usable application, with a Node.js HTTP backend and semantic HTML,
 CSS and browser JavaScript frontend served at `/`. Keep distinct backend service,
 SQLite store, MAC adapter, Git reader, protocol adapters and static frontend modules.
-No browser build tool is required. Python dependencies include FastAPI, uvicorn, httpx,
-and the official MIT MCP Python SDK; declare and lock them in native package metadata.
+No browser build tool is required. Use Node 22.23.2 or newer with node:sqlite and the official MIT MCP JavaScript SDK.
+The exact npm manifest and complete lock are specified in runtime.md. Serve an OpenAPI
+document at /openapi.json describing the REST request and response schemas.
 This component specification overrides inherited read-only/worker-only-write guidance:
 operator and peer commands intentionally mutate tasks through one shared service layer.
 
@@ -160,7 +162,7 @@ Assistant only summarizes/suggests, does not execute commands or silently mutate
 
 ## MCP and agent peering
 
-Use official MCP SDK for stdio and mounted Streamable HTTP `/mcp`, supporting SDK
+Use the official @modelcontextprotocol/sdk for stdio and mounted Streamable HTTP `/mcp`, supporting SDK
 initialize, list and tool calls. Share task authorization and data service, not a second
 store. Tools: list_repositories, list_tasks, get_task, create_task, update_task,
 list_sessions, get_branch_graph. Resource tracker://repositories. Validate all input;
@@ -183,7 +185,7 @@ using a per-peer backend-only token. Explicit operator registration authorizes c
 no automatic requests to arbitrary message-provided URLs or redirects. Peer failures
 show errors and retain history. Protocol references:
 https://a2a-protocol.org/v0.3.0/specification/ and
-https://github.com/modelcontextprotocol/python-sdk .
+https://github.com/modelcontextprotocol/typescript-sdk .
 
 ## Access and validation
 
@@ -243,3 +245,25 @@ from user's real fleet and database. Never contact production upstreams during t
 Document launch, configuration, backup, MAC authority behavior, reporter deployment,
 protocol client examples and known limits in generated README. Smoke run verifies actual
 store/API, not fabricated summary output. Acceptance must launch the full service.
+
+## Completeness requirements from candidate review
+
+Implement every named UI view in this application. Graph and Timeline must render
+interactive SVG edges/nodes and a timestamp axis; a JSON dump or instruction for other
+clients to render them is not an implementation. Provide working repository registration,
+workflow editing, settings, peer management, session fleet and repository inspector
+controls. Task editing must preserve fields the user did not change, including cover,
+checklist, dependencies and due date. Support drag and accessible move controls.
+
+Instantiate and schedule the MAC adapter in the actual application lifecycle. Successful
+snapshots must import/match projects and route writes to the right MAC endpoint. A
+standalone unused client class does not implement the integration. Implement persistent
+settings and peer routes, with their UI forms connected to actual backend writes.
+Register named SSE event listeners (or handle every event through a stream parser): an
+onmessage-only listener does not receive named task events. Update cards on remote edits.
+
+Before finishing generation, audit every section of this Component against actual source
+and tests. Fix omissions instead of declaring requested behavior a known limit. Keep
+modules readable and split by backend store, MAC, Git, sessions, settings, LLM, MCP, A2A,
+peers, HTTP, frontend board, frontend graph and frontend dialogs. Do not trim the product
+to fit a single small file. Tests and smoke modes must call product behavior.

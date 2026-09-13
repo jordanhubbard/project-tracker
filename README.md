@@ -2,7 +2,7 @@
 
 A repository and task workspace built with LitAI. The intended application combines
 Trello-style task boards, physical coding CLI session activity, Git branch timelines
-and relationship graphs. A Python backend owns SQLite, MAC synchronization, MCP, A2A
+and relationship graphs. A Node.js backend owns SQLite, MAC synchronization, MCP, A2A
 peering, and LLM gateway credentials. The browser owns visualization and editing.
 
 **Status:** specification and acceptance contract authored; application generation and
@@ -21,9 +21,10 @@ litai lock components/tracker
 litai verify
 ```
 
-The service wrapper uses `uv` to create an isolated interpreter under `_build/`
-and install the exact runtime closure recorded by the project-owned Python service
-flavor. The portable standard-library sample is excluded from product builds.
+The service wrapper selects the installed Node 22 runtime; LitAI replays the exact
+npm lock through its supported dependency lifecycle. Python dependency support in the
+installed LitAI lifecycle is incomplete, so the product now uses Node SQLite and the
+official JavaScript MCP SDK. The original Python flavor is retained as diagnostic history.
 
 MAC is authoritative for matched projects; unmatched repositories use local tasks.
 An unavailable configured fleet must never be mistaken for an unmatched repository.

@@ -46,7 +46,7 @@ queue item or let `docs/roadmap/` become a plan archive.
 - `litai onboard create` completed with the full-stack project type.
 - `litai lock components/tracker` passed; `litai project validate` passed.
 - Independent service probes are authored in `verification/acceptance/tracker.json`; they have not passed yet.
-- The first run ended with `dependencies.import-bom-mismatch` for an artifact-generated static-data import; its source also omitted required protocol behavior. Preserve it as failed evidence, not a working app. The corrected run is in progress; inspect `_build/tracker-service-rebuild.log` and revalidate its process before retrying.
+- The first run ended with `dependencies.import-bom-mismatch` for an artifact-generated static-data import; its source also omitted required protocol behavior. Preserve it as failed evidence, not a working app. The corrected Python run is terminal and rejected; its log is `_build/tracker-service-rebuild.log`. The active Node run uses `_build/tracker-node-rebuild.log`. Revalidate the active process before retrying.
 - Chrome headless automation was launched successfully from isolated `_build/browser-qa`; product browser checks remain pending.
 - No Git remote is configured; LitAI tracker/peer survey reported unsupported forge and skipped remote reconciliation.
 - After the build, verify all product requirements, protocol clients and Trello visual fidelity; the initial service probes alone do not prove the whole goal.
@@ -71,3 +71,28 @@ queue item or let `docs/roadmap/` become a plan archive.
 - The service runtime imports FastAPI and MCP 2.2.0, including the real SDK Streamable HTTP constructor.
 - `scripts/litai-service.sh --version` passed after syncing all 33 pinned runtime packages; the lifecycle selected that isolated interpreter.
 - `verification/check_service.py` is an independent disposable-instance verifier for persistence, conflicting edits, and A2A idempotency/get/cancel; syntax checked, product execution pending.
+
+### [ ] TRACK-003 — Supported full-stack dependency lifecycle
+
+- **Priority:** P0
+- **Owner:** flavors/node-service
+- **Direction:** Keep the complete application and official SDK integration despite the installed Python dependency resolver limitation.
+- **Conclusion:** The installed lifecycle rejects every requirements.txt or pyproject dependency declaration. Use its supported npm lock graph path with Node SQLite and the official MCP SDK; preserve the full product contract. Retain a sanitized upstream issue draft without unauthorized external posting.
+- **Depends on:** none
+- **Implementation:**
+  - [ ] Declare a Node service flavor with a real locked npm dependency graph.
+  - [ ] Regenerate the complete backend and frontend with explicit coverage of previously omitted integrations.
+- **Evidence:**
+  - [ ] Native dependency admission and all independent service, SDK and browser checks pass.
+
+### Node lifecycle preflight
+
+- The corrected Python run exited with `dependencies.python-lock-unsupported`. The installed resolver rejects all Python dependency manifests; there is no supported typed Python lock format to author in this version. Do not restart that run.
+- Product implementation now selects Node, built-in SQLite, and the official JavaScript MCP SDK. The full application scope remains unchanged.
+- `components/tracker/runtime.md` records the exact npm manifest and lock. `npm ci --ignore-scripts` passed. The installed LitAI lock projector accepted 95 package nodes and 160 dependency edges.
+- One orphan optional peer-metadata entry in the npm-produced debug package lock was removed; it named no declared dependency. No package, version, integrity or actual dependency edge changed. npm ci verified the normalized lock.
+- The new component lock passes. Next action in progress: generate using the supported Node/npm lifecycle, then execute all independent and browser checks.
+- The independent verifier now also drives the official MCP SDK client and constructs a real Git fork/merge fixture. These checks are authored but have not yet run against a passing artifact.
+- Upstream issue draft: Python service generation guidance currently permits SDK dependencies while Standard acquisition unconditionally rejects requirements.txt and pyproject dependency declarations. A future typed Python lock projection must enumerate exact packages, parents and source BOM coverage. No parent source was changed.
+
+- npm and an explicit Make build profile cannot be combined by the installed Standard lifecycle. The product now explicitly removes Make and uses the supported npm profile. The final revised lock and documentation review pass; the Node build is active.

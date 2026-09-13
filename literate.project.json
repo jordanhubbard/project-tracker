@@ -105,8 +105,9 @@
     "minimum_test_count": 1
   },
   "default_flavor_selectors": [
-    "+flavor://project-tracker/python-service",
-    "+flavor://literate-ai/build-make",
+    "+flavor://literate-ai/lang-javascript",
+    "-flavor://literate-ai/build-make",
+    "+flavor://literate-ai/package-npm",
     "+flavor://literate-ai/os-macos"
   ],
   "mcp_roots": [

@@ -6,6 +6,7 @@ The command is launched with --litai-serve, --host and --port appended.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from pathlib import Path
@@ -124,10 +125,63 @@ def check(command: list[str]) -> None:
             start()
             persisted = rpc('tasks/get', {'id': peer_task['id']})
             assert persisted['result']['id'] == peer_task['id'], persisted
+            async def mcp_roundtrip():
+                from mcp import Client
+                async with Client(base + '/mcp', read_timeout_seconds=8) as client:
+                    tools = await client.list_tools()
+                    names = {tool.name for tool in tools.tools}
+                    assert {'list_repositories', 'get_task', 'create_task',
+                            'update_task', 'list_sessions', 'get_branch_graph'} <= names, names
+                    result = await client.call_tool('get_task', {'task_id': task_id})
+                    assert not result.isError, result
+                    assert task_id in result.model_dump_json(), result
+                    resources = await client.list_resources()
+                    assert any(str(item.uri) == 'tracker://repositories'
+                               for item in resources.resources), resources
+                    result = await client.read_resource('tracker://repositories')
+                    assert repo_id in result.model_dump_json(), result
+            asyncio.run(asyncio.wait_for(mcp_roundtrip(), timeout=30))
+
+            git_root = root / 'git-fixture'
+            git_root.mkdir()
+            git_env = dict(environment, GIT_AUTHOR_NAME='Tracker acceptance',
+                           GIT_AUTHOR_EMAIL='tracker@example.test',
+                           GIT_COMMITTER_NAME='Tracker acceptance',
+                           GIT_COMMITTER_EMAIL='tracker@example.test',
+                           GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull)
+            def git(*args):
+                return subprocess.check_output(['git', '-C', str(git_root), *args],
+                                               env=git_env, stderr=subprocess.PIPE,
+                                               text=True, timeout=8).strip()
+            git('init', '-b', 'main')
+            (git_root / 'base.txt').write_text('base')
+            git('add', '.')
+            git('commit', '-m', 'Base commit')
+            base_hash = git('rev-parse', 'HEAD')
+            git('checkout', '-b', 'feature')
+            (git_root / 'feature.txt').write_text('feature')
+            git('add', '.')
+            git('commit', '-m', 'Feature commit')
+            feature_hash = git('rev-parse', 'HEAD')
+            git('checkout', 'main')
+            (git_root / 'main.txt').write_text('main')
+            git('add', '.')
+            git('commit', '-m', 'Main commit')
+            main_hash = git('rev-parse', 'HEAD')
+            git('merge', '--no-ff', 'feature', '-m', 'Merge feature')
+            merge_hash = git('rev-parse', 'HEAD')
+            git_repo = request('POST', '/api/repos', {
+                'name': 'Git DAG fixture', 'local_path': str(git_root)}, 201)
+            graph = request('GET', f"/api/repos/{git_repo['id']}/graph")
+            commits = {commit['hash']: commit for commit in graph['commits']}
+            assert set(commits[merge_hash]['parents']) == {feature_hash, main_hash}, graph
+            assert commits[feature_hash]['parents'] == [base_hash], graph
+            assert commits[main_hash]['parents'] == [base_hash], graph
             print(json.dumps({'ok': True, 'checks': [
                 'local authority', 'task attributes and state', 'revision conflict',
                 'database restart', 'A2A durable tasks', 'A2A idempotent creation',
-                'A2A terminal cancellation rejection']}))
+                'A2A terminal cancellation rejection', 'official MCP client roundtrip',
+                'real Git fork and merge parent edges']}))
         finally:
             stop()
             log.close()

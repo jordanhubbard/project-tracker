@@ -1,6 +1,6 @@
 {
   "schema": "literate-ai/persistent-service-acceptance@1",
-  "specification_set_identity": "sha256:6044ec18e012fca653c40fa5edabed1925098b11049f71cfdc1888a23b643a64",
+  "specification_set_identity": "sha256:efd37fada933a63f68ffe1fc00288cf816a7b5847d60c7747a0cc0d81123d69e",
   "process": {
     "environment": {
       "TRACKER_DATA_DIR": "/Users/jkh/Src/project-tracker/_build/acceptance-data",
