@@ -1,0 +1,277 @@
+#!/usr/bin/env python3
+"""Verify real Git ancestry and browser graph interactions in an isolated service."""
+
+import argparse, json, os, re, socket, subprocess, tempfile, time, urllib.request
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("entrypoint", type=Path)
+parser.add_argument("--node", default="/opt/homebrew/opt/node@22/bin/node")
+parser.add_argument(
+    "--output", type=Path, default=Path("_build/graph-browser-behavior")
+)
+args = parser.parse_args()
+out = args.output
+out.mkdir(parents=True, exist_ok=True)
+with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
+    env = {
+        k: v
+        for k, v in os.environ.items()
+        if not k.startswith(("TRACKER_", "MAC_", "OPENAI_"))
+    }
+    env.update(TRACKER_DATA_DIR=data, TRACKER_MAC_URL="", TRACKER_LLM_KEY="")
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    base = f"http://127.0.0.1:{port}"
+    log = (out / "server.log").open("w")
+    process = subprocess.Popen(
+        [
+            args.node,
+            str(args.entrypoint.resolve()),
+            "--litai-serve",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(port),
+        ],
+        env=env,
+        stdout=log,
+        stderr=log,
+    )
+
+    def api(method, path, body=None):
+        r = urllib.request.Request(
+            base + path,
+            data=None if body is None else json.dumps(body).encode(),
+            method=method,
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(r, timeout=5) as response:
+            return json.load(response)
+
+    try:
+        for _ in range(100):
+            try:
+                api("GET", "/health")
+                break
+            except OSError:
+                time.sleep(0.1)
+        gitroot = Path(data) / "checkout"
+        gitroot.mkdir()
+        git_env = dict(
+            env,
+            GIT_AUTHOR_NAME="Graph fixture",
+            GIT_AUTHOR_EMAIL="fixture@example.test",
+            GIT_COMMITTER_NAME="Graph fixture",
+            GIT_COMMITTER_EMAIL="fixture@example.test",
+            GIT_CONFIG_GLOBAL=os.devnull,
+            GIT_CONFIG_NOSYSTEM="1",
+            GIT_AUTHOR_DATE="2026-09-01T12:00:00Z",
+            GIT_COMMITTER_DATE="2026-09-01T12:00:00Z",
+        )
+
+        def git(*args):
+            return subprocess.check_output(
+                ["git", "-C", str(gitroot), *args],
+                env=git_env,
+                stderr=subprocess.PIPE,
+                text=True,
+            ).strip()
+
+        git("init", "-b", "main")
+        (gitroot / "base").write_text("base")
+        git("add", ".")
+        git("commit", "-m", "Base")
+        basehash = git("rev-parse", "HEAD")
+        git("checkout", "-b", "feature")
+        (gitroot / "feature").write_text("feature")
+        git("add", ".")
+        git("commit", "-m", "Feature")
+        featurehash = git("rev-parse", "HEAD")
+        git("checkout", "main")
+        (gitroot / "main").write_text("main")
+        git("add", ".")
+        git("commit", "-m", "Main")
+        mainhash = git("rev-parse", "HEAD")
+        git("merge", "--no-ff", "feature", "-m", "Merge feature")
+        mergehash = git("rev-parse", "HEAD")
+        repo = api(
+            "POST",
+            "/api/repos",
+            {"name": "Git branch fixture", "local_path": str(gitroot)},
+        )
+        graph = api("GET", f"/api/repos/{repo['id']}/graph")
+        commits = {c["hash"]: c for c in graph["commits"]}
+        assert set(commits[mergehash]["parents"]) == {mainhash, featurehash}
+        assert commits[mainhash]["parents"] == [basehash] and commits[featurehash][
+            "parents"
+        ] == [basehash]
+        (out / "git-api.json").write_text(json.dumps(graph, indent=2) + "\n")
+        states = api("GET", f"/api/repos/{repo['id']}/states")["items"]
+        titles = [
+            "Design the repository overview",
+            "Show coding sessions by physical host",
+            "Review live task updates",
+            "Connect the agent workspace",
+            "Publish the branch timeline",
+        ]
+        for i, st in enumerate(states):
+            for j in range(2):
+                api(
+                    "POST",
+                    f"/api/repos/{repo['id']}/tasks",
+                    {
+                        "title": titles[(i + j) % 5],
+                        "state": st["id"],
+                        "priority": 1,
+                        "description": "Diagnostic fixture for visual and interaction review.",
+                        "labels": ["Design" if j else "Platform"],
+                        "cover_color": ["purple", "blue", "green", "orange"][i % 4]
+                        if j == 0
+                        else None,
+                        "checklist": [{"text": "Review in browser", "done": False}],
+                        "branch": "main",
+                    },
+                )
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=True,
+                executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            )
+            evidence = []
+            try:
+                for name, width, height in [
+                    ("desktop", 1440, 1000),
+                    ("mobile", 390, 844),
+                ]:
+                    page = browser.new_page(viewport={"width": width, "height": height})
+                    page.set_default_timeout(4000)
+                    issues = []
+                    page.on("pageerror", lambda e: issues.append(str(e)))
+                    page.on(
+                        "console",
+                        lambda m: issues.append(m.text) if m.type == "error" else None,
+                    )
+                    page.goto(base, wait_until="domcontentloaded")
+                    page.get_by_role("button", name="Open board", exact=True).click()
+                    page.wait_for_timeout(700)
+                    page.screenshot(path=str(out / f"{name}-board.png"), full_page=True)
+                    (out / f"{name}-board.aria.txt").write_text(
+                        page.locator("body").aria_snapshot()
+                    )
+                    dimensions = page.evaluate(
+                        "({viewport:innerWidth,document:document.documentElement.scrollWidth})"
+                    )
+                    checks = []
+                    for mode in ("Graph", "Timeline"):
+                        if mode == "Timeline":
+                            page.get_by_role("button", name="Board", exact=True).click()
+                            page.wait_for_timeout(200)
+                        page.get_by_role("button", name=mode, exact=True).click()
+                        page.wait_for_timeout(400)
+                        page.screenshot(
+                            path=str(out / f"{name}-{mode.lower()}.png"), full_page=True
+                        )
+                        invalid = page.locator("svg").evaluate_all(
+                            "els => els.flatMap(el => [...el.querySelectorAll('*')].flatMap(n => [...n.attributes].filter(a => /NaN|Infinity/.test(a.value)).map(a => a.name + '=' + a.value)))"
+                        )
+                        page.locator("svg g[role=button]").first.click()
+                        selected = page.locator("#commit-inspector").inner_text()
+                        page.get_by_role("button", name="Zoom in", exact=True).click()
+                        zoomed = page.locator("#graph svg").evaluate(
+                            "(node)=>node.getBoundingClientRect().width"
+                        )
+                        page.get_by_role("button", name="Reset", exact=True).click()
+                        reset = page.locator("#graph svg").evaluate(
+                            "(node)=>node.getBoundingClientRect().width"
+                        )
+                        page.locator("#branch-filter").select_option(featurehash)
+                        page.locator("svg g[role=button]").first.click()
+                        filtered = page.locator("#commit-inspector").inner_text()
+                        inspector_bounds = page.locator(
+                            "#commit-inspector"
+                        ).bounding_box()
+                        page.locator("#commit-inspector").scroll_into_view_if_needed()
+                        inspector_bounds = page.locator(
+                            "#commit-inspector"
+                        ).bounding_box()
+                        page.screenshot(
+                            path=str(out / f"{name}-{mode.lower()}-filtered.png"),
+                            full_page=True,
+                        )
+                        if invalid:
+                            issues.append(f"{mode}: invalid SVG coordinates")
+                        selected_hash = re.search(
+                            r"\bHash\s+([a-f0-9]{40,64})\b", selected
+                        )
+                        filtered_hash = re.search(
+                            r"\bHash\s+([a-f0-9]{40,64})\b", filtered
+                        )
+                        if not selected_hash or selected_hash.group(1) != mergehash:
+                            issues.append(
+                                f"{mode}: initial selection did not show the merge hash"
+                            )
+                        if not filtered_hash or filtered_hash.group(1) != featurehash:
+                            issues.append(
+                                f"{mode}: filtered selection did not show the feature hash"
+                            )
+                        if zoomed <= reset:
+                            issues.append(f"{mode}: zoom did not change visible width")
+                        if (
+                            inspector_bounds is None
+                            or inspector_bounds["x"] < 0
+                            or inspector_bounds["x"] + inspector_bounds["width"]
+                            > width + 1
+                        ):
+                            issues.append(
+                                f"{mode}: inspector outside horizontal viewport: {inspector_bounds}"
+                            )
+                        live_width = page.evaluate(
+                            "document.documentElement.scrollWidth"
+                        )
+                        if live_width > width:
+                            issues.append(
+                                f"{mode}: document overflow {live_width}>{width}"
+                            )
+                        checks.append(
+                            {
+                                "mode": mode,
+                                "svg_count": page.locator("svg").count(),
+                                "invalid_coordinates": invalid,
+                                "selected": selected,
+                                "filtered_selection": filtered,
+                                "zoomed_width": zoomed,
+                                "reset_width": reset,
+                                "inspector_visible": page.locator(
+                                    "#commit-inspector"
+                                ).is_visible(),
+                            }
+                        )
+                    if dimensions["document"] > dimensions["viewport"]:
+                        issues.append(f"Board document overflow: {dimensions}")
+                    evidence.append(
+                        {
+                            "viewport": name,
+                            "issues": issues,
+                            "dimensions": dimensions,
+                            "graph_checks": checks,
+                            "real_git_parent_edges": True,
+                        }
+                    )
+                    page.close()
+            finally:
+                browser.close()
+            (out / "result.json").write_text(json.dumps(evidence, indent=2) + "\n")
+            print(json.dumps(evidence))
+            if any(item["issues"] for item in evidence):
+                raise SystemExit(1)
+    finally:
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+        log.close()
