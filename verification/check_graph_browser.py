@@ -298,8 +298,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             or option["text"] in ("feature", "refs/heads/feature")
                         )
                         page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).select_option(feature_option)
+                        expect(page.locator("svg g[role=button]").first).to_have_attribute("aria-label", re.compile(featurehash[:7]), timeout=2000)
                         page.locator("svg g[role=button]").first.locator("circle").first.click()
-                        expect(page.locator("#commit-inspector, .commit-inspector")).to_contain_text(featurehash, timeout=2000)
+                        expect(page.locator("#commit-inspector, .commit-inspector")).to_contain_text(re.compile(r"Hash\s+" + featurehash), timeout=2000)
                         filtered = page.locator("#commit-inspector, .commit-inspector").inner_text()
                         inspector_bounds = page.locator(
                             "#commit-inspector, .commit-inspector"
