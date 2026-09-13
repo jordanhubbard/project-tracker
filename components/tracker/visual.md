@@ -28,7 +28,20 @@ time intervals occupy equal horizontal distances. Commits sharing a timestamp
 must have separate vertical positions or another explicit collision layout so
 their nodes and labels remain independently selectable. The all-equal timestamp
 case uses a finite time domain and keeps every node visible. Absent or malformed
-dates show a bounded diagnostic state instead of invalid coordinates.
+dates on actual loaded commits show a bounded diagnostic state instead of invalid
+coordinates. Marked outside-window parent placeholders are not loaded commits:
+exclude their absent dates from the timeline's validity check and preserve the
+valid dated commits. Do not invent a timestamp for a boundary marker. Explain
+that the history window is bounded while Graph keeps the genuine parent edge.
+
+Collision handling covers nearby unequal timestamps as well as identical ones.
+Preserve proportional timestamp x coordinates and choose vertical bands using the
+rendered node, subject and ref-label extents. A label must never overlap another
+node's pointer hit target. At default and Reset scale, real circle clicks on each
+commit in the 0, 10, 100, 110 second fixture select that commit's own inspector;
+keyboard activation also works. Keep trailing labels reachable in the scroller.
+A bounded 1005-commit history still displays its loaded real commits in Timeline,
+including when the Graph response has null-dated outside-window placeholders.
 
 Both modes provide visible Zoom in, Zoom out, Reset and branch-filter controls.
 Zoom changes the actual graph scale; Reset restores fit. Scroll/pan allows every
@@ -80,6 +93,17 @@ with sufficient precedence over the component display rule. Verify real Chrome
 clicks after cold load and after each dismissal path, at desktop and 390px widths.
 Do not force clicks, remove the overlay, inject CSS, or bypass browser policies in
 acceptance tests.
+
+## Responsive workspace header
+
+At 390px, account for the combined widths of the menu, workspace title, connection
+status, Create, Settings, search, padding and gaps. Every visible header control
+must remain within the viewport, and document.scrollWidth must equal the viewport
+width. Use wrapping rows or move an accessible Settings control into the sidebar
+when necessary. A grid with inflexible button tracks that total more than the
+available width is not responsive. Check Connecting, Connected and Offline text;
+search may occupy its own row. Do not hide or clip the overflow at the body/root
+level or leave the Settings control beyond the right edge.
 
 ## Actual navigation destinations
 

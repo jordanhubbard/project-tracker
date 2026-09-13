@@ -300,7 +300,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         zoomed = page.locator("svg").first.evaluate(
                             "(node)=>node.getBoundingClientRect().width"
                         )
-                        page.get_by_role("button", name="Reset", exact=True).click()
+                        page.get_by_role("button", name=re.compile(r"^Reset(?: the graph scale)?$" )).click()
                         page.wait_for_function("w=>document.querySelector('svg')?.getBoundingClientRect().width<w", arg=zoomed, timeout=2000)
                         reset = page.locator("svg").first.evaluate(
                             "(node)=>node.getBoundingClientRect().width"

@@ -39,7 +39,7 @@ with tempfile.TemporaryDirectory() as root:
       page.on('pageerror', lambda e: (errors.append(str(e)), (out/'page-errors.json').write_text(json.dumps(errors))))
       page.goto(a)
       page.get_by_role('heading',name='Project overview').wait_for()
-      page.get_by_role('button',name=re.compile(r'^(?:Register (?:a )?|Add )repository$')).first.click()
+      page.get_by_role('button',name=re.compile(r'^(?:(?:Register (?:a )?|Add )repository|Create)$')).first.click()
       page.get_by_label(re.compile(r'^(?:(?:Repository |Display )?Name)',re.I)).fill('Local only')
       page.get_by_label(re.compile(r'^Remote URL',re.I)).fill('https://example.test/local/only.git')
       page.get_by_role('dialog').get_by_role('button', name=re.compile(r'^Register(?: repository)?$')).click()
@@ -56,7 +56,7 @@ with tempfile.TemporaryDirectory() as root:
       scope = page.get_by_role('dialog') if page.get_by_role('dialog').count() else page
       scope.get_by_role('button',name=re.compile(r'^Register(?: peer)?$')).click()
       page.get_by_role('button',name=re.compile(r'^Send (?:a )?message(?: to .+)?$')).click()
-      control=page.get_by_role('combobox',name='Remote repository id',exact=True).or_(page.get_by_role('textbox',name='Remote repository id',exact=True))
+      control=page.get_by_role('combobox',name=re.compile(r'^Remote repository id')).or_(page.get_by_role('textbox',name=re.compile(r'^Remote repository id')))
       page.wait_for_timeout(500)
       (out/'dialog.aria.txt').write_text(page.locator('body').aria_snapshot())
       page.screenshot(path=str(out/'remote-selection.png'),full_page=True)
@@ -68,13 +68,14 @@ with tempfile.TemporaryDirectory() as root:
         control.select_option(remote['id'])
       else:control.fill(remote['id'])
       page.get_by_label('Task title',exact=True).fill('Created through peer UI')
-      page.get_by_role('button',name=re.compile(r'^Send(?: create_task)?$')).click();page.wait_for_timeout(1000)
+      page.get_by_role('dialog').get_by_role('button',name=re.compile(r'^Send(?: create_task| message)?$')).click();page.wait_for_timeout(1000)
       tasks=request(b,'GET',f"/api/repos/{remote['id']}/tasks",token=token)['items']
       assert any(t['title']=='Created through peer UI' for t in tasks), tasks
       assert token not in json.dumps(request(a,'GET','/api/peers'))
       active_dialog = page.get_by_role('dialog')
       if active_dialog.count():
         active_dialog.get_by_role('button', name=re.compile(r'^(?:Close|Cancel)$')).click()
+      page.once('dialog', lambda d: d.accept())
       page.get_by_role('button',name=re.compile(r'^Remove(?: peer(?: .+)?)?$')).click()
       confirm = page.get_by_role('button', name='Confirm', exact=True)
       if confirm.count(): confirm.click()

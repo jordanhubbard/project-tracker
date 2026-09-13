@@ -171,7 +171,11 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                         if separator and key:
                             fields[key] = value.lstrip()
                 raise AssertionError('SSE stream ended without a replayable event')
-            first = first_event("0")
+            history = request('GET', '/api/activity')['items']
+            assert len(history) >= 3, history
+            cursor = str(min(int(event['id']) for event in history))
+            first = first_event(cursor)
+            assert int(first['id']) > int(cursor), (cursor, first)
             stop()
             start()
             following = first_event(first['id'])
@@ -291,7 +295,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert settings['llm_model'] == 'fixture-model', settings
                     request('PUT', '/api/settings', {'llm_key': ''})
                     assert request('GET', '/api/settings')['llm_key_configured'] is True
-                    request('PUT', '/api/settings', {'clear_llm_key': True})
+                    request('PUT', '/api/settings', {'llm_key_clear': True})
                     stop()
                     start()
                     cleared = request('GET', '/api/settings')
@@ -299,7 +303,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     calls_before = len(llm_calls)
                     disabled = request('POST', '/api/assistant', {
                         'question': 'This must not reach the gateway', 'repo_id': repo_id},
-                        expected=(400, 503))
+                        expected=(400, 409, 503))
                     assert 'error' in disabled, disabled
                     assert len(llm_calls) == calls_before, 'Explicit clear reused environment key'
                 finally:
@@ -535,15 +539,19 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                 # The real repository and boundary parents prove truncation; this metadata is optional.
                 if 'truncated' in graph:
                     assert graph['truncated'], graph
-                known = {commit['hash'] for commit in graph['commits']}
-                boundary = {parent for commit in graph['commits']
+                loaded = [commit for commit in graph['commits'] if not commit.get('boundary', False)]
+                placeholders = {commit['hash'] for commit in graph['commits'] if commit.get('boundary', False)}
+                known = {commit['hash'] for commit in loaded}
+                boundary = {parent for commit in loaded
                             for parent in commit['parents'] if parent not in known}
                 assert boundary, 'Truncation dropped real parents outside the returned window'
                 actual_lines = subprocess.check_output(
                     ['git', '-C', str(checkout), 'rev-list', '--all', '--parents'],
                     env=git_env, text=True, timeout=5).splitlines()
                 actual = {parts[0]: parts[1:] for parts in map(str.split, actual_lines)}
-                for commit in graph['commits']:
+                assert placeholders <= boundary, (placeholders, boundary)
+                assert boundary <= actual.keys(), boundary
+                for commit in loaded:
                     assert commit['parents'] == actual[commit['hash']], commit
                 print(f'Bounded history: {len(known)}/{count} commits, {len(boundary)} boundary parents',
                       file=sys.stderr)

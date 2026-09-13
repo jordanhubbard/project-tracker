@@ -67,7 +67,7 @@ with tempfile.TemporaryDirectory(prefix='tracker-expiry-') as data:
                 page.get_by_role('link', name='Fleet', exact=True)).click()
             row = page.get_by_role('cell', name='synthetic-expiry-host', exact=True).locator('..')
             row.get_by_text(re.compile(r'^(active|running)$', re.I)).wait_for()
-            repo_control = page.get_by_role('navigation').get_by_role('button', name=re.compile('Expiry fixture'))
+            repo_control = page.get_by_role('navigation').get_by_role('button', name=re.compile('Expiry fixture')).locator('..')
             assert re.search(r'\b1\b', repo_control.inner_text()), repo_control.inner_text()
             page.screenshot(path=str(out / 'active.png'), full_page=True)
             print('Waiting for the specified 90-second heartbeat deadline', flush=True)

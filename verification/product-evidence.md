@@ -1,5 +1,13 @@
 # Product completion evidence
 
+Current checkpoint: the hidden-dialog generation passed LitAI native acceptance
+(41 cases), backend protocols and task interactions. Three rendered defects remain:
+390px header overflow, nearby timeline label/node collision, and bounded timeline
+rejection caused by a null-dated parent marker. See the latest section of
+[active work](../docs/roadmap/active-work.md). Earlier tables below are historical
+snapshots; they do not override the current failure evidence or claim delivery.
+
+
 The latest complete retained source is `_build/contained-final-diagnostic`.
 It is not an admitted or delivered application. LitAI run76435 finished with a
 persistent-service readiness failure: the acceptance fixture reused an older

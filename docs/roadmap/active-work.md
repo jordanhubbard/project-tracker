@@ -321,3 +321,26 @@ queue item or let `docs/roadmap/` become a plan archive.
   and branch clearing by label. Real persistence and protocol assertions remain.
 - Regenerate through LitAI, then require all unmodified browser checks and the
   public launch path to pass before claiming the complete objective.
+
+
+### Native acceptance and remaining rendered layout repairs
+
+- The hidden-dialog rebuild finished with native acceptance and all 41 generated
+  cases passing; exact result is `_build/hidden-native-result.json`. The final
+  application files match the unmodified source used in independent browser tests.
+- Backend persistence, SSE restart replay, MCP, A2A, actual child reporting and
+  outage survival, MAC authority/transitions and effective LLM settings pass.
+  All task editing, workflow lifecycle, live updates, inspector and settings
+  interactions pass on desktop and mobile. Peer UI and real 90-second expiry pass.
+- Three rendered failures remain: the narrow header puts Settings 23px outside a
+  390px viewport; nearby unequal-time labels intercept timeline node clicks; a
+  null-dated outside-window parent placeholder incorrectly suppresses all valid
+  commits in a bounded timeline. The hidden overlay itself is fixed.
+- Evidence: `_build/hidden-independent/summary.json`, `_build/hidden-board2`,
+  `_build/hidden-graph2`, `_build/hidden-bounded-timeline`, and the per-file
+  snapshot hashes in `_build/hidden-native2-provenance.json`. No styling override,
+  forced clicks or generated-source changes were used for this acceptance audit.
+- `visual.md` now specifies responsive header bounds, collision handling for nearby
+  unequal timestamps and valid bounded-history timelines. Regenerate and require
+  unmodified browser checks plus public launch verification before completion.
+  Native test success alone does not fulfill the product goal.

@@ -88,8 +88,8 @@ with tempfile.TemporaryDirectory(prefix='tracker-git-states-') as temporary:
                 assert 0 < len(graph['commits']) < 1005
                 if 'truncated' in graph:
                     assert graph['truncated']
-                known = {c['hash'] for c in graph['commits']}
-                boundary = {parent for c in graph['commits'] for parent in c['parents'] if parent not in known}
+                known = {c['hash'] for c in graph['commits'] if not c.get('boundary', False)}
+                boundary = {parent for c in graph['commits'] if not c.get('boundary', False) for parent in c['parents'] if parent not in known}
                 assert boundary
                 for width in (1440, 390):
                     page = browser.new_page(viewport={'width': width, 'height': 1000 if width > 390 else 844})
@@ -100,6 +100,12 @@ with tempfile.TemporaryDirectory(prefix='tracker-git-states-') as temporary:
                     marker.first.scroll_into_view_if_needed()
                     expect(marker.first).to_be_visible()
                     page.screenshot(path=str(out / f'{width}-boundary.png'), full_page=True)
+                    page.get_by_role('button', name='Timeline', exact=True).or_(page.get_by_role('tab', name='Timeline', exact=True)).or_(page.get_by_role('link', name='Timeline', exact=True)).click()
+                    page.wait_for_timeout(400)
+                    page.screenshot(path=str(out / f'{width}-bounded-timeline.png'), full_page=True)
+                    (out / f'{width}-bounded-timeline.aria.txt').write_text(page.locator('body').aria_snapshot())
+                    expect(page.locator('svg g[role=button]')).to_have_count(len(known), timeout=2000)
+
                     results.append({'width': width, 'state': 'truncated', 'commits': len(known),
                                     'boundary': sorted(boundary), 'ok': True})
                     page.close()

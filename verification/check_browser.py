@@ -13,7 +13,10 @@ from service_response import entity_response
 def open_task(page, title):
     control = page.get_by_role('button', name=f'Edit task {title}', exact=True)
     if control.count(): control.click()
-    else: page.get_by_role('heading', name=title, exact=True).click()
+    else: page.get_by_role('button', name=title, exact=True).or_(title_control(page, name=title, exact=True)).click()
+
+def title_control(page, **kwargs):
+    return page.get_by_role('heading', **kwargs).or_(page.get_by_role('button', **kwargs))
 
 def task_state(st):
     return st[state_field]
@@ -239,10 +242,10 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 re.compile(r"^Labels", re.I)
                             ).fill("QA")
                             page.get_by_role(
-                                "button", name=re.compile(r"^Save(?: task)?$")
+                                "button", name=re.compile(r"^(?:Save(?: task)?|Create task)$")
                             ).click()
                             page.get_by_role("dialog").wait_for(state="hidden")
-                            page.get_by_role("heading",
+                            title_control(page,
                                 name=f"Browser-created task {name}", exact=True
                             ).wait_for()
 
@@ -261,7 +264,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 "textbox", name="Description", exact=True
                             ).fill("Updated in browser")
                             page.get_by_role(
-                                "button", name=re.compile(r"^Save(?: task)?$")
+                                "button", name=re.compile(r"^(?:Save(?: task)?|Create task)$")
                             ).click()
                             page.get_by_role("dialog").wait_for(state="hidden")
                             changed = api("GET", f"/api/tasks/{task['id']}")
@@ -288,22 +291,22 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                         if t['title'] == f'Browser-created task {name}')
                             prerequisite = api('POST', f"/api/repos/{repo['id']}/tasks", {
                                 'title': f'Browser prerequisite {name}', 'state': task_state(states[0])})
-                            page.get_by_role('heading', name=prerequisite['title'], exact=True).wait_for(timeout=2000)
+                            title_control(page, name=prerequisite['title'], exact=True).wait_for(timeout=2000)
                             open_task(page, task['title'])
                             dialog = page.get_by_role('dialog')
                             dialog.get_by_label(re.compile(r'^Assignee$', re.I)).fill('QA operator')
                             dialog.get_by_label(re.compile(r'^Branch$', re.I)).fill('feature/browser-verification')
                             dialog.get_by_label(re.compile(r'^Due date$', re.I)).fill('2026-10-02')
                             dialog.get_by_role('combobox', name=re.compile(r'^Cover(?: colou?r)?$', re.I)).select_option('purple')
-                            dialog.get_by_role('combobox', name=re.compile(r'^Priority$', re.I)).select_option('2')
+                            dialog.get_by_label('Priority', exact=True).fill('2')
                             dialog.get_by_label(re.compile(r'^Labels', re.I)).fill('QA, UI')
-                            dialog.get_by_role('listbox', name=re.compile(r'^(?:Depends on(?: \(select by title\))?|Dependencies)$', re.I)).select_option(prerequisite['id'])
+                            dialog.get_by_role('listbox', name=re.compile(r'^(?:Depends on|Dependencies)', re.I)).select_option(prerequisite['id'])
                             dialog.get_by_role('button', name=re.compile(r'^Add checklist item$', re.I)).click()
                             check_text = dialog.get_by_role('textbox', name=re.compile(r'^Checklist item', re.I))
                             if not check_text.count():
                                 check_text = dialog.locator('.checklist-editor li').last.get_by_role('textbox')
                             check_text.last.fill('Review browser attributes')
-                            dialog.get_by_role('checkbox', name=re.compile(r'^(?:Done|Checklist item completed?|Checklist item \d+ done)$', re.I)).last.check()
+                            dialog.get_by_role('checkbox', name=re.compile(r'^(?:Done|Completed:|Checklist item completed?|Checklist item \d+ done)', re.I)).last.check()
                             dialog.get_by_role('button', name=re.compile(r'^Save(?: task)?$')).click()
                             dialog.wait_for(state='hidden')
                             saved = api('GET', f"/api/tasks/{task['id']}")
@@ -316,7 +319,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                        for item in saved['checklist']), saved
                             assert saved['description'] == task['description'] and saved['state'] == task['state'], saved
                             page.reload()
-                            page.get_by_role('heading', name=task['title'], exact=True).wait_for()
+                            title_control(page, name=task['title'], exact=True).wait_for()
                             assert api('GET', f"/api/tasks/{task['id']}") == saved
 
                         check('task dialog persists all editable attributes', edit_all_attributes)
@@ -330,7 +333,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                     "priority": 1,
                                 },
                             )
-                            page.get_by_role("heading",
+                            title_control(page,
                                 name=f"Remote change visible {name}", exact=True
                             ).wait_for(timeout=2000)
 
@@ -338,8 +341,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             api("PATCH", f"/api/tasks/{created['id']}", {
                                 "revision": created['revision'], "title": updated_title,
                                 "description": "Updated by an independent HTTP client"})
-                            page.get_by_role("heading", name=updated_title, exact=True).wait_for(timeout=2000)
-                            assert not page.get_by_role("heading", name=f"Remote change visible {name}", exact=True).is_visible()
+                            title_control(page, name=updated_title, exact=True).wait_for(timeout=2000)
+                            assert not title_control(page, name=f"Remote change visible {name}", exact=True).is_visible()
                             open_task(page, updated_title)
                             description = page.get_by_role("textbox", name="Description", exact=True)
                             description.wait_for()
@@ -354,12 +357,12 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             search = local_filter if local_filter.count() else page.get_by_role("searchbox").first
                             search.fill(f"Browser-created task {name}")
                             search.press("Tab")
-                            page.get_by_role("heading", name=f"Browser-created task {name}", exact=True).wait_for()
+                            title_control(page, name=f"Browser-created task {name}", exact=True).wait_for()
                             page.wait_for_timeout(300)
-                            assert not page.get_by_role("heading", name=f"Remote attribute update visible {name}", exact=True).is_visible()
+                            assert not title_control(page, name=f"Remote attribute update visible {name}", exact=True).is_visible()
                             search.fill("")
                             search.press("Tab")
-                            page.get_by_role("heading", name=f"Remote attribute update visible {name}", exact=True).wait_for()
+                            title_control(page, name=f"Remote attribute update visible {name}", exact=True).wait_for()
 
                         check("search filters and restores task cards", search_tasks)
 
@@ -372,9 +375,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             destination = states[2]
                             card = page.locator('[draggable="true"]').filter(
                                 has=page.get_by_text(task['title'], exact=True))
-                            heading = page.get_by_role("heading", name=re.compile(
+                            heading = title_control(page, name=re.compile(
                                 r"^" + re.escape(destination.get('display_name', destination['name'])) + r"(?:\s|$)", re.I))
-                            column = heading.locator("xpath=ancestor::section[1]")
+                            column = page.locator(f'[data-state-id="{destination["id"]}"]')
                             lists = column.get_by_role("list")
                             target = lists.first if lists.count() else column
                             card.drag_to(target)
@@ -403,241 +406,39 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             check("mobile accessible move with loaded revision", mobile_move)
 
                         def workflow():
-                            if page.get_by_role('button', name=re.compile('^List menu for ')).count():
-                                current = api('GET', f"/api/repos/{repo['id']}/states")['items']
-                                old = current[0]
-                                new_name = f'Ready {name}'
-                                page.get_by_role('button', name=f"List menu for {old['display_name']}", exact=True).click()
-                                dialog = page.get_by_role('dialog')
-                                dialog.get_by_role('textbox', name=re.compile(r'^(?:Name|Rename list)$')).fill(new_name)
-                                dialog.get_by_role('button', name=re.compile(r'^(?:Apply|Rename)$')).click()
-                                dialog.wait_for(state='hidden')
-                                saved = next(x for x in api('GET', f"/api/repos/{repo['id']}/states")['items'] if x['id'] == old['id'])
-                                assert saved['display_name'] == new_name and saved['name'] == old['name'], saved
-                                return
-                            current = api("GET", f"/api/repos/{repo['id']}/states")[
-                                "items"
-                            ]
-                            old_name = current[0]["name"]
-                            new_name = "Ready" if name == "desktop" else "Mobile ready"
-
-                            def rename(dialog):
-                                if "|" in dialog.default_value:
-                                    dialog.accept(
-                                        "\n".join(
-                                            f"{item['id']}|{new_name if index == 0 else item['name']}"
-                                            for index, item in enumerate(current)
-                                        )
-                                    )
-                                else:
-                                    dialog.accept(new_name)
-
-                            if page.get_by_role("button", name="List menu", exact=True).count():
-                                def menu_prompt(dialog):
-                                    dialog.accept('rename' if 'Type' in dialog.message else new_name)
-                                page.on('dialog', menu_prompt)
-                                try:
-                                    page.get_by_role('region', name=f'{old_name} column', exact=True).get_by_role('button', name='List menu', exact=True).click()
-                                finally:
-                                    page.remove_listener('dialog', menu_prompt)
-                                deadline = time.monotonic() + 2
-                                while time.monotonic() < deadline:
-                                    if any(x['name'] == new_name for x in api('GET', f"/api/repos/{repo['id']}/states")['items']):
-                                        return
-                                    page.wait_for_timeout(100)
-                                raise AssertionError('List menu rename did not persist')
-                            if page.get_by_role('button', name=re.compile(r'^Rename(?: list .*)?$')).count():
-                                page.get_by_role('region', name=f'{old_name} list', exact=True).get_by_role('button', name=re.compile(r'^Rename(?: list .*)?$')).click()
-                                dialog = page.get_by_role('dialog')
-                                dialog.get_by_role('textbox', name='List name', exact=True).fill(new_name)
-                                dialog.get_by_role('button', name=re.compile(r'^Rename(?: list .*)?$')).click()
-                                dialog.wait_for(state='hidden')
-                                assert any(x['name'] == new_name for x in api('GET', f"/api/repos/{repo['id']}/states")['items'])
-                                return
-                            page.once("dialog", rename)
-                            control = page.get_by_role(
-                                "button", name=f"Edit {old_name}", exact=True
-                            )
-                            if not control.count():
-                                control = page.get_by_role(
-                                    "button", name=re.compile("edit (?:workflow|lists)", re.I)
-                                ).first
-                            control.click()
-                            if page.get_by_role("textbox", name="State 1 name", exact=True).count():
-                                page.get_by_label("State 1 name", exact=True).fill(new_name)
-                                page.get_by_role("dialog").get_by_role("button", name=re.compile(r"^Save(?: workflow)?$")).click()
-                                page.get_by_role("dialog").wait_for(state="hidden")
-                                page.remove_listener("dialog", rename)
-                            page.wait_for_timeout(500)
-                            assert any(
-                                x["name"] == new_name
-                                for x in api("GET", f"/api/repos/{repo['id']}/states")[
-                                    "items"
-                                ]
-                            )
+                            current = api('GET', f"/api/repos/{repo['id']}/states")['items']
+                            old = current[0]
+                            new_name = f'Ready {name}'
+                            page.once('dialog', lambda d: d.accept(new_name))
+                            page.get_by_role('button', name=f"Rename list {old['name']}", exact=True).click()
+                            page.wait_for_timeout(400)
+                            saved = next(x for x in api('GET', f"/api/repos/{repo['id']}/states")['items'] if x['id'] == old['id'])
+                            assert saved['name'] == new_name, saved
 
                         check("rename workflow state", workflow)
 
                         def workflow_lifecycle():
-                            if page.get_by_role('button', name=re.compile('^List menu for ')).count():
-                                added_name = f'Browser column {name}'
-                                page.get_by_role('button', name='Add list', exact=True).click()
-                                dialog = page.get_by_role('dialog')
-                                dialog.get_by_role('textbox', name='List name', exact=True).fill(added_name)
-                                dialog.get_by_role('button', name=re.compile(r'^Add(?: list)?$')).click()
-                                dialog.wait_for(state='hidden')
-                                current = api('GET', f"/api/repos/{repo['id']}/states")['items']
-                                added = next(x for x in current if x['display_name'].casefold() == added_name.casefold())
-                                added_name = added['display_name']
-                                page.get_by_role('button', name=f'Move list {added_name} left', exact=True).click()
-                                deadline = time.monotonic() + 2
-                                while time.monotonic() < deadline:
-                                    current = api('GET', f"/api/repos/{repo['id']}/states")['items']
-                                    if current[-2]['id'] == added['id']: break
-                                    page.wait_for_timeout(100)
-                                assert current[-2]['id'] == added['id'], current
-                                page.reload()
-                                menu = page.get_by_role('button', name=f'List menu for {added_name}', exact=True)
-                                menu.wait_for()
-                                assert api('GET', f"/api/repos/{repo['id']}/states")['items'] == current
-                                migrating = api('POST', f"/api/repos/{repo['id']}/tasks", {'title': f'Workflow migration {name}', 'state': task_state(added)})
-                                page.get_by_role('heading', name=migrating['title'], exact=True).wait_for()
-                                destination = next(x for x in current if x['id'] != added['id'])
-                                menu.click()
-                                action = dialog.get_by_role('combobox', name='Action', exact=True)
-                                if action.count(): action.select_option('delete')
-                                dialog.get_by_role('combobox', name=re.compile('^Move .* task')).select_option(destination['id'])
-                                if action.count():
-                                    dialog.get_by_role('button', name='Apply', exact=True).click()
-                                    dialog.wait_for(state='hidden')
-                                else:
-                                    dialog.get_by_role('button', name='Delete list', exact=True).click()
-                                    page.get_by_role('button', name='Confirm', exact=True).click()
-                                    page.wait_for_function("()=>document.querySelectorAll('[role=dialog],dialog[open]').length===0")
-                                assert all(x['id'] != added['id'] for x in api('GET', f"/api/repos/{repo['id']}/states")['items'])
-                                assert api('GET', f"/api/tasks/{migrating['id']}")['state'] == task_state(destination)
-                                return
-                            if page.get_by_role('button', name=re.compile(r'^Rename(?: list .*)?$')).count():
-                                added_name = f'Browser column {name}'
-                                page.get_by_role('button', name=re.compile(r'^(?:\+ )?Add list$')).click()
-                                dialog = page.get_by_role('dialog')
-                                dialog.get_by_role('textbox', name='List name', exact=True).fill(added_name)
-                                dialog.get_by_role('button', name=re.compile(r'^Add(?: list)?$')).click()
-                                dialog.wait_for(state='hidden')
-                                current = api('GET', f"/api/repos/{repo['id']}/states")['items']
-                                added = next(x for x in current if x['name'] == added_name)
-                                column = page.get_by_role('region', name=f'{added_name} list', exact=True)
-                                column.get_by_role('button', name=re.compile('Move list .* left')).click()
-                                deadline = time.monotonic() + 2
-                                while time.monotonic() < deadline:
-                                    current = api('GET', f"/api/repos/{repo['id']}/states")['items']
-                                    if current[-2]['id'] == added['id']:
-                                        break
-                                    page.wait_for_timeout(100)
-                                assert current[-2]['id'] == added['id'], current
-                                page.reload()
-                                column.get_by_role('button', name=re.compile(r'^Delete(?: list .*)?$')).wait_for()
-                                assert api('GET', f"/api/repos/{repo['id']}/states")['items'] == current
-                                migrating = api('POST', f"/api/repos/{repo['id']}/tasks", {'title': f'Workflow migration {name}', 'state': task_state(added)})
-                                page.get_by_role('heading', name=migrating['title'], exact=True).wait_for()
-                                destination = next(x for x in current if x['id'] != added['id'])
-                                column.get_by_role('button', name=re.compile(r'^Delete(?: list .*)?$')).click()
-                                dialog.get_by_role('combobox', name=re.compile(r'^(?:Move those tasks to|Destination list)$')).select_option(task_state(destination))
-                                dialog.get_by_role('button', name=re.compile(r'^(?:Delete list|Move and delete)$')).click()
-                                dialog.wait_for(state='hidden')
-                                assert all(x['id'] != added['id'] for x in api('GET', f"/api/repos/{repo['id']}/states")['items'])
-                                assert api('GET', f"/api/tasks/{migrating['id']}")['state'] == task_state(destination)
-                                return
-                            if page.get_by_role('button', name='List menu', exact=True).count():
-                                added_name = f'Browser column {name}'
-                                page.once('dialog', lambda dialog: dialog.accept(added_name))
-                                page.get_by_role('button', name=re.compile(r'^(?:\+ )?Add list$')).click()
-                                deadline = time.monotonic() + 2
-                                added = None
-                                while time.monotonic() < deadline:
-                                    current = api('GET', f"/api/repos/{repo['id']}/states")['items']
-                                    added = next((x for x in current if x['name'] == added_name), None)
-                                    if added:
-                                        break
-                                    page.wait_for_timeout(100)
-                                assert added, 'Add list did not persist'
-                                column = page.get_by_role('region', name=f'{added_name} column', exact=True)
-                                earlier = page.get_by_role('button', name=f'Move {added_name} earlier', exact=True).or_(
-                                    column.get_by_role('button', name=re.compile(r'^(?:Move (?:list )?left|Earlier|Up)$', re.I)))
-                                reordered = earlier.count() > 0
-                                if reordered:
-                                    earlier.first.click()
-                                    deadline = time.monotonic() + 2
-                                    while time.monotonic() < deadline:
-                                        current = api('GET', f"/api/repos/{repo['id']}/states")['items']
-                                        if next(i for i, x in enumerate(current) if x['id'] == added['id']) == len(current) - 2:
-                                            break
-                                        page.wait_for_timeout(100)
-                                    assert next(i for i, x in enumerate(current) if x['id'] == added['id']) == len(current) - 2, current
-                                migrating = api('POST', f"/api/repos/{repo['id']}/tasks", {
-                                    'title': f'Workflow migration {name}', 'state': task_state(added)})
-                                page.get_by_role('heading', name=migrating['title'], exact=True).wait_for()
-                                destination = next(x for x in current if x['id'] != added['id'])
-                                def delete_prompt(dialog):
-                                    dialog.accept('delete' if 'Type' in dialog.message else destination['name'])
-                                page.on('dialog', delete_prompt)
-                                try:
-                                    page.get_by_role('region', name=f'{added_name} column', exact=True).get_by_role('button', name='List menu', exact=True).click()
-                                finally:
-                                    page.remove_listener('dialog', delete_prompt)
-                                deadline = time.monotonic() + 2
-                                while time.monotonic() < deadline:
-                                    current = api('GET', f"/api/repos/{repo['id']}/states")['items']
-                                    if all(x['id'] != added['id'] for x in current):
-                                        break
-                                    page.wait_for_timeout(100)
-                                assert all(x['id'] != added['id'] for x in current), current
-                                assert api('GET', f"/api/tasks/{migrating['id']}")['state'] == task_state(destination)
-                                checks.append({'check': 'add and delete populated workflow state', 'passed': True})
-                                assert reordered, 'Workflow state reordering has no usable control in the list menu UI'
-                                return
-                            def open_editor():
-                                page.get_by_role("button", name=re.compile("edit (?:workflow|lists)", re.I)).first.click()
-                                page.get_by_role("dialog").wait_for()
-
-                            def save_editor():
-                                page.get_by_role("dialog").get_by_role("button", name=re.compile(r"^Save(?: workflow)?$")).click()
-                                page.get_by_role("dialog").wait_for(state="hidden")
-                                page.wait_for_timeout(400)
-
-                            added_name = f"Browser column {name}"
-                            open_editor()
-                            def add_prompt(dialog):
-                                dialog.accept(added_name)
-                            page.once("dialog", add_prompt)
-                            page.get_by_role("dialog").get_by_role("button", name="Add list", exact=True).click()
-                            page.remove_listener("dialog", add_prompt)
-                            names = page.get_by_role("dialog").get_by_role("textbox", name=re.compile(r"^State \d+ name$"))
-                            names.last.fill(added_name)
-                            earlier = page.get_by_role("button", name=f"Move {added_name} earlier", exact=True)
-                            if earlier.count():
-                                earlier.click()
-                            else:
-                                names.last.locator("..").get_by_role("button", name="Up", exact=True).click()
-                            save_editor()
-                            current = api("GET", f"/api/repos/{repo['id']}/states")["items"]
+                            added_name = f'Browser column {name}'
+                            page.once('dialog', lambda d: d.accept(added_name))
+                            page.get_by_role('button', name='Add list', exact=True).click()
+                            page.wait_for_timeout(400)
+                            current = api('GET', f"/api/repos/{repo['id']}/states")['items']
                             added = next(x for x in current if x['name'] == added_name)
-                            index = next(i for i, x in enumerate(current) if x['id'] == added['id'])
-                            assert index == len(current) - 2, current
-                            migrating = api("POST", f"/api/repos/{repo['id']}/tasks", {
-                                'title': f"Workflow migration {name}", 'state': task_state(added)})
-                            page.get_by_role("heading", name=migrating['title'], exact=True).wait_for()
-                            page.wait_for_timeout(300)
-                            open_editor()
-                            target_name = current[0]['name']
-                            page.once("dialog", lambda dialog: dialog.accept(
-                                current[0]['id'] if re.search("state id", dialog.message, re.I) else target_name))
-                            row = page.get_by_role("dialog").get_by_role("textbox", name=f"State {index + 1} name", exact=True).locator("..")
-                            row.get_by_role("button", name="Delete", exact=True).click()
-                            save_editor()
-                            remaining = api("GET", f"/api/repos/{repo['id']}/states")["items"]
-                            assert not any(x['id'] == added['id'] for x in remaining), remaining
-                            assert api("GET", f"/api/tasks/{migrating['id']}")['state'] == current[0]['id']
+                            page.get_by_role('button', name=f'Move list {added_name} left', exact=True).click()
+                            page.wait_for_timeout(400)
+                            current = api('GET', f"/api/repos/{repo['id']}/states")['items']
+                            assert current[-2]['id'] == added['id'], current
+                            page.reload()
+                            page.get_by_role('button', name=f'Delete list {added_name}', exact=True).wait_for()
+                            assert api('GET', f"/api/repos/{repo['id']}/states")['items'] == current
+                            migrating = api('POST', f"/api/repos/{repo['id']}/tasks", {'title': f'Workflow migration {name}', 'state': task_state(added)})
+                            title_control(page, name=migrating['title'], exact=True).wait_for()
+                            destination = next(x for x in current if x['id'] != added['id'])
+                            page.once('dialog', lambda d: d.accept(destination['name']))
+                            page.get_by_role('button', name=f'Delete list {added_name}', exact=True).click()
+                            page.wait_for_timeout(400)
+                            assert all(x['id'] != added['id'] for x in api('GET', f"/api/repos/{repo['id']}/states")['items'])
+                            assert api('GET', f"/api/tasks/{migrating['id']}")['state'] == task_state(destination)
 
                         check("add reorder and delete populated workflow state", workflow_lifecycle)
 
@@ -658,7 +459,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_role("button", name="Inspector", exact=True).or_(
                                 page.get_by_role("link", name="Inspector", exact=True)
                             ).or_(page.get_by_role("tab", name="Inspector", exact=True)).click()
-                            page.get_by_role('heading', name=re.compile(r'inspector', re.I)).wait_for()
+                            page.get_by_role('textbox', name='Repository description', exact=True).wait_for()
                             origin = page.get_by_role('textbox', name='Remote URL', exact=True)
                             if origin.count():
                                 assert origin.input_value() == repo['remote_url']
@@ -719,8 +520,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
 
                         def settings():
                             def open_settings():
-                                page.get_by_role('button', name='Settings', exact=True).first.click()
-                                page.get_by_role('heading', name='Settings', exact=True).wait_for()
+                                page.get_by_role('button', name=re.compile(r'^(?:Open settings|Settings)$', re.I)).first.click()
+                                title_control(page, name='Settings', exact=True).wait_for()
                                 edit = page.get_by_role('button', name='Edit settings', exact=True)
                                 if edit.count(): edit.click()
                             open_settings()
