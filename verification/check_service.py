@@ -3,6 +3,8 @@
 
 Usage: python verification/check_service.py -- /path/to/node /path/to/main.js
 The command is launched with --litai-serve, --host and --port appended.
+Use --diagnostic-continue before -- to collect later phase failures; any failure
+still exits nonzero. Reporter commands use the framework's JSON-array entrypoint.
 """
 from __future__ import annotations
 
@@ -22,7 +24,7 @@ import urllib.error
 import urllib.request
 
 
-def check(command: list[str]) -> None:
+def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
     if not command:
         raise SystemExit('Pass a runnable artifact command after --')
     with tempfile.TemporaryDirectory(prefix='tracker-independent-') as temporary:
@@ -38,6 +40,17 @@ def check(command: list[str]) -> None:
         base = f'http://127.0.0.1:{port}'
         process = None
         log = (root / 'server.log').open('w+')
+        diagnostic_failures = []
+
+        def run_phase(name, operation):
+            try:
+                operation()
+            except Exception as error:
+                if not diagnostic_continue:
+                    raise
+                diagnostic_failures.append({'phase': name, 'error': str(error)[:2000]})
+                print(f'Diagnostic phase failed: {name}: {error}', file=sys.stderr)
+
 
         def request(method, path, body=None, expected=200):
             data = None if body is None else json.dumps(body).encode()
@@ -188,191 +201,205 @@ def check(command: list[str]) -> None:
                     assert repo_id in result.model_dump_json(), result
             asyncio.run(asyncio.wait_for(mcp_roundtrip(), timeout=30))
 
-            llm_calls = []
-            fixture_key = 'disposable-llm-secret-' + str(uuid.uuid4())
+            def llm_gateway():
+                llm_calls = []
+                fixture_key = 'disposable-llm-secret-' + str(uuid.uuid4())
 
-            class Gateway(BaseHTTPRequestHandler):
-                def log_message(self, *_):
-                    pass
+                class Gateway(BaseHTTPRequestHandler):
+                    def log_message(self, *_):
+                        pass
 
-                def do_POST(self):
-                    payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
-                    llm_calls.append((self.path, self.headers.get('Authorization'), payload))
-                    encoded = json.dumps({'choices': [{'message': {
-                        'role': 'assistant', 'content': 'Fixture summary of tracker work'}}]}).encode()
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'application/json')
-                    self.send_header('Content-Length', str(len(encoded)))
-                    self.end_headers()
-                    self.wfile.write(encoded)
+                    def do_POST(self):
+                        payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+                        llm_calls.append((self.path, self.headers.get('Authorization'), payload))
+                        encoded = json.dumps({'choices': [{'message': {
+                            'role': 'assistant', 'content': 'Fixture summary of tracker work'}}]}).encode()
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json')
+                        self.send_header('Content-Length', str(len(encoded)))
+                        self.end_headers()
+                        self.wfile.write(encoded)
 
-            gateway = ThreadingHTTPServer(('127.0.0.1', 0), Gateway)
-            gateway_thread = threading.Thread(target=gateway.serve_forever, daemon=True)
-            gateway_thread.start()
-            try:
+                gateway = ThreadingHTTPServer(('127.0.0.1', 0), Gateway)
+                gateway_thread = threading.Thread(target=gateway.serve_forever, daemon=True)
+                gateway_thread.start()
+                try:
+                    stop()
+                    environment.update(TRACKER_LLM_URL=f'http://127.0.0.1:{gateway.server_port}/v1',
+                                       TRACKER_LLM_KEY=fixture_key, TRACKER_LLM_MODEL='fixture-model')
+                    start()
+                    settings = request('GET', '/api/settings')
+                    assert fixture_key not in json.dumps(settings), settings
+                    answer = request('POST', '/api/assistant', {
+                        'question': 'Summarize current work', 'repo_id': repo_id})
+                    assert 'Fixture summary' in json.dumps(answer), answer
+                    assert fixture_key not in json.dumps(answer), answer
+                    assert len(llm_calls) == 1, llm_calls
+                    path, authorization, payload = llm_calls[0]
+                    assert path == '/v1/chat/completions', path
+                    assert authorization == 'Bearer ' + fixture_key
+                    assert payload['model'] == 'fixture-model', payload
+                    assert 'Edited title' in json.dumps(payload), payload
+                    assert fixture_key not in json.dumps(payload), payload
+                finally:
+                    gateway.shutdown()
+                    gateway.server_close()
+                    gateway_thread.join(timeout=2)
+
+            run_phase('llm_gateway', llm_gateway)
+
+            def git_and_reporter():
+                git_root = root / 'git-fixture'
+                git_root.mkdir()
+                git_env = dict(environment, GIT_AUTHOR_NAME='Tracker acceptance',
+                               GIT_AUTHOR_EMAIL='tracker@example.test',
+                               GIT_COMMITTER_NAME='Tracker acceptance',
+                               GIT_COMMITTER_EMAIL='tracker@example.test',
+                               GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull)
+                def git(*args):
+                    return subprocess.check_output(['git', '-C', str(git_root), *args],
+                                                   env=git_env, stderr=subprocess.PIPE,
+                                                   text=True, timeout=8).strip()
+                git('init', '-b', 'main')
+                (git_root / 'base.txt').write_text('base')
+                git('add', '.')
+                git('commit', '-m', 'Base commit')
+                base_hash = git('rev-parse', 'HEAD')
+                git('checkout', '-b', 'feature')
+                (git_root / 'feature.txt').write_text('feature')
+                git('add', '.')
+                git('commit', '-m', 'Feature commit')
+                feature_hash = git('rev-parse', 'HEAD')
+                git('checkout', 'main')
+                (git_root / 'main.txt').write_text('main')
+                git('add', '.')
+                git('commit', '-m', 'Main commit')
+                main_hash = git('rev-parse', 'HEAD')
+                git('merge', '--no-ff', 'feature', '-m', 'Merge feature')
+                merge_hash = git('rev-parse', 'HEAD')
+                git_repo = request('POST', '/api/repos', {
+                    'name': 'Git DAG fixture', 'local_path': str(git_root)}, 201)
+                graph = request('GET', f"/api/repos/{git_repo['id']}/graph")
+                commits = {commit['hash']: commit for commit in graph['commits']}
+                assert set(commits[merge_hash]['parents']) == {feature_hash, main_hash}, graph
+                assert commits[feature_hash]['parents'] == [base_hash], graph
+                assert commits[main_hash]['parents'] == [base_hash], graph
+
+                child_pid_file = root / 'reported-child.pid'
+                child_release_file = root / 'release-reported-child'
+                child_code = (
+                    'import os, pathlib, time; '
+                    f'pathlib.Path({str(child_pid_file)!r}).write_text(str(os.getpid())); '
+                    f'path = pathlib.Path({str(child_release_file)!r}); '
+                    'deadline = time.monotonic() + 20\n'
+                    'while not path.exists() and time.monotonic() < deadline: time.sleep(0.1)\n'
+                )
+                reporter_env = dict(environment, TRACKER_URL=base,
+                                    TRACKER_ACCESS_TOKEN='disposable-reporter-token')
+                reporter_arguments = ['service', 'session', '--repo', str(git_root),
+                                      '--cli', 'other', '--', sys.executable, '-c', child_code]
+                reporter = subprocess.Popen(command + [json.dumps(reporter_arguments)],
+                                            env=reporter_env, stdout=log, stderr=log)
+                try:
+                    deadline = time.monotonic() + 12
+                    observed = None
+                    while time.monotonic() < deadline:
+                        if child_pid_file.exists():
+                            child_pid = int(child_pid_file.read_text())
+                            observed = next((item for item in request('GET', '/api/sessions')['items']
+                                             if item.get('pid') == child_pid
+                                             and item.get('status') == 'running'), None)
+                            if observed:
+                                break
+                        if reporter.poll() is not None:
+                            raise AssertionError('Host reporter exited before reporting its child')
+                        time.sleep(0.1)
+                    assert observed, 'Host reporter did not publish the running child PID'
+                    assert observed['hostname'] == socket.gethostname(), observed
+                    assert observed['repo_id'] == git_repo['id'], observed
+                    assert observed['branch'] == 'main', observed
+                    child_release_file.touch()
+                    assert reporter.wait(timeout=8) == 0
+                    ended = next(item for item in request('GET', '/api/sessions')['items']
+                                 if item['session_id'] == observed['session_id'])
+                    assert ended['status'] == 'stopped', ended
+                finally:
+                    child_release_file.touch()
+                    if reporter.poll() is None:
+                        reporter.terminate()
+                        try:
+                            reporter.wait(timeout=5)
+                        except subprocess.TimeoutExpired:
+                            reporter.kill()
+                            reporter.wait(timeout=5)
+            run_phase('git_and_reporter', git_and_reporter)
+
+            def mac_authority():
+                from mac_fixture import MacFixture
                 stop()
-                environment.update(TRACKER_LLM_URL=f'http://127.0.0.1:{gateway.server_port}/v1',
-                                   TRACKER_LLM_KEY=fixture_key, TRACKER_LLM_MODEL='fixture-model')
-                start()
-                settings = request('GET', '/api/settings')
-                assert fixture_key not in json.dumps(settings), settings
-                answer = request('POST', '/api/assistant', {
-                    'question': 'Summarize current work', 'repo_id': repo_id})
-                assert 'Fixture summary' in json.dumps(answer), answer
-                assert fixture_key not in json.dumps(answer), answer
-                assert len(llm_calls) == 1, llm_calls
-                path, authorization, payload = llm_calls[0]
-                assert path == '/v1/chat/completions', path
-                assert authorization == 'Bearer ' + fixture_key
-                assert payload['model'] == 'fixture-model', payload
-                assert 'Edited title' in json.dumps(payload), payload
-                assert fixture_key not in json.dumps(payload), payload
-            finally:
-                gateway.shutdown()
-                gateway.server_close()
-                gateway_thread.join(timeout=2)
-
-            git_root = root / 'git-fixture'
-            git_root.mkdir()
-            git_env = dict(environment, GIT_AUTHOR_NAME='Tracker acceptance',
-                           GIT_AUTHOR_EMAIL='tracker@example.test',
-                           GIT_COMMITTER_NAME='Tracker acceptance',
-                           GIT_COMMITTER_EMAIL='tracker@example.test',
-                           GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull)
-            def git(*args):
-                return subprocess.check_output(['git', '-C', str(git_root), *args],
-                                               env=git_env, stderr=subprocess.PIPE,
-                                               text=True, timeout=8).strip()
-            git('init', '-b', 'main')
-            (git_root / 'base.txt').write_text('base')
-            git('add', '.')
-            git('commit', '-m', 'Base commit')
-            base_hash = git('rev-parse', 'HEAD')
-            git('checkout', '-b', 'feature')
-            (git_root / 'feature.txt').write_text('feature')
-            git('add', '.')
-            git('commit', '-m', 'Feature commit')
-            feature_hash = git('rev-parse', 'HEAD')
-            git('checkout', 'main')
-            (git_root / 'main.txt').write_text('main')
-            git('add', '.')
-            git('commit', '-m', 'Main commit')
-            main_hash = git('rev-parse', 'HEAD')
-            git('merge', '--no-ff', 'feature', '-m', 'Merge feature')
-            merge_hash = git('rev-parse', 'HEAD')
-            git_repo = request('POST', '/api/repos', {
-                'name': 'Git DAG fixture', 'local_path': str(git_root)}, 201)
-            graph = request('GET', f"/api/repos/{git_repo['id']}/graph")
-            commits = {commit['hash']: commit for commit in graph['commits']}
-            assert set(commits[merge_hash]['parents']) == {feature_hash, main_hash}, graph
-            assert commits[feature_hash]['parents'] == [base_hash], graph
-            assert commits[main_hash]['parents'] == [base_hash], graph
-
-            child_pid_file = root / 'reported-child.pid'
-            child_release_file = root / 'release-reported-child'
-            child_code = (
-                'import os, pathlib, time; '
-                f'pathlib.Path({str(child_pid_file)!r}).write_text(str(os.getpid())); '
-                f'path = pathlib.Path({str(child_release_file)!r}); '
-                'deadline = time.monotonic() + 20\n'
-                'while not path.exists() and time.monotonic() < deadline: time.sleep(0.1)\n'
-            )
-            reporter_env = dict(environment, TRACKER_URL=base, TRACKER_ACCESS_TOKEN='')
-            reporter = subprocess.Popen(command + ['session', '--repo', str(git_root),
-                                        '--cli', 'other', '--', sys.executable, '-c', child_code],
-                                        env=reporter_env, stdout=log, stderr=log)
-            try:
-                deadline = time.monotonic() + 12
-                observed = None
-                while time.monotonic() < deadline:
-                    if child_pid_file.exists():
-                        child_pid = int(child_pid_file.read_text())
-                        observed = next((item for item in request('GET', '/api/sessions')['items']
-                                         if item.get('pid') == child_pid
-                                         and item.get('status') == 'running'), None)
-                        if observed:
+                with MacFixture() as fleet:
+                    environment.update(TRACKER_DATA_DIR=str(root / 'fleet-data'),
+                                       TRACKER_MAC_URL=fleet.url, TRACKER_MAC_TOKEN=fleet.token)
+                    start()
+                    deadline = time.monotonic() + 15
+                    fleet_repo = None
+                    while time.monotonic() < deadline:
+                        page = request('GET', '/api/repos')
+                        fleet_repo = next((item for item in page['items']
+                                           if item.get('authority') == 'mac'), None)
+                        if fleet_repo:
                             break
-                    if reporter.poll() is not None:
-                        raise AssertionError('Host reporter exited before reporting its child')
-                    time.sleep(0.1)
-                assert observed, 'Host reporter did not publish the running child PID'
-                assert observed['hostname'] == socket.gethostname(), observed
-                assert observed['repo_id'] == git_repo['id'], observed
-                assert observed['branch'] == 'main', observed
-                child_release_file.touch()
-                assert reporter.wait(timeout=8) == 0
-                ended = next(item for item in request('GET', '/api/sessions')['items']
-                             if item['session_id'] == observed['session_id'])
-                assert ended['status'] == 'stopped', ended
-            finally:
-                child_release_file.touch()
-                if reporter.poll() is None:
-                    reporter.terminate()
-                    try:
-                        reporter.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        reporter.kill()
-                        reporter.wait(timeout=5)
-            from mac_fixture import MacFixture
-            stop()
-            with MacFixture() as fleet:
-                environment.update(TRACKER_DATA_DIR=str(root / 'fleet-data'),
-                                   TRACKER_MAC_URL=fleet.url, TRACKER_MAC_TOKEN=fleet.token)
-                start()
-                deadline = time.monotonic() + 15
-                fleet_repo = None
-                while time.monotonic() < deadline:
-                    page = request('GET', '/api/repos')
-                    fleet_repo = next((item for item in page['items']
-                                       if item.get('authority') == 'mac'), None)
-                    if fleet_repo:
-                        break
-                    time.sleep(0.2)
-                assert fleet_repo, ('MAC project summaries were not imported', page)
-                assert not fleet.writes, ('Read-only startup mutated the fleet', fleet.writes)
-                unmatched = request('POST', '/api/repos', {
-                    'name': 'Confirmed absent from MAC',
-                    'remote_url': 'https://example.test/unrelated/local-only.git'}, 201)
-                assert unmatched['authority'] == 'local', unmatched
-                local_task = request('POST', f"/api/repos/{unmatched['id']}/tasks", {
-                    'title': 'Local work with fleet configured'}, 201)
-                assert local_task['authority'] == 'local', local_task
-                assert not fleet.writes, ('Unmatched local work mutated the fleet', fleet.writes)
-                fleet_id = fleet_repo['id']
-                page = request('GET', f'/api/repos/{fleet_id}/tasks')
-                existing = next((item for item in page['items']
-                                 if item['title'] == 'Existing fleet task'), None)
-                assert existing, page
-                created = request('POST', f'/api/repos/{fleet_id}/tasks', {
-                    'title': 'Route to fleet', 'description': 'Must be MAC owned'}, 201)
-                assert any(method == 'POST' and path == '/tasks'
-                           and body.get('project') == fleet.project
-                           for method, path, body in fleet.writes), fleet.writes
-                request('PATCH', f"/api/tasks/{existing['id']}", {
-                    'revision': existing['revision'], 'labels': ['updated']})
-                preserved = next(item for item in fleet.tasks if item['id'] == 'task_fixture_1')
-                assert preserved['metadata']['foreign_key'] == 'preserve', preserved
-                assert preserved['metadata']['project_tracker']['labels'] == ['updated'], preserved
-                refreshed = request('GET', f"/api/tasks/{created['id']}")
-                request('PATCH', f"/api/tasks/{created['id']}", {
-                    'revision': refreshed['revision'], 'state': 'completed'},
-                    (400, 403, 409, 422))
-                unchanged = request('GET', f"/api/tasks/{created['id']}")
-                assert unchanged['state'] != 'completed', unchanged
-                fleet.unavailable = True
-                time.sleep(6)
-                unknown = request('POST', '/api/repos', {
-                    'name': 'Unknown during outage',
-                    'remote_url': 'https://example.test/unknown/during-outage.git'}, 201)
-                assert unknown['authority'] == 'unresolved', unknown
-                request('POST', f"/api/repos/{unknown['id']}/tasks", {
-                    'title': 'Must wait for authority resolution'}, 503)
-                request('POST', f'/api/repos/{fleet_id}/tasks', {
-                    'title': 'Must not become a local shadow'}, 503)
-                cached = request('GET', f'/api/repos/{fleet_id}/tasks')
-                assert all(item['title'] != 'Must not become a local shadow'
-                           for item in cached['items']), cached
-                stop()
+                        time.sleep(0.2)
+                    assert fleet_repo, ('MAC project summaries were not imported', page)
+                    assert not fleet.writes, ('Read-only startup mutated the fleet', fleet.writes)
+                    unmatched = request('POST', '/api/repos', {
+                        'name': 'Confirmed absent from MAC',
+                        'remote_url': 'https://example.test/unrelated/local-only.git'}, 201)
+                    assert unmatched['authority'] == 'local', unmatched
+                    local_task = request('POST', f"/api/repos/{unmatched['id']}/tasks", {
+                        'title': 'Local work with fleet configured'}, 201)
+                    assert local_task['authority'] == 'local', local_task
+                    assert not fleet.writes, ('Unmatched local work mutated the fleet', fleet.writes)
+                    fleet_id = fleet_repo['id']
+                    page = request('GET', f'/api/repos/{fleet_id}/tasks')
+                    existing = next((item for item in page['items']
+                                     if item['title'] == 'Existing fleet task'), None)
+                    assert existing, page
+                    created = request('POST', f'/api/repos/{fleet_id}/tasks', {
+                        'title': 'Route to fleet', 'description': 'Must be MAC owned'}, 201)
+                    assert any(method == 'POST' and path == '/tasks'
+                               and body.get('project') == fleet.project
+                               for method, path, body in fleet.writes), fleet.writes
+                    request('PATCH', f"/api/tasks/{existing['id']}", {
+                        'revision': existing['revision'], 'labels': ['updated']})
+                    preserved = next(item for item in fleet.tasks if item['id'] == 'task_fixture_1')
+                    assert preserved['metadata']['foreign_key'] == 'preserve', preserved
+                    assert preserved['metadata']['project_tracker']['labels'] == ['updated'], preserved
+                    refreshed = request('GET', f"/api/tasks/{created['id']}")
+                    request('PATCH', f"/api/tasks/{created['id']}", {
+                        'revision': refreshed['revision'], 'state': 'completed'},
+                        (400, 403, 409, 422))
+                    unchanged = request('GET', f"/api/tasks/{created['id']}")
+                    assert unchanged['state'] != 'completed', unchanged
+                    fleet.unavailable = True
+                    time.sleep(6)
+                    unknown = request('POST', '/api/repos', {
+                        'name': 'Unknown during outage',
+                        'remote_url': 'https://example.test/unknown/during-outage.git'}, 201)
+                    assert unknown['authority'] == 'unresolved', unknown
+                    request('POST', f"/api/repos/{unknown['id']}/tasks", {
+                        'title': 'Must wait for authority resolution'}, 503)
+                    request('POST', f'/api/repos/{fleet_id}/tasks', {
+                        'title': 'Must not become a local shadow'}, 503)
+                    cached = request('GET', f'/api/repos/{fleet_id}/tasks')
+                    assert all(item['title'] != 'Must not become a local shadow'
+                               for item in cached['items']), cached
+                    stop()
+            run_phase('mac_authority', mac_authority)
+
+            if diagnostic_failures:
+                print(json.dumps({'ok': False, 'diagnostic_failures': diagnostic_failures}))
+                raise AssertionError('Independent diagnostic phases failed')
             print(json.dumps({'ok': True, 'checks': [
                 'local authority', 'task attributes and state', 'revision conflict',
                 'database restart', 'session heartbeat and stop', 'SSE replay after restart',
@@ -398,6 +425,9 @@ def check(command: list[str]) -> None:
 
 if __name__ == '__main__':
     argv = sys.argv[1:]
+    diagnostic_continue = argv[:1] == ['--diagnostic-continue']
+    if diagnostic_continue:
+        argv = argv[1:]
     if argv[:1] == ['--']:
         argv = argv[1:]
-    check(argv)
+    check(argv, diagnostic_continue=diagnostic_continue)
