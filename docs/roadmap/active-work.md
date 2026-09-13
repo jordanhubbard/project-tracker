@@ -121,3 +121,11 @@ queue item or let `docs/roadmap/` become a plan archive.
 - Corrected verifier assumptions: local state IDs are obtained from the workflow endpoint; A2A uses repo_id/task DataPart fields; installed Python MCP SDK uses input_schema/is_error attributes.
 - LLM verification failed because the generated client discarded the configured /v1 gateway path. Preserve this regression check. Subsequent Git/reporter/MAC/browser checks have not yet run in this suite.
 - Next authority repair: adopt the preflighted npm closure, clarify MAC discovery/deduplication/reporter association and gateway URL prefixes, then rebuild with a structured debug log.
+
+### Diagnostic browser review
+
+- Ran the preserved final candidate in a disposable database with the preflighted compatible npm closure. Desktop (1440px) and mobile (390px) screenshots are under `_build/diagnostic-browser`; neither viewport has page-level horizontal overflow.
+- Visually inspected the board and task modal. The navy sidebar, dark columns, horizontal board and cards render, but CSP blocks the inline card-cover colors; this reduces fidelity and produces console errors. A favicon request also returned 404.
+- Browser actions passed: create task, edit description while preserving labels, keyboard move with persisted state, second-client SSE update and workflow rename. Initial textarea selector failures were corrected using accessible textbox roles; they were verifier issues.
+- Verified defect: Activity navigation renders the project overview instead of an activity feed. Source inspection shows the Agents & peers navigation uses the same overview fallback; that control still needs execution verification.
+- These are diagnostic results from the previous candidate, not acceptance of the active revised build. Recheck the final revised frontend; if retained, fix cover styling under its actual CSP and implement the missing navigation views.
