@@ -281,6 +281,14 @@ def check(command: list[str]) -> None:
                     time.sleep(0.2)
                 assert fleet_repo, ('MAC project summaries were not imported', page)
                 assert not fleet.writes, ('Read-only startup mutated the fleet', fleet.writes)
+                unmatched = request('POST', '/api/repos', {
+                    'name': 'Confirmed absent from MAC',
+                    'remote_url': 'https://example.test/unrelated/local-only.git'}, 201)
+                assert unmatched['authority'] == 'local', unmatched
+                local_task = request('POST', f"/api/repos/{unmatched['id']}/tasks", {
+                    'title': 'Local work with fleet configured'}, 201)
+                assert local_task['authority'] == 'local', local_task
+                assert not fleet.writes, ('Unmatched local work mutated the fleet', fleet.writes)
                 fleet_id = fleet_repo['id']
                 page = request('GET', f'/api/repos/{fleet_id}/tasks')
                 existing = next((item for item in page['items']
@@ -304,6 +312,12 @@ def check(command: list[str]) -> None:
                 assert unchanged['state'] != 'completed', unchanged
                 fleet.unavailable = True
                 time.sleep(6)
+                unknown = request('POST', '/api/repos', {
+                    'name': 'Unknown during outage',
+                    'remote_url': 'https://example.test/unknown/during-outage.git'}, 201)
+                assert unknown['authority'] == 'unresolved', unknown
+                request('POST', f"/api/repos/{unknown['id']}/tasks", {
+                    'title': 'Must wait for authority resolution'}, 503)
                 request('POST', f'/api/repos/{fleet_id}/tasks', {
                     'title': 'Must not become a local shadow'}, 503)
                 cached = request('GET', f'/api/repos/{fleet_id}/tasks')
@@ -318,6 +332,7 @@ def check(command: list[str]) -> None:
                 'backend LLM gateway and secret redaction',
                 'real Git fork and merge parent edges', 'MAC discovery and task routing',
                 'MAC metadata preservation', 'MAC lifecycle rejection',
+                'confirmed MAC absence permits local work',
                 'MAC outage without local fallback']}))
         except BaseException:
             stop()
