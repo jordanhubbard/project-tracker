@@ -301,6 +301,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                             'task': {'title': 'Created through authenticated peer'}}}]}
                     sent = request('POST', f"/api/peers/{registered['id']}/messages",
                                    {'message': peer_message})
+                    assert 'result' in sent, sent
                     assert sent['result']['status']['state'] == 'completed', sent
                     retried = request('POST', f"/api/peers/{registered['id']}/messages",
                                       {'message': peer_message})
@@ -423,6 +424,18 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                             break
                         time.sleep(0.2)
                     assert fleet_repo, ('MAC project summaries were not imported', page)
+                    fleet_id = fleet_repo['id']
+                    deadline = time.monotonic() + 15
+                    existing = None
+                    while time.monotonic() < deadline:
+                        page = request('GET', f'/api/repos/{fleet_id}/tasks')
+                        existing = next((item for item in page['items']
+                                         if item['title'] == 'Existing fleet task'), None)
+                        if existing:
+                            break
+                        time.sleep(0.2)
+                    assert existing, ('MAC tasks were not imported', page,
+                                      request('GET', '/health'))
                     assert not fleet.writes, ('Read-only startup mutated the fleet', fleet.writes)
                     unmatched = request('POST', '/api/repos', {
                         'name': 'Confirmed absent from MAC',
@@ -432,11 +445,6 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                         'title': 'Local work with fleet configured'}, 201)
                     assert local_task['authority'] == 'local', local_task
                     assert not fleet.writes, ('Unmatched local work mutated the fleet', fleet.writes)
-                    fleet_id = fleet_repo['id']
-                    page = request('GET', f'/api/repos/{fleet_id}/tasks')
-                    existing = next((item for item in page['items']
-                                     if item['title'] == 'Existing fleet task'), None)
-                    assert existing, page
                     created = request('POST', f'/api/repos/{fleet_id}/tasks', {
                         'title': 'Route to fleet', 'description': 'Must be MAC owned'}, 201)
                     assert any(method == 'POST' and path == '/tasks'
