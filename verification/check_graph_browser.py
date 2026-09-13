@@ -151,6 +151,10 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         "branch": "main",
                     },
                 )
+        feature_task_title = 'Feature-only branch association probe'
+        main_task_title = 'Main-only branch association probe'
+        for title, branch in [(feature_task_title, 'feature'), (main_task_title, 'main')]:
+            api('POST', f"/api/repos/{repo['id']}/tasks", {'title': title, 'branch': branch})
         with sync_playwright() as p:
             browser = p.chromium.launch(
                 headless=True,
@@ -229,6 +233,14 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             assert any(item.get('pid') == child_pid for item in api('GET', '/api/sessions')['items'])
                             assert socket.gethostname() in row.inner_text(), row.inner_text()
                             assert 'other' in row.inner_text() and 'main' in row.inner_text(), row.inner_text()
+                            page.get_by_role('button', name=re.compile(r'^(?:Back to board|Board)$')).or_(page.get_by_role('tab', name='Board', exact=True)).or_(page.get_by_role('link', name='Board', exact=True)).first.click()
+                            page.get_by_role('button', name='Graph', exact=True).or_(page.get_by_role('tab', name='Graph', exact=True)).or_(page.get_by_role('link', name='Graph', exact=True)).click()
+                            page.wait_for_timeout(400)
+                            if socket.gethostname() not in page.locator('main').inner_text():
+                                issues.append('Graph omits the active coding-session host association')
+                            page.screenshot(path=str(out / 'desktop-active-session-graph.png'), full_page=True)
+                            page.get_by_role('button', name=re.compile(r'^(?:Back to board|Board)$')).or_(page.get_by_role('tab', name='Board', exact=True)).or_(page.get_by_role('link', name='Board', exact=True)).first.click()
+                            page.get_by_role('button', name='Fleet', exact=True).or_(page.get_by_role('tab', name='Fleet', exact=True)).or_(page.get_by_role('link', name='Fleet', exact=True)).click()
                             release_file.touch()
                             assert reporter.wait(timeout=8) == 0
                             row.get_by_text(re.compile(r"^stopped$", re.I)).wait_for(timeout=4000)
@@ -265,6 +277,22 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         invalid = page.locator("svg").evaluate_all(
                             "els => els.flatMap(el => [...el.querySelectorAll('*')].flatMap(n => [...n.attributes].filter(a => /NaN|Infinity/.test(a.value)).map(a => a.name + '=' + a.value)))"
                         )
+                        overlaps = page.locator('svg').first.evaluate("""svg => {
+                            const nodes=[...svg.querySelectorAll('[role=button]')].map(n=>({hash:(n.getAttribute('aria-label')||'').match(/[a-f0-9]{7,64}/)?.[0],rect:n.getBoundingClientRect()}));
+                            const result=[];
+                            for(const label of svg.querySelectorAll('text')) {
+                                const own=nodes.find(n=>n.hash && label.textContent.includes(n.hash));
+                                if(!own) continue;
+                                const r=label.getBoundingClientRect();
+                                for(const node of nodes) if(node.hash!==own.hash) {
+                                    const b=node.rect;
+                                    if(Math.min(r.right,b.right)-Math.max(r.left,b.left)>1 && Math.min(r.bottom,b.bottom)-Math.max(r.top,b.top)>1)
+                                        result.push({label:label.textContent,node:node.hash});
+                                }
+                            }
+                            return result;
+                        }""")
+                        if overlaps: issues.append(f'{mode}: commit labels overlap other node hit targets: {overlaps}')
                         timeline_positions = {}
                         if mode == "Timeline" and args.irregular_times:
                             nodes = page.locator("svg [role=button]")
@@ -274,9 +302,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 label = node.get_attribute("aria-label") or ""
                                 short_hash = re.search(r"[a-f0-9]{7,64}", label)
                                 if short_hash:
-                                    expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(r"Hash\s*" + short_hash.group()), timeout=2000)
+                                    expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(r"Hash\s*:?\s*" + short_hash.group()), timeout=2000)
                                 details = page.locator("#commit-inspector, .commit-inspector, .inspector").inner_text()
-                                match = re.search(r"\bHash\s+([a-f0-9]{40,64})\b", details)
+                                match = re.search(r"\bHash\s*:?\s+([a-f0-9]{40,64})\b", details)
                                 center = commit_circle(node).evaluate(
                                     "n => {const p = n.ownerSVGElement.createSVGPoint(); p.x=n.cx.baseVal.value; p.y=n.cy.baseVal.value; return p.matrixTransform(n.getCTM()).x}"
                                 )
@@ -289,22 +317,25 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 far = timeline_positions[mainhash] - timeline_positions[basehash]
                                 if far <= 0 or abs(near / far - 0.1) > 0.03:
                                     issues.append(f"Timeline: 0/10/100-second spacing is not proportional: {timeline_positions}")
-                        commit_circle(page.locator("svg [role=button]").first).click()
+                        commit_circle(page.locator("svg").get_by_role("button", name=re.compile(mergehash[:8]))).click()
                         expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(mergehash, timeout=2000)
                         selected = page.locator("#commit-inspector, .commit-inspector, .inspector").inner_text()
                         if re.search(r'\b(?:undefined|NaN)\b', selected):
                             issues.append(f'{mode} commit inspector contains an undefined value')
                         initial_width = page.locator("svg").first.evaluate("n=>n.getBoundingClientRect().width")
-                        page.get_by_role("button", name="Zoom in", exact=True).click()
-                        page.wait_for_function("w=>document.querySelector('svg')?.getBoundingClientRect().width>w", arg=initial_width, timeout=2000)
-                        zoomed = page.locator("svg").first.evaluate(
-                            "(node)=>node.getBoundingClientRect().width"
-                        )
-                        page.get_by_role("button", name=re.compile(r"^Reset(?: the graph scale)?$" )).click()
-                        page.wait_for_function("w=>document.querySelector('svg')?.getBoundingClientRect().width<w", arg=zoomed, timeout=2000)
-                        reset = page.locator("svg").first.evaluate(
-                            "(node)=>node.getBoundingClientRect().width"
-                        )
+                        initial_node_width = commit_circle(page.locator('svg [role=button]').first).evaluate('n=>n.getBoundingClientRect().width')
+                        page.get_by_role('button', name='Zoom in', exact=True).click()
+                        page.wait_for_timeout(400)
+                        zoomed = page.locator('svg').first.evaluate('n=>n.getBoundingClientRect().width')
+                        zoomed_node_width = commit_circle(page.locator('svg [role=button]').first).evaluate('n=>n.getBoundingClientRect().width')
+                        if zoomed_node_width <= initial_node_width + .1:
+                            issues.append(f'{mode}: Zoom in did not enlarge commit geometry ({initial_node_width} -> {zoomed_node_width})')
+                        page.get_by_role('button', name=re.compile(r'^Reset(?: the graph scale)?$')).click()
+                        page.wait_for_timeout(400)
+                        reset = page.locator('svg').first.evaluate('n=>n.getBoundingClientRect().width')
+                        reset_node_width = commit_circle(page.locator('svg [role=button]').first).evaluate('n=>n.getBoundingClientRect().width')
+                        if abs(reset_node_width - initial_node_width) > .1:
+                            issues.append(f'{mode}: Reset did not restore commit geometry')
                         page.wait_for_function("hash=>[...document.querySelectorAll('select option')].some(o=>o.value===hash || o.value==='refs/heads/feature' || ['feature','refs/heads/feature'].includes(o.textContent))", arg=featurehash, timeout=2000)
                         options = page.locator("#branch-filter, select").filter(has=page.locator("option", has_text="All branches")).locator("option").evaluate_all(
                             "nodes => nodes.map(node => ({value:node.value, text:node.textContent}))"
@@ -316,10 +347,14 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             or option["text"] in ("feature", "refs/heads/feature")
                         )
                         page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).select_option(feature_option)
-                        expect(page.locator("svg [role=button]").first).to_have_attribute("aria-label", re.compile(featurehash[:7]), timeout=2000)
-                        commit_circle(page.locator("svg [role=button]").first).click()
-                        expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(r"Hash\s*" + featurehash), timeout=2000)
+                        filtered_node = page.locator("svg").get_by_role("button", name=re.compile(featurehash[:8]))
+                        expect(filtered_node).to_be_visible(timeout=2000)
+                        commit_circle(filtered_node).click()
+                        expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(r"Hash\s*:?\s*" + featurehash), timeout=2000)
                         filtered = page.locator("#commit-inspector, .commit-inspector, .inspector").inner_text()
+                        if feature_task_title not in filtered or main_task_title in filtered:
+                            issues.append(f'{mode}: filtered feature inspector does not distinguish actual branch task associations')
+
                         inspector_bounds = page.locator(
                             "#commit-inspector, .commit-inspector, .inspector"
                         ).bounding_box()
@@ -341,10 +376,10 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         if invalid:
                             issues.append(f"{mode}: invalid SVG coordinates")
                         selected_hash = re.search(
-                            r"\bHash\s+([a-f0-9]{40,64})\b", selected
+                            r"\bHash\s*:?\s+([a-f0-9]{40,64})\b", selected
                         )
                         filtered_hash = re.search(
-                            r"\bHash\s+([a-f0-9]{40,64})\b", filtered
+                            r"\bHash\s*:?\s+([a-f0-9]{40,64})\b", filtered
                         )
                         if not selected_hash or selected_hash.group(1) != mergehash:
                             issues.append(
@@ -354,8 +389,6 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             issues.append(
                                 f"{mode}: filtered selection did not show the feature hash"
                             )
-                        if zoomed <= reset:
-                            issues.append(f"{mode}: zoom did not change visible width")
                         if (
                             inspector_bounds is None
                             or inspector_bounds["x"] < 0

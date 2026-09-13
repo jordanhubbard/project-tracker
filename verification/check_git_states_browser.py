@@ -60,15 +60,17 @@ with tempfile.TemporaryDirectory(prefix='tracker-git-states-') as temporary:
                 def open_graph(page):
                     page.goto(base)
                     page.get_by_role('button', name=re.compile(r'^Open board(?: for .+)?$')).click()
-                    page.get_by_role('button', name='Graph', exact=True).or_(
-                        page.get_by_role('link', name='Graph', exact=True)).or_(
-                        page.get_by_role('tab', name='Graph', exact=True)).click()
+                    with page.expect_response(lambda response: '/graph' in response.url and response.status == 200) as fetched:
+                        page.get_by_role('button', name='Graph', exact=True).or_(
+                            page.get_by_role('link', name='Graph', exact=True)).or_(
+                            page.get_by_role('tab', name='Graph', exact=True)).click()
+                    return entity_response(fetched.value.json())
                 for width in (1440, 390):
                     page = browser.new_page(viewport={'width': width, 'height': 1000 if width > 390 else 844})
                     page.on('pageerror', lambda error: errors.append(str(error)))
                     open_graph(page)
                     expect(page.get_by_text(re.compile(r'(no commits|no history|unborn)', re.I)).first).to_be_visible()
-                    assert page.locator('svg g[role=button]').count() == 0
+                    assert page.locator('svg [role=button]').count() == 0
                     page.screenshot(path=str(out / f'{width}-empty.png'), full_page=True)
                     results.append({'width': width, 'state': 'empty', 'ok': True})
                     page.close()
@@ -94,7 +96,10 @@ with tempfile.TemporaryDirectory(prefix='tracker-git-states-') as temporary:
                 for width in (1440, 390):
                     page = browser.new_page(viewport={'width': width, 'height': 1000 if width > 390 else 844})
                     page.on('pageerror', lambda error: errors.append(str(error)))
-                    open_graph(page)
+                    rendered_graph = open_graph(page)
+                    known = {c['hash'] for c in rendered_graph['commits'] if not c.get('boundary', False)}
+                    boundary = {parent for c in rendered_graph['commits'] if not c.get('boundary', False) for parent in c['parents'] if parent not in known}
+                    assert boundary and 0 < len(known) < 1005
                     marker = page.locator('svg').get_by_role('button', name=re.compile(next(iter(boundary))[:7])).or_(
                         page.locator('svg').locator('text').filter(has_text=re.compile(next(iter(boundary))[:7])))
                     marker.first.scroll_into_view_if_needed()
@@ -104,7 +109,7 @@ with tempfile.TemporaryDirectory(prefix='tracker-git-states-') as temporary:
                     page.wait_for_timeout(400)
                     page.screenshot(path=str(out / f'{width}-bounded-timeline.png'), full_page=True)
                     (out / f'{width}-bounded-timeline.aria.txt').write_text(page.locator('body').aria_snapshot())
-                    expect(page.locator('svg g[role=button]')).to_have_count(len(known), timeout=2000)
+                    expect(page.locator('svg [role=button]')).to_have_count(len(known), timeout=2000)
 
                     results.append({'width': width, 'state': 'truncated', 'commits': len(known),
                                     'boundary': sorted(boundary), 'ok': True})

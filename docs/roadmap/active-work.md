@@ -344,3 +344,30 @@ queue item or let `docs/roadmap/` become a plan archive.
   unequal timestamps and valid bounded-history timelines. Regenerate and require
   unmodified browser checks plus public launch verification before completion.
   Native test success alone does not fulfill the product goal.
+
+
+### Final layout audit and remaining interaction repairs
+
+- The layout rebuild passed LitAI native acceptance with 48 tests. The final
+  unmodified source passes independent backend, peer UI, real session expiry,
+  empty-history and bounded-history graph/timeline checks. The 390px header fits.
+- Final board tests pass task creation/editing/all attributes, live updates,
+  search, moves, rename, inspector, Activity and Settings. The list menu omits
+  Delete, and the checkout-needed graph view omits navigation back to the board.
+- Graph tests prove the first Zoom in leaves the small graph's actual circle
+  diameter unchanged. Timeline clicks and timestamp spacing work, but label
+  rectangles intersect adjacent node targets in both viewport sizes. Visible
+  overlap is retained as failure even where later circles receive clicks.
+- Evidence: `_build/layout-native-result.json`, `_build/layout-final-provenance.json`,
+  `_build/layout-final-independent/summary.json`, and `_build/layout-final-graph4`.
+  The latter corrects DOM-order assumptions and measures rendered geometry.
+- Refined `visual.md` for visible workflow deletion/migration, navigation in
+  diagnostic graph states, scaling the full fitted canvas, collision-free labels,
+  and accurate branch-associated task/session annotations. Regenerate through
+  LitAI and require the complete rendered and public-launch checks before delivery.
+
+- The branch-association audit uses distinct main/feature tasks and an actual
+  coding reporter child. It confirms the graph omits the active host annotation
+  and the feature-filtered inspector incorrectly includes main-only tasks.
+  `_build/layout-branch-audit` retains these results and screenshots. The next
+  generation must implement these associations, not only the underlying API data.

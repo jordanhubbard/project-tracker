@@ -43,11 +43,32 @@ keyboard activation also works. Keep trailing labels reachable in the scroller.
 A bounded 1005-commit history still displays its loaded real commits in Timeline,
 including when the Graph response has null-dated outside-window placeholders.
 
+A fixed minimum gap between circle centers is not sufficient collision handling.
+For example, at times 0, 10, 100 and 110 seconds, the labels "Base" and "Main"
+with eight-character hashes overlap the next circles when all nodes share a row.
+Reserve the full hash, subject and ref-label rectangle in each vertical band,
+including padding around other node targets. Measure rendered text or use a
+conservative bounded label width with truncation and accessible full text.
+Verify bounding rectangles of each label against every other commit hit target;
+none may intersect. Drawing a later circle on top of an earlier label still fails
+readability even if that circle receives clicks.
+
 Both modes provide visible Zoom in, Zoom out, Reset and branch-filter controls.
 Zoom changes the actual graph scale; Reset restores fit. Scroll/pan allows every
-node to be reached. The branch filter uses real ref ancestry and retains required
+node to be reached. The very first Zoom in on the four-commit fork/merge fixture
+must visibly enlarge commit geometry. Apply the scale to the complete fitted
+canvas size, including label padding and any minimum viewport size. Applying a
+minimum width after multiplying only the narrow lane width can swallow the first
+several zoom increments. Compare an actual commit circle's rendered diameter
+before and after one click, then verify Reset restores its original geometry.
+The branch filter uses real ref ancestry and retains required
 boundary context. Show task and active-session branch associations as overlays
-or linked annotations using actual backend data.
+or linked annotations using actual backend data. A selected branch's task list
+must use the branch association, not label every repository task "on this branch".
+For distinct main and feature tasks, filtering to feature and selecting its tip
+shows feature-related tasks without mislabelling main-only tasks. Include active
+coding-session branch associations from the backend alongside task associations;
+MAC assignments alone are not active coding sessions.
 
 Clicking or keyboard-activating a node selects it and opens an in-page commit
 inspector with hash, subject, author, timestamp, parents and related task links.
@@ -105,6 +126,17 @@ available width is not responsive. Check Connecting, Connected and Offline text;
 search may occupy its own row. Do not hide or clip the overflow at the body/root
 level or leave the Settings control beyond the right edge.
 
+## Workflow deletion from the board
+
+Every list menu exposes both Rename and Delete. Deleting a populated list offers
+a labelled destination chosen by list name, migrates every task to that remaining
+list in the same backend operation, and removes the deleted list. Preserve task
+attributes and revisions correctly. Cancel leaves the list and tasks unchanged;
+reject deleting the last list. Verify through the visible UI: add a list, move it
+left, reload, create a task in it, delete with a destination and confirm both the
+remaining ordered states and migrated task through the API. A rename-only menu
+or a backend-only delete capability does not satisfy editable workflow states.
+
 ## Actual navigation destinations
 
 Dispatch Activity and Agents & peers before the no-selected-repository overview
@@ -139,6 +171,11 @@ exercise both Git modes including node selection, zoom/reset and filtering.
 Verify backend persistence and a second-client event while observing the page.
 
 Graph and Timeline retain visible navigation back to the board and between modes.
+Render these controls before any empty, unborn, checkout-needed or error return.
+A remote-only repository explains the checkout requirement and still offers Back
+to board plus Inspector so the operator can supply a path. Test clicking Graph
+from a remote-only board and returning through its visible control; browser Back
+or rediscovering the repository in the sidebar is not the view's navigation.
 After applying or clearing a branch filter, commit selection must still update the
 inspector; reuse the selection callback when rebuilding the SVG. Scope workspace
 sidebar styles to that sidebar: a commit inspector must not inherit a fixed sidebar

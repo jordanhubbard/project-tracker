@@ -1,11 +1,12 @@
 # Product completion evidence
 
-Current checkpoint: the hidden-dialog generation passed LitAI native acceptance
-(41 cases), backend protocols and task interactions. Three rendered defects remain:
-390px header overflow, nearby timeline label/node collision, and bounded timeline
-rejection caused by a null-dated parent marker. See the latest section of
-[active work](../docs/roadmap/active-work.md). Earlier tables below are historical
-snapshots; they do not override the current failure evidence or claim delivery.
+Current checkpoint: the layout generation passed native acceptance (48 cases),
+backend protocols, peer UI, expiry, task editing, mobile width and bounded-history
+views. Remaining rendered failures are workflow deletion, remote-only navigation,
+small-graph zoom, nearby labels, and task/session branch associations. See the
+latest [active work](../docs/roadmap/active-work.md) and the final-source audit under
+`_build/layout-final-independent` and `_build/layout-branch-audit`. Earlier tables
+below are historical snapshots and do not claim delivery.
 
 
 The latest complete retained source is `_build/contained-final-diagnostic`.

@@ -49,10 +49,10 @@ with tempfile.TemporaryDirectory() as root:
       page.get_by_role('button',name='Agents & peers',exact=True).click()
       if not page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL)$')).count():
         page.get_by_role('button', name=re.compile(r'^Register (?:a )?peer$')).click()
-      display = page.get_by_role('textbox', name=re.compile(r'^(?:Display name|Peer name)$'))
+      display = page.get_by_role('textbox', name=re.compile(r'^(?:Name|Display name|Peer name)$'))
       if display.count(): display.fill('Remote verification peer')
       page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL)$')).fill(b)
-      page.get_by_label(re.compile(r'^(?:(?:Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\))$')).fill(token)
+      page.get_by_label(re.compile(r'^(?:(?:Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\)|Bearer token \(stored backend-only\))$')).fill(token)
       scope = page.get_by_role('dialog') if page.get_by_role('dialog').count() else page
       scope.get_by_role('button',name=re.compile(r'^Register(?: peer)?$')).click()
       page.get_by_role('button',name=re.compile(r'^Send (?:a )?message(?: to .+)?$')).click()
