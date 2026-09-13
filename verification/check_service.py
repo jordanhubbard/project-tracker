@@ -47,7 +47,8 @@ def check(command: list[str]) -> None:
                 response = error
             with response:
                 text = response.read().decode()
-                assert response.status == expected, (method, path, response.status, text)
+                allowed = expected if isinstance(expected, tuple) else (expected,)
+                assert response.status in allowed, (method, path, response.status, text)
             return json.loads(text) if text else None
 
         def start():
@@ -104,6 +105,42 @@ def check(command: list[str]) -> None:
             start()
             restored = request('GET', f'/api/tasks/{task_id}')
             assert restored == changed, (restored, changed)
+            session_id = str(uuid.uuid4())
+            heartbeat = {'session_id': session_id, 'repo_id': repo_id,
+                         'hostname': 'fixture-host', 'host_id': 'host-fixture',
+                         'cli': 'codex', 'pid': 12345, 'branch': 'main',
+                         'task_id': task_id, 'model': None, 'status': 'running'}
+            request('POST', '/api/sessions/heartbeat', heartbeat)
+            sessions = request('GET', '/api/sessions')['items']
+            reported = next(item for item in sessions if item['session_id'] == session_id)
+            assert reported['hostname'] == 'fixture-host' and reported['cli'] == 'codex', reported
+            assert reported['last_seen_at'], reported
+            heartbeat['status'] = 'stopped'
+            request('POST', '/api/sessions/heartbeat', heartbeat)
+            stopped = next(item for item in request('GET', '/api/sessions')['items']
+                           if item['session_id'] == session_id)
+            assert stopped['status'] == 'stopped', stopped
+
+            def first_event(after=None):
+                headers = {'Accept': 'text/event-stream'}
+                if after is not None:
+                    headers['Last-Event-ID'] = after
+                req = urllib.request.Request(base + '/api/events', headers=headers)
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    fields = {}
+                    for raw_line in response:
+                        line = raw_line.decode().rstrip('\r\n')
+                        if not line and 'data' in fields and 'id' in fields:
+                            return fields
+                        key, separator, value = line.partition(':')
+                        if separator and key:
+                            fields[key] = value.lstrip()
+                raise AssertionError('SSE stream ended without a replayable event')
+            first = first_event()
+            stop()
+            start()
+            following = first_event(first['id'])
+            assert int(following['id']) > int(first['id']), (first, following)
             message = {'kind': 'message', 'role': 'user', 'messageId': str(uuid.uuid4()),
                        'parts': [{'kind': 'data', 'data': {
                            'operation': 'create_task', 'arguments': {
@@ -132,7 +169,11 @@ def check(command: list[str]) -> None:
                     names = {tool.name for tool in tools.tools}
                     assert {'list_repositories', 'get_task', 'create_task',
                             'update_task', 'list_sessions', 'get_branch_graph'} <= names, names
-                    result = await client.call_tool('get_task', {'task_id': task_id})
+                    get_tool = next(tool for tool in tools.tools if tool.name == 'get_task')
+                    properties = get_tool.inputSchema.get('properties', {})
+                    id_key = 'task_id' if 'task_id' in properties else 'id'
+                    assert id_key in properties, get_tool
+                    result = await client.call_tool('get_task', {id_key: task_id})
                     assert not result.isError, result
                     assert task_id in result.model_dump_json(), result
                     resources = await client.list_resources()
@@ -177,11 +218,60 @@ def check(command: list[str]) -> None:
             assert set(commits[merge_hash]['parents']) == {feature_hash, main_hash}, graph
             assert commits[feature_hash]['parents'] == [base_hash], graph
             assert commits[main_hash]['parents'] == [base_hash], graph
+            from mac_fixture import MacFixture
+            stop()
+            with MacFixture() as fleet:
+                environment.update(TRACKER_DATA_DIR=str(root / 'fleet-data'),
+                                   TRACKER_MAC_URL=fleet.url, TRACKER_MAC_TOKEN=fleet.token)
+                start()
+                deadline = time.monotonic() + 15
+                fleet_repo = None
+                while time.monotonic() < deadline:
+                    page = request('GET', '/api/repos')
+                    fleet_repo = next((item for item in page['items']
+                                       if item.get('authority') == 'mac'), None)
+                    if fleet_repo:
+                        break
+                    time.sleep(0.2)
+                assert fleet_repo, ('MAC project summaries were not imported', page)
+                assert not fleet.writes, ('Read-only startup mutated the fleet', fleet.writes)
+                fleet_id = fleet_repo['id']
+                page = request('GET', f'/api/repos/{fleet_id}/tasks')
+                existing = next((item for item in page['items']
+                                 if item['title'] == 'Existing fleet task'), None)
+                assert existing, page
+                created = request('POST', f'/api/repos/{fleet_id}/tasks', {
+                    'title': 'Route to fleet', 'description': 'Must be MAC owned'}, 201)
+                assert any(method == 'POST' and path == '/tasks'
+                           and body.get('project') == fleet.project
+                           for method, path, body in fleet.writes), fleet.writes
+                request('PATCH', f"/api/tasks/{existing['id']}", {
+                    'revision': existing['revision'], 'labels': ['updated']})
+                preserved = next(item for item in fleet.tasks if item['id'] == 'task_fixture_1')
+                assert preserved['metadata']['foreign_key'] == 'preserve', preserved
+                assert preserved['metadata']['project_tracker']['labels'] == ['updated'], preserved
+                refreshed = request('GET', f"/api/tasks/{created['id']}")
+                request('PATCH', f"/api/tasks/{created['id']}", {
+                    'revision': refreshed['revision'], 'state': 'completed'},
+                    (400, 403, 409, 422))
+                unchanged = request('GET', f"/api/tasks/{created['id']}")
+                assert unchanged['state'] != 'completed', unchanged
+                fleet.unavailable = True
+                time.sleep(6)
+                request('POST', f'/api/repos/{fleet_id}/tasks', {
+                    'title': 'Must not become a local shadow'}, 503)
+                cached = request('GET', f'/api/repos/{fleet_id}/tasks')
+                assert all(item['title'] != 'Must not become a local shadow'
+                           for item in cached['items']), cached
+                stop()
             print(json.dumps({'ok': True, 'checks': [
                 'local authority', 'task attributes and state', 'revision conflict',
-                'database restart', 'A2A durable tasks', 'A2A idempotent creation',
+                'database restart', 'session heartbeat and stop', 'SSE replay after restart',
+                'A2A durable tasks', 'A2A idempotent creation',
                 'A2A terminal cancellation rejection', 'official MCP client roundtrip',
-                'real Git fork and merge parent edges']}))
+                'real Git fork and merge parent edges', 'MAC discovery and task routing',
+                'MAC metadata preservation', 'MAC lifecycle rejection',
+                'MAC outage without local fallback']}))
         finally:
             stop()
             log.close()

@@ -96,3 +96,9 @@ queue item or let `docs/roadmap/` become a plan archive.
 - Upstream issue draft: Python service generation guidance currently permits SDK dependencies while Standard acquisition unconditionally rejects requirements.txt and pyproject dependency declarations. A future typed Python lock projection must enumerate exact packages, parents and source BOM coverage. No parent source was changed.
 
 - npm and an explicit Make build profile cannot be combined by the installed Standard lifecycle. The product now explicitly removes Make and uses the supported npm profile. The final revised lock and documentation review pass; the Node build is active.
+
+### Independent MAC and live-state checks
+
+- Added `verification/mac_fixture.py` from the current public MAC project-summary contract (`project`/`project_id`, not raw `name`/`id` records), with authenticated requests and a controlled outage. Its HTTP schema/outage smoke check passed.
+- The service verifier now checks MAC discovery, write routing, metadata preservation, integer priority compatibility, lifecycle rejection and no local fallback during outage. It also checks heartbeat/stopped records and SSE replay across restart.
+- These product checks remain unexecuted until the active Node candidate passes the native lifecycle. Fixture verification is not evidence that the app integrates correctly.
