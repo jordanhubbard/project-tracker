@@ -246,6 +246,41 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             edit_move,
                         )
 
+                        def edit_all_attributes():
+                            task = next(t for t in api('GET', f"/api/repos/{repo['id']}/tasks")['items']
+                                        if t['title'] == f'Browser-created task {name}')
+                            prerequisite = api('POST', f"/api/repos/{repo['id']}/tasks", {
+                                'title': f'Browser prerequisite {name}', 'state': states[0]['id']})
+                            page.get_by_role('heading', name=prerequisite['title'], exact=True).wait_for(timeout=2000)
+                            page.get_by_role('heading', name=task['title'], exact=True).click()
+                            dialog = page.get_by_role('dialog')
+                            dialog.get_by_label(re.compile(r'^Assignee$', re.I)).fill('QA operator')
+                            dialog.get_by_label(re.compile(r'^Branch$', re.I)).fill('feature/browser-verification')
+                            dialog.get_by_label(re.compile(r'^Due date$', re.I)).fill('2026-10-02')
+                            dialog.get_by_label(re.compile(r'^Cover(?: colou?r)?$', re.I)).select_option('purple')
+                            dialog.get_by_label(re.compile(r'^Priority$', re.I)).select_option(label='high')
+                            dialog.get_by_label(re.compile(r'^Labels', re.I)).fill('QA, UI')
+                            dialog.get_by_label(re.compile(r'^(?:Depends on|Dependencies)$', re.I)).select_option(prerequisite['id'])
+                            dialog.get_by_role('button', name=re.compile(r'^Add checklist item$', re.I)).click()
+                            dialog.get_by_role('textbox', name=re.compile(r'^Checklist item', re.I)).last.fill('Review browser attributes')
+                            dialog.get_by_role('checkbox', name=re.compile(r'^Done$', re.I)).last.check()
+                            dialog.get_by_role('button', name=re.compile(r'^Save(?: task)?$')).click()
+                            dialog.wait_for(state='hidden')
+                            saved = api('GET', f"/api/tasks/{task['id']}")
+                            assert saved['assignee'] == 'QA operator', saved
+                            assert saved['branch'] == 'feature/browser-verification', saved
+                            assert saved['due_date'].startswith('2026-10-02'), saved
+                            assert saved['cover_color'] == 'purple' and saved['priority'] == 2, saved
+                            assert saved['labels'] == ['QA', 'UI'] and saved['dependencies'] == [prerequisite['id']], saved
+                            assert any(item['text'] == 'Review browser attributes' and item['done']
+                                       for item in saved['checklist']), saved
+                            assert saved['description'] == task['description'] and saved['state'] == task['state'], saved
+                            page.reload()
+                            page.get_by_role('heading', name=task['title'], exact=True).wait_for()
+                            assert api('GET', f"/api/tasks/{task['id']}") == saved
+
+                        check('task dialog persists all editable attributes', edit_all_attributes)
+
                         def remote():
                             created = api(
                                 "POST",

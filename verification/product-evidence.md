@@ -13,7 +13,7 @@ repeat affected tests before final delivery.
 | --- | --- | --- |
 | LitAI build and admission | Exact npm manifest/lock; missing Hono peer edge is now present; 27 generated tests pass independently | Native lifecycle result and current receipt |
 | Repository overview and inspector | First registration, origin display, description save pass in browser | Final artifact repeat |
-| Task attributes and SQLite | Full attribute roundtrip, restart, dependencies, cycle rejection and revision conflict pass | Final artifact repeat |
+| Task attributes and SQLite | Full API roundtrip/restart and desktop/mobile dialog attribute edits pass; dependencies, cycle rejection and revision conflict pass | Final artifact repeat |
 | Trello board | Dark rail/list/card structure, colored covers, readable move controls; create/edit/rapid move/search/desktop drag pass | Document overflow from hidden absolute labels; final visual review |
 | Workflow editing | Rename, add and delete populated states with migration pass | No usable reorder control in generated list-menu UI |
 | Live task activity | Second-client create/edit/detail update and durable SSE replay pass | Final artifact repeat |
