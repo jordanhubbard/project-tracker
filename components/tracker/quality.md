@@ -104,3 +104,33 @@ non-success response and preserve cached state; do not return HTTP 200 for a rej
 operation. After a successful discovery, make MAC unavailable and register a previously
 unknown repository. Its authority remains unresolved and task creation returns 503;
 absence from a stale cached snapshot never confirms local authority during an outage.
+
+## Interaction and session regressions
+
+A completed task save updates the visible card and its revision before another card
+operation uses that object. Verify edit description -> Save -> immediately Move to
+another state with no reload or artificial pause: the move persists and the saved
+labels/description remain intact. Do not leave the pre-save task object in a move
+callback. A failed save keeps the editable draft available. Genuine concurrent
+external edits still produce a conflict with explicit reload/reapply controls; never
+silently overwrite them to make this sequence pass.
+
+Coalescing asynchronous renders must retain a pending refresh. If a mutation, SSE
+event or navigation occurs during an in-flight fetch/render, schedule a follow-up
+render for the newest state and route. Returning the old pending promise and dropping
+the new request is incorrect. Refresh repository overview/sidebar counts when tasks
+or sessions change rather than keeping the first fetched overview forever.
+
+At 390px, Settings remains reachable via a visible labelled control in the header or
+sidebar. Do not hide the only Settings button with a mobile media query. Exercise the
+same saved URL/model and blank write-only key flow on desktop and mobile; a compact
+button or sidebar control is acceptable when header space is tight.
+
+A physical session heartbeat is a committed live change: publish an SSE session event
+for start/update/stop and subscribe to it in the frontend. Keep the Fleet/Agents rows,
+repo inspector and overview active-session counts current. In a real reporter test,
+show the spawned child's hostname, PID, CLI and branch; release the child and display
+stopped within two seconds without navigating or reloading. Expiry must also update
+the visible derived status and counts after the configured heartbeat deadline.
+Persist relevant session events for replay. The event name is an implementation
+choice, but emitting and subscribing must agree across every entity change surface.
