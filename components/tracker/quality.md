@@ -232,3 +232,14 @@ A timeline layout node need not have the graph layout's lane property. Its commi
 inspector must never print "Lane undefined". Either resolve the real graph lane for
 that commit, or omit an inapplicable lane field. Verify selected and branch-filtered
 commit details in both Graph and Timeline views; retain real timestamp spacing.
+
+
+## Effective settings regression
+
+With gateway URL, model and key supplied only through TRACKER_LLM_* environment
+variables, a real assistant request succeeds against a disposable gateway and
+Settings GET reports the effective URL/model and llm_key_configured true without
+returning the key. Project the same effective configuration used by the request,
+not only persisted database settings. Blank secret edits retain the effective
+credential; an explicit clear must suppress the environment fallback until the
+operator configures a replacement. Test these behaviors through HTTP.

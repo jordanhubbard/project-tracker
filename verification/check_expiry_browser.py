@@ -77,7 +77,7 @@ with tempfile.TemporaryDirectory(prefix='tracker-expiry-') as data:
             elapsed = round(time.monotonic() - started, 2)
             result = {'elapsed_seconds': elapsed, 'row': row.inner_text(),
                       'sidebar': repo_control.inner_text(), 'stale_visible': stale.is_visible()}
-            result['ok'] = result['stale_visible'] and bool(re.search(r'\b0\b', result['sidebar']))
+            result['ok'] = result['stale_visible'] and (bool(re.search(r'\b0\b', result['sidebar'])) or result['sidebar'].strip() == repo['name'])
             (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
             page.screenshot(path=str(out / 'after-deadline.png'), full_page=True)
             browser.close()

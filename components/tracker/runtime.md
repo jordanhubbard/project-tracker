@@ -17,6 +17,12 @@ to hono@4.13.7; leaving its dependsOn empty fails native dependency validation.
 Resolve each installed dependency by its actual nearest node_modules lock path,
 including nested overridden versions. Absent optional peers need no invented edge.
 Audit every lock package against the source BOM before finishing generation.
+For each scoped npm package, the component name is its full manifest name (for
+example "@modelcontextprotocol/sdk", not just "sdk"). Preserve its canonical
+purl pkg:npm/%40modelcontextprotocol/sdk@1.30.0 and exact version. This installed
+admission adapter matches manifest/import authority against component names;
+it does not combine CycloneDX group with name. Apply the same rule to every
+scoped transitive package, including @hono/node-server and @types/node.
 Use Node built-ins for HTTP, SQLite, Git subprocesses, filesystem, crypto and events.
 Git 2.30.0 or newer is a required host runtime dependency. This macOS build is bound
 to the independently observed host Git 2.50.1 (`git --version` reports

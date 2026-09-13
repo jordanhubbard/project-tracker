@@ -77,6 +77,12 @@ returns to Project overview has not implemented this view.
 
 Settings loads saved nonsecret URLs, model and timeout before editing. Blank
 password inputs preserve existing credentials; clear actions are explicit.
+The task editor provides labeled controls for title, description, state, integer
+priority, labels, cover color, assignee, branch, due date, checklist text/completion,
+and dependencies. Priority is editable on creation and update, with its current
+value loaded and preserved through later edits; a backend field alone does not
+fulfill task editing. At desktop and mobile, change priority to 2 together with
+other attributes, save, reload, reopen and verify the persisted value.
 Task editing preserves every unedited attribute, including checklist completion,
 labels, due date and dependencies. Provide dependency selection by task title
 instead of requiring the operator to type internal task IDs.

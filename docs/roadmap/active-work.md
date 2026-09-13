@@ -268,3 +268,27 @@ queue item or let `docs/roadmap/` become a plan archive.
 - Promoted diagnostic checker adaptations for symbolic task-state keys, display names, custom workflow dialogs, role-based peer dialog closing, visible origin prefixes and graph inspector alternatives. State representation is inferred from an actual created task instead of assuming UUIDs or names. Keep native admission and final product proof distinct.
 
 - Final lazy-import entrypoint repeats the full board pass at both widths and the backend passes except missing MAC lifecycle states. Graph tests retain explicit PID and undefined-inspector failures. Actual packaged artifact launches with a fresh disposable database, healthHTTP200/statusok and rootHTTP200: `_build/contained-packaged-launch.json`. This confirms the previous acceptance startup error was the reused fixture schema; it does not create an admission receipt.
+
+
+### Scoped dependency and task editor follow-up
+
+- The workflow/PID generation terminated before admission with a scoped npm BOM
+  name mismatch. All tracked authority remained frozen throughout the run. The
+  source used group plus basename while this installed adapter matches the full
+  manifest name. Runtime authority now specifies full scoped names and canonical
+  purls for every scoped dependency; no generated source or framework was patched.
+- Independent backend checks pass, including the full MAC workflow and actual
+  reporter outage survival. Graph/timeline, peer registration/message/removal,
+  empty/truncated Git and board workflow/inspector/navigation checks pass. Board
+  task attribute editing fails because Priority has no control. Added explicit
+  create/edit/reload requirements; preserved the failing checker assertion.
+- Generated direct Node tests pass 89 of 90. The failing effective-settings test
+  correctly finds an environment-only LLM key usable but reported unconfigured.
+  Added effective configuration projection and explicit-clear regression coverage.
+- Browser checkers now recognize explicit Edit buttons, title-cased list labels,
+  scoped generic Save, current mobile drawer labels, peer confirmation, and a
+  cleared zero-session badge. These changes retain backend persistence, event,
+  workflow migration, real-PID and expiry assertions.
+- Evidence remains under `_build/workflow-pid-*`. No accepted artifact, public
+  installation or completion claim exists. No remote forge is configured; the
+  local worktree/branch survey found only this main worktree.

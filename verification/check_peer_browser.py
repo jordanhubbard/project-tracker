@@ -47,12 +47,12 @@ with tempfile.TemporaryDirectory() as root:
       local=next(repo for repo in request(a,'GET','/api/repos')['items'] if repo['name']=='Local only')
       assert local['remote_url']=='https://example.test/local/only.git' and local['authority']=='local'
       page.get_by_role('button',name='Agents & peers',exact=True).click()
-      if not page.get_by_label(re.compile(r'^Peer (?:base )?URL$')).count():
+      if not page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL)$')).count():
         page.get_by_role('button', name=re.compile(r'^Register (?:a )?peer$')).click()
       display = page.get_by_role('textbox', name='Display name', exact=True)
       if display.count(): display.fill('Remote verification peer')
-      page.get_by_label(re.compile(r'^Peer (?:base )?URL$')).fill(b)
-      page.get_by_label(re.compile(r'^(?:(?:Peer t|T)oken \(stored backend-only\)|Peer access token \(write only\)|Bearer credential \(stored on this backend only\))$')).fill(token)
+      page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL)$')).fill(b)
+      page.get_by_label(re.compile(r'^(?:(?:Peer t|T)oken \(stored backend-only\)|Peer access token \(write only\)|Bearer credential \(stored on this backend only\)|Access token \(write only\))$')).fill(token)
       scope = page.get_by_role('dialog') if page.get_by_role('dialog').count() else page
       scope.get_by_role('button',name=re.compile(r'^Register(?: peer)?$')).click()
       page.get_by_role('button',name='Send message',exact=True).click()
@@ -76,6 +76,8 @@ with tempfile.TemporaryDirectory() as root:
       if active_dialog.count():
         active_dialog.get_by_role('button', name=re.compile(r'^(?:Close|Cancel)$')).click()
       page.get_by_role('button',name=re.compile(r'^Remove(?: peer)?$')).click()
+      confirm = page.get_by_role('button', name='Confirm', exact=True)
+      if confirm.count(): confirm.click()
       deadline=time.monotonic()+2
       while request(a,'GET','/api/peers')['items'] and time.monotonic()<deadline:page.wait_for_timeout(100)
       assert not request(a,'GET','/api/peers')['items']
