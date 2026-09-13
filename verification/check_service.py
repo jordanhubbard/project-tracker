@@ -45,6 +45,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
         def run_phase(name, operation):
             try:
                 operation()
+                print(f'Independent phase passed: {name}', file=sys.stderr)
             except Exception as error:
                 if not diagnostic_continue:
                     raise
@@ -248,6 +249,77 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
 
             run_phase('llm_gateway', llm_gateway)
 
+            def two_peer_instances():
+                with socket.socket() as listener:
+                    listener.bind(('127.0.0.1', 0))
+                    peer_port = listener.getsockname()[1]
+                peer_base = f'http://127.0.0.1:{peer_port}'
+                peer_token = 'disposable-peer-' + str(uuid.uuid4())
+                peer_environment = dict(environment, TRACKER_DATA_DIR=str(root / 'peer-data'),
+                                        TRACKER_ACCESS_TOKEN=peer_token, TRACKER_MAC_URL='',
+                                        TRACKER_LLM_URL='', TRACKER_LLM_KEY='')
+                peer_process = subprocess.Popen(command + ['--litai-serve', '--host',
+                                                '127.0.0.1', '--port', str(peer_port)],
+                                                env=peer_environment, stdout=log, stderr=log)
+                def peer_request(method, path, body=None, expected=200, authenticated=True):
+                    headers = {'Content-Type': 'application/json'}
+                    if authenticated:
+                        headers['Authorization'] = 'Bearer ' + peer_token
+                    req = urllib.request.Request(peer_base + path, method=method,
+                            data=None if body is None else json.dumps(body).encode(), headers=headers)
+                    try:
+                        response = urllib.request.urlopen(req, timeout=5)
+                    except urllib.error.HTTPError as error:
+                        response = error
+                    with response:
+                        raw = response.read().decode()
+                        assert response.status == expected, (path, response.status, raw)
+                        return json.loads(raw) if raw else None
+                try:
+                    deadline = time.monotonic() + 20
+                    while time.monotonic() < deadline:
+                        if peer_process.poll() is not None:
+                            raise AssertionError('Peer service exited before readiness')
+                        try:
+                            peer_request('GET', '/health')
+                            break
+                        except OSError:
+                            time.sleep(0.1)
+                    else:
+                        raise AssertionError('Peer service did not become ready')
+                    peer_request('GET', '/api/repos', expected=401, authenticated=False)
+                    remote_repo = peer_request('POST', '/api/repos', {
+                        'name': 'Peer-owned repository',
+                        'remote_url': 'https://example.test/peer/repository.git'}, expected=201)
+                    registered = request('POST', '/api/peers', {
+                        'url': peer_base, 'name': 'Isolated peer', 'token': peer_token}, 201)
+                    assert peer_token not in json.dumps(registered), registered
+                    assert peer_token not in json.dumps(request('GET', '/api/peers'))
+                    peer_message = {'kind': 'message', 'role': 'user',
+                        'messageId': str(uuid.uuid4()), 'parts': [{'kind': 'data', 'data': {
+                            'operation': 'create_task', 'repo_id': remote_repo['id'],
+                            'task': {'title': 'Created through authenticated peer'}}}]}
+                    sent = request('POST', f"/api/peers/{registered['id']}/messages",
+                                   {'message': peer_message})
+                    assert sent['result']['status']['state'] == 'completed', sent
+                    retried = request('POST', f"/api/peers/{registered['id']}/messages",
+                                      {'message': peer_message})
+                    assert retried['result']['id'] == sent['result']['id'], retried
+                    rows = peer_request('GET', f"/api/repos/{remote_repo['id']}/tasks")['items']
+                    assert sum(t['title'] == 'Created through authenticated peer'
+                               for t in rows) == 1, rows
+                    request('DELETE', f"/api/peers/{registered['id']}", expected=(200, 204))
+                    assert all(p['id'] != registered['id']
+                               for p in request('GET', '/api/peers')['items'])
+                finally:
+                    peer_process.terminate()
+                    try:
+                        peer_process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        peer_process.kill()
+                        peer_process.wait(timeout=5)
+            run_phase('two_peer_instances', two_peer_instances)
+
             def git_and_reporter():
                 git_root = root / 'git-fixture'
                 git_root.mkdir()
@@ -406,6 +478,8 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                 'A2A durable tasks', 'A2A idempotent creation',
                 'A2A terminal cancellation rejection', 'official MCP client roundtrip',
                 'backend LLM gateway and secret redaction',
+                'authenticated peer roundtrip and retry idempotency',
+                'peer credential redaction and removal',
                 'real Git fork and merge parent edges', 'MAC discovery and task routing',
                 'physical-host reporter child PID and stopped lifecycle',
                 'MAC metadata preservation', 'MAC lifecycle rejection',
