@@ -34,6 +34,10 @@ Its optional `--diagnostic-continue` flag records independent failures and proce
 to later phases, then still exits nonzero. Use it to investigate a disposable
 candidate, never to turn a failed check into a pass.
 
+`check_git_states_browser.py` also verifies visible empty history and truncated
+ancestry at desktop/mobile widths using a real 1,005-commit repository. It checks
+that the boundary parent marker is reachable in the actual rendered SVG.
+
 ## Additional product review
 
 After the automated suite passes, review these flows against the same artifact:

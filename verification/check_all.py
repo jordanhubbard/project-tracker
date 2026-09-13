@@ -26,6 +26,8 @@ def main():
                      '--output', str(output / 'peer-ui')]),
         ('session-expiry', [str(scripts / 'check_expiry_browser.py'), str(entrypoint), '--node', args.node,
                             '--output', str(output / 'session-expiry')]),
+        ('git-states', [str(scripts / 'check_git_states_browser.py'), str(entrypoint),
+                        '--node', args.node, '--output', str(output / 'git-states')]),
         ('equal-time-graph', [str(scripts / 'check_graph_browser.py'), str(entrypoint),
                               '--node', args.node, '--output', str(output / 'equal-time-graph')]),
         ('irregular-time-graph', [str(scripts / 'check_graph_browser.py'), str(entrypoint),

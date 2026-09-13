@@ -229,3 +229,5 @@ queue item or let `docs/roadmap/` become a plan archive.
 - Visually compared `_build/ui-final-browser/desktop-board.png` with the user attachment. Dark rail/list/card structure and covers are present, but pale native move selects have poor text contrast and the board overflows. These remain review items for the replacement artifact, not a visual pass.
 
 - Added a 1,005-commit fast-import fixture to the service suite. The retained UI candidate returns 200 commits, marks truncation and preserves the one real parent outside the window; all returned parent lists match Git. Evidence `_build/ui-final-service-boundary.log`. Rendering the boundary marker remains part of final browser review.
+
+- Added and ran `verification/check_git_states_browser.py`: desktop/mobile empty history and 1,005-commit truncated graph views pass, including scrolling to the actual boundary-parent marker with no page errors. Captures/results `_build/ui-final-git-states`. Included this checker in `check_all.py`; overall acceptance still requires the unresolved candidate repairs.

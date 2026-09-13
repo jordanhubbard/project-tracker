@@ -13,7 +13,9 @@ symlink identity, which creates a duplicate repository. Expiry remains active at
 110 seconds. Peer registration succeeds but opening the message dialog throws
 `Illegal invocation`. Graph selection/filter/zoom and timestamp-proportional placement pass after
 waiting for asynchronous rendering. Mobile inspector overflow is confirmed.
-Empty Git history and detached HEAD pass API checks. Visual comparison finds
+Empty Git history and detached HEAD pass API checks. Desktop/mobile empty and
+truncated graph views also pass (`_build/ui-final-git-states/result.json`), including
+a reachable real boundary-parent marker. Visual comparison finds
 poor contrast in the pale task-move controls; final visual acceptance remains open. These results supersede the older candidate
 rows below where noted. Evidence: `_build/ui-final-browser.log`,
 `_build/ui-service-alias.log`, `_build/ui-expiry-browser/result.json`,
