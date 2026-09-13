@@ -11,7 +11,7 @@ the backend owns SQLite, upstream credentials, MAC synchronization, MCP and A2A.
 The application is still being verified. There is no accepted installation or
 background service registration yet. Do not use a retained diagnostic snapshot as
 a production installation. The [active work record](../roadmap/active-work.md) and
-[product evidence](../../verification/product-evidence.md) identify the current
+`verification/product-evidence.md` identify the current
 candidate, passing checks and remaining work.
 
 This local build targets macOS with Node.js 22.23.2, the observed Git 2.50.1 host
@@ -86,7 +86,7 @@ litai lock components/tracker
 litai verify
 ```
 
-The independent checks under [verification](../../verification/README.md) exercise
+The independent checks under `verification/` exercise
 isolated databases, synthetic MAC/LLM endpoints, actual child processes and Chrome.
 They do not write to the production fleet or substitute for a LitAI admission
 receipt. Generated source and diagnostic output live in disposable build storage.
