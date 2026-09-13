@@ -123,6 +123,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
         ] == [basehash]
         (out / "git-api.json").write_text(json.dumps(graph, indent=2) + "\n")
         states = api("GET", f"/api/repos/{repo['id']}/states")["items"]
+        probe = api('POST', f"/api/repos/{repo['id']}/tasks", {'title': 'Workflow representation probe'})
+        state_values_are_names = any(st['name'] == probe['state'] for st in states)
+        api('DELETE', f"/api/tasks/{probe['id']}")
         titles = [
             "Design the repository overview",
             "Show coding sessions by physical host",
@@ -137,7 +140,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                     f"/api/repos/{repo['id']}/tasks",
                     {
                         "title": titles[(i + j) % 5],
-                        "state": st["id"],
+                        "state": st["name"] if state_values_are_names else st["id"],
                         "priority": 1,
                         "description": "Diagnostic fixture for visual and interaction review.",
                         "labels": ["Design" if j else "Platform"],
@@ -217,15 +220,20 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 page.get_by_role("link", name="Fleet", exact=True)
                             ).or_(page.get_by_role("tab", name="Fleet", exact=True)).click()
                             pid_cell = page.get_by_role("cell", name=str(child_pid), exact=True)
-                            pid_cell.wait_for(timeout=10000)
-                            row = pid_cell.locator("..")
+                            host_cell = page.get_by_role('cell', name=socket.gethostname(), exact=True)
+                            host_cell.wait_for(timeout=10000)
+                            row = host_cell.locator('..')
+                            pid_visible = pid_cell.count() > 0
+                            if not pid_visible:
+                                issues.append(f'Fleet row omits actual child PID {child_pid}')
+                            assert any(item.get('pid') == child_pid for item in api('GET', '/api/sessions')['items'])
                             assert socket.gethostname() in row.inner_text(), row.inner_text()
                             assert 'other' in row.inner_text() and 'main' in row.inner_text(), row.inner_text()
                             release_file.touch()
                             assert reporter.wait(timeout=8) == 0
                             row.get_by_text(re.compile(r"^stopped$", re.I)).wait_for(timeout=4000)
                             page.screenshot(path=str(out / "desktop-reporter-fleet.png"), full_page=True)
-                            reporter_verified = True
+                            reporter_verified = pid_visible
                         finally:
                             release_file.touch()
                             if reporter.poll() is None:
@@ -242,7 +250,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         if mode == "Timeline":
                             page.get_by_role("button", name=re.compile(r"^(?:Back to board|Board)$")).or_(
                                 page.get_by_role("link", name=re.compile(r"^(?:Back to board|Board)$"))
-                            ).or_(page.get_by_role("tab", name=re.compile(r"^(?:Back to board|Board)$"))).click()
+                            ).or_(page.get_by_role("tab", name=re.compile(r"^(?:Back to board|Board)$"))).first.click()
                             page.wait_for_timeout(200)
                         page.get_by_role("button", name=mode, exact=True).or_(
                             page.get_by_role("link", name=mode, exact=True)
@@ -266,8 +274,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 label = node.get_attribute("aria-label") or ""
                                 short_hash = re.search(r"[a-f0-9]{7,64}", label)
                                 if short_hash:
-                                    expect(page.locator("#commit-inspector, .commit-inspector")).to_contain_text(re.compile(r"Hash\s*" + short_hash.group()), timeout=2000)
-                                details = page.locator("#commit-inspector, .commit-inspector").inner_text()
+                                    expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(r"Hash\s*" + short_hash.group()), timeout=2000)
+                                details = page.locator("#commit-inspector, .commit-inspector, .inspector").inner_text()
                                 match = re.search(r"\bHash\s+([a-f0-9]{40,64})\b", details)
                                 center = commit_circle(node).evaluate(
                                     "n => {const p = n.ownerSVGElement.createSVGPoint(); p.x=n.cx.baseVal.value; p.y=n.cy.baseVal.value; return p.matrixTransform(n.getCTM()).x}"
@@ -282,8 +290,10 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 if far <= 0 or abs(near / far - 0.1) > 0.03:
                                     issues.append(f"Timeline: 0/10/100-second spacing is not proportional: {timeline_positions}")
                         commit_circle(page.locator("svg [role=button]").first).click()
-                        expect(page.locator("#commit-inspector, .commit-inspector")).to_contain_text(mergehash, timeout=2000)
-                        selected = page.locator("#commit-inspector, .commit-inspector").inner_text()
+                        expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(mergehash, timeout=2000)
+                        selected = page.locator("#commit-inspector, .commit-inspector, .inspector").inner_text()
+                        if re.search(r'\b(?:undefined|NaN)\b', selected):
+                            issues.append(f'{mode} commit inspector contains an undefined value')
                         initial_width = page.locator("svg").first.evaluate("n=>n.getBoundingClientRect().width")
                         page.get_by_role("button", name="Zoom in", exact=True).click()
                         page.wait_for_function("w=>document.querySelector('svg')?.getBoundingClientRect().width>w", arg=initial_width, timeout=2000)
@@ -308,21 +318,21 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).select_option(feature_option)
                         expect(page.locator("svg [role=button]").first).to_have_attribute("aria-label", re.compile(featurehash[:7]), timeout=2000)
                         commit_circle(page.locator("svg [role=button]").first).click()
-                        expect(page.locator("#commit-inspector, .commit-inspector")).to_contain_text(re.compile(r"Hash\s*" + featurehash), timeout=2000)
-                        filtered = page.locator("#commit-inspector, .commit-inspector").inner_text()
+                        expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(r"Hash\s*" + featurehash), timeout=2000)
+                        filtered = page.locator("#commit-inspector, .commit-inspector, .inspector").inner_text()
                         inspector_bounds = page.locator(
-                            "#commit-inspector, .commit-inspector"
+                            "#commit-inspector, .commit-inspector, .inspector"
                         ).bounding_box()
                         deadline = time.monotonic() + 2
                         while True:
                             try:
-                                page.locator("#commit-inspector, .commit-inspector").scroll_into_view_if_needed(timeout=1000)
+                                page.locator("#commit-inspector, .commit-inspector, .inspector").scroll_into_view_if_needed(timeout=1000)
                                 break
                             except Exception:
                                 if time.monotonic() >= deadline:
                                     raise
                         inspector_bounds = page.locator(
-                            "#commit-inspector, .commit-inspector"
+                            "#commit-inspector, .commit-inspector, .inspector"
                         ).bounding_box()
                         page.screenshot(
                             path=str(out / f"{name}-{mode.lower()}-filtered.png"),
@@ -373,7 +383,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 "zoomed_width": zoomed,
                                 "reset_width": reset,
                                 "inspector_visible": page.locator(
-                                    "#commit-inspector, .commit-inspector"
+                                    "#commit-inspector, .commit-inspector, .inspector"
                                 ).is_visible(),
                             }
                         )

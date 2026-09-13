@@ -83,3 +83,15 @@ non-success client response separately. Test an existing discovered MAC task edi
 when the upstream deliberately returns HTTP 503: tracker must return 503, retain
 the cached task unchanged, and create no local task. Test a successful in_progress
 transition and a rejected completed transition independently of this outage case.
+
+
+Install the full supported MAC lifecycle, including states with no tasks currently
+occupying them. Do not replace the workflow with distinct states from the imported
+task snapshot. In particular, discovering a project with only open tasks must still
+advertise in_progress and completed so the operator can request those transitions.
+Use the authoritative lifecycle definitions (or the known supported lifecycle when
+no discovery endpoint exists), merging additional observed states. Keep the workflow
+stable as lists become empty. Let MAC enforce whether a transition is allowed.
+Test an open-only upstream project: in_progress succeeds through the actual transition
+endpoint, while a completed request reaches that endpoint and returns its deliberate
+lifecycle rejection. Rejecting both locally as unknown_state is incomplete integration.

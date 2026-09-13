@@ -220,3 +220,15 @@ format escapes use %1f for a unit separator; git log pretty-format uses %x1f. Us
 splitting on the unit-separator byte. Use the correct command-specific format (or
 another correctly parsed format), and retain refs/heads, remotes and tags. Empty
 refs on a nonempty branched repository is a failure, not an acceptable fallback.
+
+
+The Fleet/Physical host sessions table must visibly include the actual spawned child
+PID, alongside hostname, CLI, branch, task, last heartbeat and derived status. Storing
+pid in SQLite and GET /api/sessions is necessary but insufficient: the operator must
+be able to identify the process from the rendered row. Verify a real reporter child,
+find its exact PID in the Fleet row, then stop it and observe stopped without reload.
+
+A timeline layout node need not have the graph layout's lane property. Its commit
+inspector must never print "Lane undefined". Either resolve the real graph lane for
+that commit, or omit an inapplicable lane field. Verify selected and branch-filtered
+commit details in both Graph and Timeline views; retain real timestamp spacing.

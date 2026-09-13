@@ -109,13 +109,14 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
             assert repo['authority'] == 'local', repo
             repo_id = repo['id']
             workflow = request('GET', f'/api/repos/{repo_id}/states')['items']
-            in_progress = next(state['id'] for state in workflow
-                               if state.get('name', '').lower().replace(' ', '_') == 'in_progress')
             prerequisite = request('POST', f'/api/repos/{repo_id}/tasks', {
                 'title': 'Independent prerequisite'}, 201)
             task = request('POST', f'/api/repos/{repo_id}/tasks', {
                 'title': 'Persist and edit', 'description': 'Initial description'}, 201)
             task_id = task['id']
+            state_values_are_names = any(state['name'] == task['state'] for state in workflow)
+            in_progress = next((state['name'] if state_values_are_names else state['id']) for state in workflow
+                               if state.get('name', '').lower().replace(' ', '_') == 'in_progress')
             changed = request('PATCH', f'/api/tasks/{task_id}', {
                 'revision': task['revision'], 'title': 'Edited title',
                 'state': in_progress, 'labels': ['integration'],
@@ -388,7 +389,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     'name': 'Git DAG fixture', 'local_path': str(git_root)}, 201)
                 empty_graph = request('GET', f"/api/repos/{git_repo['id']}/graph")
                 assert not empty_graph['commits'], empty_graph
-                assert empty_graph.get('state') in ('empty', 'unborn'), empty_graph
+                assert empty_graph.get('state', empty_graph.get('status')) in ('empty', 'unborn'), empty_graph
                 (git_root / 'base.txt').write_text('base')
                 git('add', '.')
                 git('commit', '-m', 'Base commit')
@@ -661,8 +662,9 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert preserved['metadata']['foreign_key'] == 'preserve', preserved
                     assert preserved['metadata']['project_tracker']['labels'] == ['updated'], preserved
                     fleet_states = request('GET', f'/api/repos/{fleet_id}/states')['items']
-                    state_by_name = {item['name'].lower().replace(' ', '_'): item['id'] for item in fleet_states}
+                    state_by_name = {item['name'].lower().replace(' ', '_'): (item['name'] if any(st['name'] == existing['state'] for st in fleet_states) else item['id']) for item in fleet_states}
                     def mac_lifecycle_success():
+                        assert 'in_progress' in state_by_name, ('MAC workflow omits unoccupied in_progress state', fleet_states)
                         refreshed = request('GET', f"/api/tasks/{created['id']}")
                         moved = request('PATCH', f"/api/tasks/{created['id']}", {
                             'revision': refreshed['revision'], 'state': state_by_name['in_progress']})
@@ -674,6 +676,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                                    for method, path, body in fleet.writes), fleet.writes
                     run_phase('mac_lifecycle_success', mac_lifecycle_success)
                     def mac_lifecycle_rejection():
+                        assert 'completed' in state_by_name, ('MAC workflow omits unoccupied completed state', fleet_states)
                         refreshed = request('GET', f"/api/tasks/{created['id']}")
                         request('PATCH', f"/api/tasks/{created['id']}", {
                             'revision': refreshed['revision'], 'state': state_by_name['completed']},

@@ -1,42 +1,40 @@
 # Product completion evidence
 
-The latest generated candidate is retained at `_build/polish-final-diagnostic`.
-It is not the delivered application. LitAI run68694 failed readiness because the authored acceptance contract omitted
-the assigned port argument. The corrected arguments successfully launch the packaged
-artifact on an ephemeral port (`_build/polish-packaged-launch.json`). No admission
-is claimed. Replacement run30297 is recorded in `_build/active-run.json`. Independent observations below
-come from the preceding snapshots of this same generation. Final source changed
-`frontend/dialogs.js` to use explicit named form elements, and changed test metadata;
-repeat affected tests before final delivery.
+The latest complete retained source is `_build/contained-final-diagnostic`.
+It is not an admitted or delivered application. LitAI run76435 finished with a
+persistent-service readiness failure: the acceptance fixture reused an older
+candidate's SQLite database and startup reported a missing message_id column.
+Tracked authority remained unchanged throughout that run. Preserve the old fixture
+and use a new disposable acceptance directory for each replacement generation.
 
 | Requirement | Current evidence | Remaining work |
 | --- | --- | --- |
-| LitAI build and admission | Exact npm manifest/lock; missing Hono peer edge is now present; 27 generated tests pass independently | Native lifecycle result and current receipt |
-| Repository overview and inspector | First registration, origin display, description save pass in browser | Final artifact repeat |
-| Task attributes and SQLite | Full API roundtrip/restart and desktop/mobile dialog attribute edits pass; dependencies, cycle rejection and revision conflict pass | Final artifact repeat |
-| Trello board | Dark rail/list/card structure, colored covers, readable move controls; create/edit/rapid move/search/desktop drag pass | Document overflow from hidden absolute labels; final visual review |
-| Workflow editing | Rename, add and delete populated states with migration pass | No usable reorder control in generated list-menu UI |
-| Live task activity | Second-client create/edit/detail update and durable SSE replay pass | Final artifact repeat |
-| Physical coding sessions | Real child PID, hostname, CLI, branch, outage survival, stopped lifecycle and Fleet display pass | Final artifact repeat |
-| Session expiry | Idle browser becomes stale at 90.03 seconds and sidebar count becomes zero | Final artifact repeat |
-| Checkout identity | Real checkout and symlink registration share one identity | Final artifact repeat |
-| Git DAG/timeline | Real fork/merge ancestry, equal/irregular timestamps, selection, zoom/filter, mobile inspector pass | Final artifact repeat |
-| Empty/truncated Git | Current candidate passes desktop/mobile empty state and reachable boundary marker; backend passes 1,005-commit truncation | Run browser state checker on final artifact |
-| MAC authority | Import, stable polling, SSH equivalence, all-protocol writes, lifecycle rejection, confirmed absence and outage containment pass | Final artifact repeat; setup documentation review |
-| Official MCP | Official HTTP and stdio SDK clients pass | Final artifact repeat |
-| A2A peers | Durable tasks, restart/idempotency, authenticated forwarding, token redaction; two-instance UI remote task creation/removal pass | Final artifact repeat |
-| LLM configuration | Gateway mock verifies prefix/auth/context; desktop/mobile Settings persistence and redaction pass | Final artifact repeat |
-| Public launch path | Diagnostic source runs in isolated fixtures | Accepted-source build, actual litai run, health and final browser checks |
+| LitAI build/admission | Dependency and native stages reached packaged service acceptance | Fresh acceptance fixture, successful admission and current receipt |
+| Repository overview/inspector | Registration, origin and description save pass | Final artifact repeat |
+| Task attributes/SQLite | API restart durability and complete desktop/mobile edits pass | Final artifact repeat |
+| Trello board | Dark rail/lists/cards/covers visually reviewed; dimensions and rightmost-list scrolling pass at1440/390 | Final artifact review |
+| Workflow editing | Rename, add, reorder, reload and populated deletion migration pass | Final artifact repeat |
+| Live task activity | Second-client create/edit and durable SSE replay pass | Final artifact repeat |
+| Physical coding sessions | Actual child PID/host/CLI/branch stored; reporter survives backend outage and stops | Fleet row omits PID |
+| Session expiry | Passive stale status/sidebar zero at95.11 seconds | Final artifact repeat |
+| Checkout identity | Realpath/symlink identity passes | Final artifact repeat |
+| Git graph/timeline | Real refs/parent edges, branch filter, selection, zoom, proportional time and mobile inspector pass | Timeline inspector prints Lane undefined |
+| Empty/truncated Git | Both widths pass empty state and reachable outside-window parent marker | Final artifact repeat |
+| MAC authority | Discovery, stable import, metadata preservation, absence/outage separation and503/no shadow tasks pass | Workflow omits unoccupied in_progress/completed states, preventing transitions |
+| Official MCP | Official HTTP and stdio SDK client roundtrips pass | Final artifact repeat |
+| A2A peers | Durable tasks/retries, authenticated forwarding and peer UI create/remove pass | Final artifact repeat |
+| LLM settings | Gateway prefix/auth/context, UI persistence and secret redaction pass | Final artifact repeat |
+| Public launch | Retained source executes in isolated test processes | Accepted-source build, actual public litai run and final health/browser checks |
 
-Evidence includes `_build/polish-backend-ready.log`,
-`_build/polish-native-diagnostic.log`, `_build/polish-board-controls.log`,
-`_build/polish-peer-ready/result.json`, `_build/polish-expiry/result.json`,
-`_build/polish-graph-ready.log` and `_build/polish-graph-irregular.log`.
+Evidence: `_build/contained-backend-ready2.log`, `_build/contained-board-ready2`,
+`_build/contained-peer-ready`, `_build/contained-expiry`, `_build/contained-git-states`,
+`_build/contained-graph-ready3` and `_build/contained-graph-irregular2`.
+Final source changed main.js to lazy imports, plus README/test manifest/BOM/spec map;
+backend and UI implementations match the tested earlier snapshot. Recheck entrypoint
+behavior before transferring execution claims to the final artifact.
 
-The isolated browser-only overflow experiment in `_build/polish-overflow-diagnosis`
-changed card-action positioning temporarily: widths became 1440/390, then returned
-to 1525/1245 after restoring the original style. It identifies the cause; it is not
-a passing product result. Generated source was not edited.
-
-`check_all.py` runs the independent product suite and does not issue a LitAI receipt.
-No production MAC writes, external publication or release is required for this task.
+Checker adaptations support stable symbolic task-state keys with separate workflow
+IDs and display names, custom role dialogs and equivalent accessible controls.
+They preserve failure for unavailable MAC transitions and missing Fleet PID.
+The independent suite never creates a LitAI receipt. No production MAC writes,
+external publication or fleet-wide installation is required for this task.

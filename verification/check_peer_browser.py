@@ -72,7 +72,7 @@ with tempfile.TemporaryDirectory() as root:
       tasks=request(b,'GET',f"/api/repos/{remote['id']}/tasks",token=token)['items']
       assert any(t['title']=='Created through peer UI' for t in tasks), tasks
       assert token not in json.dumps(request(a,'GET','/api/peers'))
-      active_dialog = page.locator('dialog[open]')
+      active_dialog = page.get_by_role('dialog')
       if active_dialog.count():
         active_dialog.get_by_role('button', name=re.compile(r'^(?:Close|Cancel)$')).click()
       page.get_by_role('button',name=re.compile(r'^Remove(?: peer)?$')).click()
