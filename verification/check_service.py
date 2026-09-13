@@ -382,6 +382,11 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                                                    env=git_env, stderr=subprocess.PIPE,
                                                    text=True, timeout=8).strip()
                 git('init', '-b', 'main')
+                git_repo = request('POST', '/api/repos', {
+                    'name': 'Git DAG fixture', 'local_path': str(git_root)}, 201)
+                empty_graph = request('GET', f"/api/repos/{git_repo['id']}/graph")
+                assert not empty_graph['commits'], empty_graph
+                assert empty_graph.get('state') in ('empty', 'unborn'), empty_graph
                 (git_root / 'base.txt').write_text('base')
                 git('add', '.')
                 git('commit', '-m', 'Base commit')
@@ -398,13 +403,16 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                 main_hash = git('rev-parse', 'HEAD')
                 git('merge', '--no-ff', 'feature', '-m', 'Merge feature')
                 merge_hash = git('rev-parse', 'HEAD')
-                git_repo = request('POST', '/api/repos', {
-                    'name': 'Git DAG fixture', 'local_path': str(git_root)}, 201)
                 graph = request('GET', f"/api/repos/{git_repo['id']}/graph")
                 commits = {commit['hash']: commit for commit in graph['commits']}
                 assert set(commits[merge_hash]['parents']) == {feature_hash, main_hash}, graph
                 assert commits[feature_hash]['parents'] == [base_hash], graph
                 assert commits[main_hash]['parents'] == [base_hash], graph
+
+                git('checkout', '--detach', merge_hash)
+                detached = request('GET', f"/api/repos/{git_repo['id']}/graph")
+                assert merge_hash in {c['hash'] for c in detached['commits']}, detached
+                git('checkout', 'main')
 
                 child_pid_file = root / 'reported-child.pid'
                 child_release_file = root / 'release-reported-child'

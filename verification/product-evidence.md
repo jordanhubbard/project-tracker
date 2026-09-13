@@ -11,8 +11,10 @@ inspector saves and Settings pass at desktop/mobile. Board document widths are
 1526/1440 and 1299/390, so layout still fails. Service checks pass except checkout
 symlink identity, which creates a duplicate repository. Expiry remains active at
 110 seconds. Peer registration succeeds but opening the message dialog throws
-`Illegal invocation`. Graph checks are being made tolerant of asynchronous rendering;
-mobile inspector overflow is confirmed. These results supersede the older candidate
+`Illegal invocation`. Graph selection/filter/zoom and timestamp-proportional placement pass after
+waiting for asynchronous rendering. Mobile inspector overflow is confirmed.
+Empty Git history and detached HEAD pass API checks. Visual comparison finds
+poor contrast in the pale task-move controls; final visual acceptance remains open. These results supersede the older candidate
 rows below where noted. Evidence: `_build/ui-final-browser.log`,
 `_build/ui-service-alias.log`, `_build/ui-expiry-browser/result.json`,
 `_build/ui-final-peer/page-errors.json`, `_build/ui-final-graph-ready.log`.
