@@ -1,6 +1,6 @@
 {
   "schema": "literate-ai/persistent-service-acceptance@1",
-  "specification_set_identity": "sha256:4195cd54588d2aab087c9d78cc0e7cc96380409c98fd577bc79b80b82723c987",
+  "specification_set_identity": "sha256:f598058f5d7ec702c69da15db0c32d6b3ebcfd54650ce355a51a2e3356f318e6",
   "process": {
     "environment": {
       "TRACKER_DATA_DIR": "/Users/jkh/Src/project-tracker/_build/acceptance-data",
@@ -9,7 +9,13 @@
       "TRACKER_LLM_KEY": ""
     },
     "startup_timeout_seconds": 30,
-    "timeout_seconds": 120
+    "timeout_seconds": 120,
+    "arguments": [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "{port}"
+    ]
   },
   "readiness": {
     "path": "/health",

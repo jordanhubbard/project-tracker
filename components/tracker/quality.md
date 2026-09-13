@@ -174,3 +174,26 @@ browser exception, then send an actual remote task. Browser crypto methods requi
 their receiver: use crypto.randomUUID() as a method call or bind it explicitly;
 extracting the function and invoking it unbound throws Illegal invocation in Chrome.
 Generate the retry-stable message ID once per message draft and retain it on retry.
+
+
+## Final concrete board regressions
+
+A horizontally scrollable board must contain absolutely positioned accessibility
+labels as well as visible cards. A visually-hidden move label with an initial
+static position outside the viewport can use the page as its containing block and
+increase document.scrollWidth even when its visible card is inside an overflow
+auto scroller. Give each card action container an appropriate positioned containing
+block (for example position:relative on .card-actions), or use an equivalent
+containment that retains accessible names. Verify every task and list remains
+reachable through board scrolling. Reproduce with five columns and at least two
+cards per column: at 1440 and 390 pixels the document stays at viewport width,
+including after scrolling to the rightmost list. Merely adding min-width:0 and
+hiding body overflow does not fix this absolute-label escape.
+
+The browser must expose actual workflow reordering controls. A List menu containing
+only rename/delete and an Add list button is incomplete, even when the backend
+reorder API works. Provide visible, labelled Move list left/right or equivalent
+keyboard-operable controls. Add a list at the end, move it one position earlier,
+then reload: the order must persist and card assignments remain unchanged. Keep
+rename/add/delete with populated-state task migration working. The controls must
+be usable at desktop and 390px, not only via an undocumented API or internal IDs.

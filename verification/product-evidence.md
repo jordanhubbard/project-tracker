@@ -1,8 +1,10 @@
 # Product completion evidence
 
 The latest generated candidate is retained at `_build/polish-final-diagnostic`.
-It is not the delivered application. LitAI run68694 is still under native validation;
-its state is recorded in `_build/active-run.json`. Independent observations below
+It is not the delivered application. LitAI run68694 failed readiness because the authored acceptance contract omitted
+the assigned port argument. The corrected arguments successfully launch the packaged
+artifact on an ephemeral port (`_build/polish-packaged-launch.json`). No admission
+is claimed. Replacement run30297 is recorded in `_build/active-run.json`. Independent observations below
 come from the preceding snapshots of this same generation. Final source changed
 `frontend/dialogs.js` to use explicit named form elements, and changed test metadata;
 repeat affected tests before final delivery.
@@ -19,7 +21,7 @@ repeat affected tests before final delivery.
 | Session expiry | Idle browser becomes stale at 90.03 seconds and sidebar count becomes zero | Final artifact repeat |
 | Checkout identity | Real checkout and symlink registration share one identity | Final artifact repeat |
 | Git DAG/timeline | Real fork/merge ancestry, equal/irregular timestamps, selection, zoom/filter, mobile inspector pass | Final artifact repeat |
-| Empty/truncated Git | Prior candidate browser check passes empty state and reachable boundary marker; current backend passes 1,005-commit truncation | Run browser state checker on final artifact |
+| Empty/truncated Git | Current candidate passes desktop/mobile empty state and reachable boundary marker; backend passes 1,005-commit truncation | Run browser state checker on final artifact |
 | MAC authority | Import, stable polling, SSH equivalence, all-protocol writes, lifecycle rejection, confirmed absence and outage containment pass | Final artifact repeat; setup documentation review |
 | Official MCP | Official HTTP and stdio SDK clients pass | Final artifact repeat |
 | A2A peers | Durable tasks, restart/idempotency, authenticated forwarding, token redaction; two-instance UI remote task creation/removal pass | Final artifact repeat |

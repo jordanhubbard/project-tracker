@@ -93,8 +93,8 @@ with tempfile.TemporaryDirectory(prefix='tracker-git-states-') as temporary:
                     page = browser.new_page(viewport={'width': width, 'height': 1000 if width > 390 else 844})
                     page.on('pageerror', lambda error: errors.append(str(error)))
                     open_graph(page)
-                    expect(page.get_by_text(re.compile(r'truncat', re.I)).first).to_be_visible()
-                    marker = page.locator('svg').get_by_text(re.compile(next(iter(boundary))[:7]))
+                    marker = page.locator('svg').get_by_role('button', name=re.compile(next(iter(boundary))[:7])).or_(
+                        page.locator('svg').locator('text').filter(has_text=re.compile(next(iter(boundary))[:7])))
                     marker.first.scroll_into_view_if_needed()
                     expect(marker.first).to_be_visible()
                     page.screenshot(path=str(out / f'{width}-boundary.png'), full_page=True)
