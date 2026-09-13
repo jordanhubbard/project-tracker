@@ -156,7 +156,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         lambda m: issues.append(m.text) if m.type == "error" else None,
                     )
                     page.goto(base, wait_until="domcontentloaded")
-                    page.get_by_role("button", name="Open board", exact=True).click()
+                    page.get_by_role("button", name="Open board", exact=True).or_(
+                        page.get_by_role("link", name="Open board", exact=True)
+                    ).click()
                     page.wait_for_timeout(700)
                     page.screenshot(path=str(out / f"{name}-board.png"), full_page=True)
                     (out / f"{name}-board.aria.txt").write_text(
@@ -168,10 +170,16 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                     checks = []
                     for mode in ("Graph", "Timeline"):
                         if mode == "Timeline":
-                            page.get_by_role("button", name="Board", exact=True).click()
+                            page.get_by_role("button", name="Board", exact=True).or_(
+                                page.get_by_role("link", name="Board", exact=True)
+                            ).click()
                             page.wait_for_timeout(200)
-                        page.get_by_role("button", name=mode, exact=True).click()
+                        page.get_by_role("button", name=mode, exact=True).or_(
+                            page.get_by_role("link", name=mode, exact=True)
+                        ).click()
                         page.wait_for_timeout(400)
+                        if page.locator("#branch-filter").input_value():
+                            page.locator("#branch-filter").select_option("")
                         page.screenshot(
                             path=str(out / f"{name}-{mode.lower()}.png"), full_page=True
                         )
@@ -181,14 +189,23 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         page.locator("svg g[role=button]").first.click()
                         selected = page.locator("#commit-inspector").inner_text()
                         page.get_by_role("button", name="Zoom in", exact=True).click()
-                        zoomed = page.locator("#graph svg").evaluate(
+                        zoomed = page.locator("svg").first.evaluate(
                             "(node)=>node.getBoundingClientRect().width"
                         )
                         page.get_by_role("button", name="Reset", exact=True).click()
-                        reset = page.locator("#graph svg").evaluate(
+                        reset = page.locator("svg").first.evaluate(
                             "(node)=>node.getBoundingClientRect().width"
                         )
-                        page.locator("#branch-filter").select_option(featurehash)
+                        options = page.locator("#branch-filter option").evaluate_all(
+                            "nodes => nodes.map(node => ({value:node.value, text:node.textContent}))"
+                        )
+                        feature_option = next(
+                            option["value"]
+                            for option in options
+                            if option["value"] in (featurehash, "refs/heads/feature")
+                            or option["text"] in ("feature", "refs/heads/feature")
+                        )
+                        page.locator("#branch-filter").select_option(feature_option)
                         page.locator("svg g[role=button]").first.click()
                         filtered = page.locator("#commit-inspector").inner_text()
                         inspector_bounds = page.locator(

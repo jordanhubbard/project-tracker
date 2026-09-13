@@ -116,7 +116,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         lambda m: issues.append(m.text) if m.type == "error" else None,
                     )
                     page.goto(base, wait_until="domcontentloaded")
-                    page.get_by_role("button", name="Open board", exact=True).click()
+                    page.get_by_role("button", name="Open board", exact=True).or_(
+                        page.get_by_role("link", name="Open board", exact=True)
+                    ).click()
                     page.wait_for_timeout(700)
                     page.screenshot(path=str(out / f"{name}-board.png"), full_page=True)
                     (out / f"{name}-board.aria.txt").write_text(
@@ -239,12 +241,32 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         check("second-client SSE update", remote)
 
                         def workflow():
-                            old_name = "open" if name == "desktop" else "Ready"
+                            current = api("GET", f"/api/repos/{repo['id']}/states")[
+                                "items"
+                            ]
+                            old_name = current[0]["name"]
                             new_name = "Ready" if name == "desktop" else "Mobile ready"
-                            page.once("dialog", lambda dialog: dialog.accept(new_name))
-                            page.get_by_role(
+
+                            def rename(dialog):
+                                if "|" in dialog.default_value:
+                                    dialog.accept(
+                                        "\n".join(
+                                            f"{item['id']}|{new_name if index == 0 else item['name']}"
+                                            for index, item in enumerate(current)
+                                        )
+                                    )
+                                else:
+                                    dialog.accept(new_name)
+
+                            page.once("dialog", rename)
+                            control = page.get_by_role(
                                 "button", name=f"Edit {old_name}", exact=True
-                            ).click()
+                            )
+                            if not control.count():
+                                control = page.get_by_role(
+                                    "button", name="Edit workflow", exact=True
+                                ).first
+                            control.click()
                             page.wait_for_timeout(500)
                             assert any(
                                 x["name"] == new_name
@@ -263,8 +285,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                         "menu|sidebar|Toggle repositories", re.I
                                     ),
                                 ).click()
-                            page.get_by_role(
-                                "button", name="Activity", exact=True
+                            page.get_by_role("button", name="Activity", exact=True).or_(
+                                page.get_by_role("link", name="Activity", exact=True)
                             ).click()
                             page.get_by_role(
                                 "heading", name=re.compile("Activity", re.I)
@@ -274,9 +296,17 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 in page.locator("main").inner_text()
                             )
                             if name == "mobile":
-                                navigation = page.get_by_role(
-                                    "button", name="Activity", exact=True
-                                ).bounding_box()
+                                navigation = (
+                                    page.get_by_role(
+                                        "button", name="Activity", exact=True
+                                    )
+                                    .or_(
+                                        page.get_by_role(
+                                            "link", name="Activity", exact=True
+                                        )
+                                    )
+                                    .bounding_box()
+                                )
                                 if navigation and navigation["x"] >= 0:
                                     page.get_by_role(
                                         "button",
@@ -294,7 +324,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_label("Gateway URL", exact=True).fill(
                                 "http://127.0.0.1:9/v1"
                             )
-                            page.get_by_label("API key", exact=True).fill(
+                            page.get_by_label(re.compile(r"^API key")).fill(
                                 "disposable-browser-secret"
                             )
                             page.get_by_label("Model", exact=True).fill(
@@ -311,10 +341,16 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             )
                             assert "disposable-browser-secret" not in json.dumps(saved)
                             assert (
-                                page.get_by_label("API key", exact=True).input_value()
+                                page.get_by_label(re.compile(r"^API key")).input_value()
                                 == ""
                             )
                             page.reload(wait_until="domcontentloaded")
+                            if not page.get_by_label(
+                                "Gateway URL", exact=True
+                            ).is_visible():
+                                page.get_by_role(
+                                    "button", name="Settings", exact=True
+                                ).click()
                             page.get_by_label("Gateway URL", exact=True).wait_for()
                             assert (
                                 page.get_by_label(
@@ -327,7 +363,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 == "browser-fixture-model"
                             )
                             assert (
-                                page.get_by_label("API key", exact=True).input_value()
+                                page.get_by_label(re.compile(r"^API key")).input_value()
                                 == ""
                             )
 
