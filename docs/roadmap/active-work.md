@@ -292,3 +292,8 @@ queue item or let `docs/roadmap/` become a plan archive.
 - Evidence remains under `_build/workflow-pid-*`. No accepted artifact, public
   installation or completion claim exists. No remote forge is configured; the
   local worktree/branch survey found only this main worktree.
+
+- Visual review found pale-on-white native task move selects. Stopped the next run
+  during preflight (exit143, no generation child) to include dark control styling
+  before spending another generation. The browser screenshot is retained at
+  `_build/workflow-pid-board-final/desktop-board.png`.

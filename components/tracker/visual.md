@@ -61,6 +61,14 @@ values, preserve saved colors on edit, and check computed backgrounds in the
 browser. Serve a local favicon or declare one that does not create a 404 request.
 No console, CSP, failed-resource or uncaught page errors are acceptable.
 
+## Readable board controls
+
+Native form controls participate in the dark theme, including the compact task
+move selects on every card. Set a dark color-scheme and explicit compatible
+foreground/background colors where needed. A pale label on a default white native
+select is unreadable even if its action works. Inspect the closed select and its
+options at desktop and mobile widths; retain visible keyboard focus.
+
 ## Actual navigation destinations
 
 Dispatch Activity and Agents & peers before the no-selected-repository overview
