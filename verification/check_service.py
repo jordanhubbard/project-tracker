@@ -429,7 +429,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                             child_pid = int(child_pid_file.read_text())
                             observed = next((item for item in request('GET', '/api/sessions')['items']
                                              if item.get('pid') == child_pid
-                                             and item.get('status') == 'running'), None)
+                                             and item.get('status') in ('running', 'active')), None)
                             if observed:
                                 break
                         if reporter.poll() is not None:

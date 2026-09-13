@@ -24,6 +24,8 @@ def main():
                    '--output', str(output / 'board')]),
         ('peer-ui', [str(scripts / 'check_peer_browser.py'), str(entrypoint), '--node', args.node,
                      '--output', str(output / 'peer-ui')]),
+        ('session-expiry', [str(scripts / 'check_expiry_browser.py'), str(entrypoint), '--node', args.node,
+                            '--output', str(output / 'session-expiry')]),
         ('equal-time-graph', [str(scripts / 'check_graph_browser.py'), str(entrypoint),
                               '--node', args.node, '--output', str(output / 'equal-time-graph')]),
         ('irregular-time-graph', [str(scripts / 'check_graph_browser.py'), str(entrypoint),
