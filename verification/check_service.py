@@ -182,8 +182,11 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
             assert sum(row['title'] == 'Peer idempotency' for row in rows['items']) == 1, rows
             stop()
             start()
-            persisted = rpc('tasks/get', {'id': peer_task['id']})
-            assert persisted['result']['id'] == peer_task['id'], persisted
+            def a2a_restart():
+                persisted = rpc('tasks/get', {'id': peer_task['id']})
+                assert 'result' in persisted, persisted
+                assert persisted['result']['id'] == peer_task['id'], persisted
+            run_phase('a2a_restart', a2a_restart)
             async def mcp_roundtrip():
                 from mcp import Client
                 async with Client(base + '/mcp', read_timeout_seconds=8) as client:
@@ -463,17 +466,24 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                         time.sleep(0.2)
                     assert existing, ('MAC tasks were not imported', page,
                                       request('GET', '/health'))
-                    time.sleep(5.5)
-                    polled = request('GET', f"/api/tasks/{existing['id']}")
-                    assert polled['revision'] == existing['revision'], (
-                        'Unchanged MAC polling changed the task revision', existing, polled)
-                    equivalent = request('POST', '/api/repos', {
-                        'name': 'Equivalent SSH registration',
-                        'remote_url': 'git@example.test:team/mac-owned.git'}, (200, 201, 409))
-                    if 'error' not in equivalent:
-                        assert equivalent['id'] == fleet_id and equivalent['authority'] == 'mac', equivalent
-                    repositories = request('GET', '/api/repos')['items']
-                    assert len(repositories) == 1 and repositories[0]['id'] == fleet_id, repositories
+                    def imported_metadata():
+                        assert existing['labels'] == ['fleet'], existing
+                    run_phase('mac_metadata_import', imported_metadata)
+                    def stable_poll():
+                        time.sleep(5.5)
+                        polled = request('GET', f"/api/tasks/{existing['id']}")
+                        assert polled['revision'] == existing['revision'], (
+                            'Unchanged MAC polling changed the task revision', existing, polled)
+                    run_phase('mac_poll_stability', stable_poll)
+                    def equivalent_registration():
+                        equivalent = request('POST', '/api/repos', {
+                            'name': 'Equivalent SSH registration',
+                            'remote_url': 'git@example.test:team/mac-owned.git'}, (200, 201, 409))
+                        if 'error' not in equivalent:
+                            assert equivalent['id'] == fleet_id and equivalent['authority'] == 'mac', equivalent
+                        repositories = request('GET', '/api/repos')['items']
+                        assert len(repositories) == 1 and repositories[0]['id'] == fleet_id, repositories
+                    run_phase('mac_equivalent_registration', equivalent_registration)
                     assert not fleet.writes, ('Read-only startup mutated the fleet', fleet.writes)
                     unmatched = request('POST', '/api/repos', {
                         'name': 'Confirmed absent from MAC',
@@ -539,17 +549,20 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                                and body.get('project') == fleet.project
                                and body.get('title') == 'Route MAC task through A2A'
                                for method, path, body in fleet.writes), fleet.writes
+                    existing = request('GET', f"/api/tasks/{existing['id']}")
                     request('PATCH', f"/api/tasks/{existing['id']}", {
                         'revision': existing['revision'], 'labels': ['updated']})
                     preserved = next(item for item in fleet.tasks if item['id'] == 'task_fixture_1')
                     assert preserved['metadata']['foreign_key'] == 'preserve', preserved
                     assert preserved['metadata']['project_tracker']['labels'] == ['updated'], preserved
-                    refreshed = request('GET', f"/api/tasks/{created['id']}")
-                    request('PATCH', f"/api/tasks/{created['id']}", {
-                        'revision': refreshed['revision'], 'state': 'completed'},
-                        (400, 403, 409, 422))
-                    unchanged = request('GET', f"/api/tasks/{created['id']}")
-                    assert unchanged['state'] != 'completed', unchanged
+                    def mac_lifecycle_rejection():
+                        refreshed = request('GET', f"/api/tasks/{created['id']}")
+                        request('PATCH', f"/api/tasks/{created['id']}", {
+                            'revision': refreshed['revision'], 'state': 'completed'},
+                            (400, 403, 409, 422))
+                        unchanged = request('GET', f"/api/tasks/{created['id']}")
+                        assert unchanged['state'] != 'completed', unchanged
+                    run_phase('mac_lifecycle_rejection', mac_lifecycle_rejection)
                     fleet.unavailable = True
                     time.sleep(6)
                     unknown = request('POST', '/api/repos', {

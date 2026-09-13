@@ -8,7 +8,7 @@ require a particular envelope key. Protocol JSON-RPC responses remain untouched.
 def entity_response(value):
     if not isinstance(value, dict) or "jsonrpc" in value or "error" in value:
         return value
-    for key in ("repository", "task", "session", "peer"):
+    for key in ("repository", "repo", "task", "session", "peer"):
         if set(value) == {key} and isinstance(value[key], dict):
             return value[key]
     if "items" not in value:
@@ -16,6 +16,7 @@ def entity_response(value):
             key
             for key in (
                 "repositories",
+                "repos",
                 "tasks",
                 "states",
                 "sessions",

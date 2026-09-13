@@ -155,10 +155,23 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         "console",
                         lambda m: issues.append(m.text) if m.type == "error" else None,
                     )
+                    page.on("response", lambda r: issues.append(f"HTTP {r.status}: {r.url}") if r.status >= 400 else None)
                     page.goto(base, wait_until="domcontentloaded")
-                    page.get_by_role("button", name="Open board", exact=True).or_(
-                        page.get_by_role("link", name="Open board", exact=True)
-                    ).click()
+                    try:
+                        page.get_by_role("button", name="Open board", exact=True).or_(
+                            page.get_by_role("link", name="Open board", exact=True)
+                        ).click()
+                    except Exception:
+                        page.screenshot(
+                            path=str(out / f"{name}-startup.png"), full_page=True
+                        )
+                        (out / f"{name}-startup.aria.txt").write_text(
+                            page.locator("body").aria_snapshot()
+                        )
+                        (out / f"{name}-startup-errors.json").write_text(
+                            json.dumps(issues, indent=2)
+                        )
+                        raise
                     page.wait_for_timeout(700)
                     page.screenshot(path=str(out / f"{name}-board.png"), full_page=True)
                     (out / f"{name}-board.aria.txt").write_text(
