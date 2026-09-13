@@ -12,6 +12,8 @@ parser.add_argument("--node", default="/opt/homebrew/opt/node@22/bin/node")
 parser.add_argument(
     "--output", type=Path, default=Path("_build/graph-browser-behavior")
 )
+parser.add_argument("--irregular-times", action="store_true",
+                    help="Use commit times at 0, 10, 100 and 110 seconds and verify horizontal spacing")
 args = parser.parse_args()
 out = args.output
 out.mkdir(parents=True, exist_ok=True)
@@ -89,13 +91,19 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
         git("checkout", "-b", "feature")
         (gitroot / "feature").write_text("feature")
         git("add", ".")
+        if args.irregular_times:
+            git_env.update(GIT_AUTHOR_DATE="2026-09-01T12:00:10Z", GIT_COMMITTER_DATE="2026-09-01T12:00:10Z")
         git("commit", "-m", "Feature")
         featurehash = git("rev-parse", "HEAD")
         git("checkout", "main")
         (gitroot / "main").write_text("main")
         git("add", ".")
+        if args.irregular_times:
+            git_env.update(GIT_AUTHOR_DATE="2026-09-01T12:01:40Z", GIT_COMMITTER_DATE="2026-09-01T12:01:40Z")
         git("commit", "-m", "Main")
         mainhash = git("rev-parse", "HEAD")
+        if args.irregular_times:
+            git_env.update(GIT_AUTHOR_DATE="2026-09-01T12:01:50Z", GIT_COMMITTER_DATE="2026-09-01T12:01:50Z")
         git("merge", "--no-ff", "feature", "-m", "Merge feature")
         mergehash = git("rev-parse", "HEAD")
         repo = api(
@@ -199,6 +207,26 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         invalid = page.locator("svg").evaluate_all(
                             "els => els.flatMap(el => [...el.querySelectorAll('*')].flatMap(n => [...n.attributes].filter(a => /NaN|Infinity/.test(a.value)).map(a => a.name + '=' + a.value)))"
                         )
+                        timeline_positions = {}
+                        if mode == "Timeline" and args.irregular_times:
+                            nodes = page.locator("svg g[role=button]")
+                            for index in range(nodes.count()):
+                                node = nodes.nth(index)
+                                node.click()
+                                details = page.locator("#commit-inspector").inner_text()
+                                match = re.search(r"\bHash\s+([a-f0-9]{40,64})\b", details)
+                                center = node.locator("circle").first.evaluate(
+                                    "n => {const p = n.ownerSVGElement.createSVGPoint(); p.x=n.cx.baseVal.value; p.y=n.cy.baseVal.value; return p.matrixTransform(n.getCTM()).x}"
+                                )
+                                if match:
+                                    timeline_positions[match.group(1)] = center
+                            if not all(h in timeline_positions for h in (basehash, featurehash, mainhash)):
+                                issues.append("Timeline: missing individually selectable timestamp nodes")
+                            else:
+                                near = timeline_positions[featurehash] - timeline_positions[basehash]
+                                far = timeline_positions[mainhash] - timeline_positions[basehash]
+                                if far <= 0 or abs(near / far - 0.1) > 0.03:
+                                    issues.append(f"Timeline: 0/10/100-second spacing is not proportional: {timeline_positions}")
                         page.locator("svg g[role=button]").first.click()
                         selected = page.locator("#commit-inspector").inner_text()
                         page.get_by_role("button", name="Zoom in", exact=True).click()
@@ -269,6 +297,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         checks.append(
                             {
                                 "mode": mode,
+                                "timeline_positions": timeline_positions,
                                 "svg_count": page.locator("svg").count(),
                                 "invalid_coordinates": invalid,
                                 "selected": selected,
