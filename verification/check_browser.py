@@ -258,6 +258,12 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 "description": "Updated by an independent HTTP client"})
                             page.get_by_text(updated_title, exact=True).wait_for(timeout=2000)
                             assert not page.get_by_text(f"Remote change visible {name}", exact=True).is_visible()
+                            page.get_by_text(updated_title, exact=True).click()
+                            description = page.get_by_role("textbox", name="Description", exact=True)
+                            description.wait_for()
+                            assert description.input_value() == "Updated by an independent HTTP client"
+                            page.keyboard.press("Escape")
+                            page.get_by_role("dialog").wait_for(state="hidden")
 
                         check("second-client SSE update", remote)
 
