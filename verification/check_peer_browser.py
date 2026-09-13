@@ -49,13 +49,13 @@ with tempfile.TemporaryDirectory() as root:
       page.get_by_role('button',name='Agents & peers',exact=True).click()
       if not page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL)$')).count():
         page.get_by_role('button', name=re.compile(r'^Register (?:a )?peer$')).click()
-      display = page.get_by_role('textbox', name='Display name', exact=True)
+      display = page.get_by_role('textbox', name=re.compile(r'^(?:Display name|Peer name)$'))
       if display.count(): display.fill('Remote verification peer')
       page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL)$')).fill(b)
-      page.get_by_label(re.compile(r'^(?:(?:Peer t|T)oken \(stored backend-only\)|Peer access token \(write only\)|Bearer credential \(stored on this backend only\)|Access token \(write only\))$')).fill(token)
+      page.get_by_label(re.compile(r'^(?:(?:Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\))$')).fill(token)
       scope = page.get_by_role('dialog') if page.get_by_role('dialog').count() else page
       scope.get_by_role('button',name=re.compile(r'^Register(?: peer)?$')).click()
-      page.get_by_role('button',name='Send message',exact=True).click()
+      page.get_by_role('button',name=re.compile(r'^Send (?:a )?message(?: to .+)?$')).click()
       control=page.get_by_role('combobox',name='Remote repository id',exact=True).or_(page.get_by_role('textbox',name='Remote repository id',exact=True))
       page.wait_for_timeout(500)
       (out/'dialog.aria.txt').write_text(page.locator('body').aria_snapshot())
@@ -75,7 +75,7 @@ with tempfile.TemporaryDirectory() as root:
       active_dialog = page.get_by_role('dialog')
       if active_dialog.count():
         active_dialog.get_by_role('button', name=re.compile(r'^(?:Close|Cancel)$')).click()
-      page.get_by_role('button',name=re.compile(r'^Remove(?: peer)?$')).click()
+      page.get_by_role('button',name=re.compile(r'^Remove(?: peer(?: .+)?)?$')).click()
       confirm = page.get_by_role('button', name='Confirm', exact=True)
       if confirm.count(): confirm.click()
       deadline=time.monotonic()+2

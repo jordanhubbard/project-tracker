@@ -69,6 +69,18 @@ foreground/background colors where needed. A pale label on a default white nativ
 select is unreadable even if its action works. Inspect the closed select and its
 options at desktop and mobile widths; retain visible keyboard focus.
 
+## Hidden dialog lifecycle
+
+A hidden modal container must not render, cover the workspace, intercept pointer
+input, or retain keyboard focus. Preserve the HTML hidden attribute's behavior even
+when component rules set display:flex or display:grid. The initially empty dialog
+root must be hidden on first load; opening a dialog makes it visible, and Cancel,
+Escape and successful Save hide it again. Use an explicit hidden-state CSS rule
+with sufficient precedence over the component display rule. Verify real Chrome
+clicks after cold load and after each dismissal path, at desktop and 390px widths.
+Do not force clicks, remove the overlay, inject CSS, or bypass browser policies in
+acceptance tests.
+
 ## Actual navigation destinations
 
 Dispatch Activity and Agents & peers before the no-selected-repository overview

@@ -297,3 +297,27 @@ queue item or let `docs/roadmap/` become a plan archive.
   during preflight (exit143, no generation child) to include dark control styling
   before spending another generation. The browser screenshot is retained at
   `_build/workflow-pid-board-final/desktop-board.png`.
+
+
+### Native rebuild accepted; hidden dialog repair
+
+- The editor/contrast rebuild completed successfully with no tracked authority
+  drift. Exact result and artifact identity are retained in
+  `_build/editor-contrast-native-result.json`. This is native lifecycle success,
+  not a claim that the requested application is ready for delivery.
+- The final service passed independent backend checks, including effective LLM
+  settings, explicit key clear across restart, MAC transitions and rejection,
+  official MCP/A2A, SQLite/SSE and actual coding-child outage survival. The native
+  hook passed all 35 cases. The full scoped npm BOM passes reconciliation.
+- Unmodified browser checks fail because the empty dialog root's display:flex
+  overrides its hidden attribute and intercepts clicks. A clearly labelled,
+  browser-only diagnostic override isolates that defect: board/task attributes,
+  workflow lifecycle, inspector, Settings, peers, expiry and equal/irregular and
+  empty/truncated Git views all work at the tested desktop/mobile widths. These
+  probes do not count as acceptance and are never promoted into normal checkers.
+- Added the hidden-dialog lifecycle requirement. Promoted only API and accessible
+  selector compatibility fixes from the normal diagnostic checkers: key/name/id
+  state inference, nested repository detail, current workflow/Settings/peer controls
+  and branch clearing by label. Real persistence and protocol assertions remain.
+- Regenerate through LitAI, then require all unmodified browser checks and the
+  public launch path to pass before claiming the complete objective.

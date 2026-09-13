@@ -124,7 +124,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
         (out / "git-api.json").write_text(json.dumps(graph, indent=2) + "\n")
         states = api("GET", f"/api/repos/{repo['id']}/states")["items"]
         probe = api('POST', f"/api/repos/{repo['id']}/tasks", {'title': 'Workflow representation probe'})
-        state_values_are_names = any(st['name'] == probe['state'] for st in states)
+        state_field = next(key for key in ('key', 'name', 'id') if any(st.get(key) == probe['state'] for st in states))
         api('DELETE', f"/api/tasks/{probe['id']}")
         titles = [
             "Design the repository overview",
@@ -140,7 +140,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                     f"/api/repos/{repo['id']}/tasks",
                     {
                         "title": titles[(i + j) % 5],
-                        "state": st["name"] if state_values_are_names else st["id"],
+                        "state": st[state_field],
                         "priority": 1,
                         "description": "Diagnostic fixture for visual and interaction review.",
                         "labels": ["Design" if j else "Platform"],
@@ -257,7 +257,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         ).or_(page.get_by_role("tab", name=mode, exact=True)).click()
                         page.wait_for_timeout(400)
                         if page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).input_value():
-                            page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).select_option("")
+                            page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).select_option(label="All branches")
                         expect(page.locator("svg [role=button]")).to_have_count(4, timeout=2000)
                         page.screenshot(
                             path=str(out / f"{name}-{mode.lower()}.png"), full_page=True

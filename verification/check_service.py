@@ -114,8 +114,8 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
             task = request('POST', f'/api/repos/{repo_id}/tasks', {
                 'title': 'Persist and edit', 'description': 'Initial description'}, 201)
             task_id = task['id']
-            state_values_are_names = any(state['name'] == task['state'] for state in workflow)
-            in_progress = next((state['name'] if state_values_are_names else state['id']) for state in workflow
+            state_field = next(key for key in ('key', 'name', 'id') if any(state.get(key) == task['state'] for state in workflow))
+            in_progress = next(state[state_field] for state in workflow
                                if state.get('name', '').lower().replace(' ', '_') == 'in_progress')
             changed = request('PATCH', f'/api/tasks/{task_id}', {
                 'revision': task['revision'], 'title': 'Edited title',
@@ -285,6 +285,23 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert payload['model'] == 'fixture-model', payload
                     assert 'Edited title' in json.dumps(payload), payload
                     assert fixture_key not in json.dumps(payload), payload
+                    # Verify the same effective configuration used by the successful call.
+                    assert settings['llm_key_configured'] is True, settings
+                    assert settings['llm_url'] == environment['TRACKER_LLM_URL'], settings
+                    assert settings['llm_model'] == 'fixture-model', settings
+                    request('PUT', '/api/settings', {'llm_key': ''})
+                    assert request('GET', '/api/settings')['llm_key_configured'] is True
+                    request('PUT', '/api/settings', {'clear_llm_key': True})
+                    stop()
+                    start()
+                    cleared = request('GET', '/api/settings')
+                    assert cleared['llm_key_configured'] is False, cleared
+                    calls_before = len(llm_calls)
+                    disabled = request('POST', '/api/assistant', {
+                        'question': 'This must not reach the gateway', 'repo_id': repo_id},
+                        expected=(400, 503))
+                    assert 'error' in disabled, disabled
+                    assert len(llm_calls) == calls_before, 'Explicit clear reused environment key'
                 finally:
                     gateway.shutdown()
                     gateway.server_close()
@@ -662,7 +679,8 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert preserved['metadata']['foreign_key'] == 'preserve', preserved
                     assert preserved['metadata']['project_tracker']['labels'] == ['updated'], preserved
                     fleet_states = request('GET', f'/api/repos/{fleet_id}/states')['items']
-                    state_by_name = {item['name'].lower().replace(' ', '_'): (item['name'] if any(st['name'] == existing['state'] for st in fleet_states) else item['id']) for item in fleet_states}
+                    fleet_state_field = next(key for key in ('key', 'name', 'id') if any(st.get(key) == existing['state'] for st in fleet_states))
+                    state_by_name = {item['name'].lower().replace(' ', '_'): item[fleet_state_field] for item in fleet_states}
                     def mac_lifecycle_success():
                         assert 'in_progress' in state_by_name, ('MAC workflow omits unoccupied in_progress state', fleet_states)
                         refreshed = request('GET', f"/api/tasks/{created['id']}")
