@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, json, os, socket, subprocess, sys, tempfile, time, urllib.request
+import argparse, json, os, re, socket, subprocess, sys, tempfile, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from service_response import entity_response
@@ -31,7 +31,6 @@ with tempfile.TemporaryDirectory() as root:
     raise AssertionError('startup failed')
   try:
     a=start('a'); token='disposable-ui-peer-token'; b=start('b',token)
-    local=request(a,'POST','/api/repos',{'name':'Local only','remote_url':'https://example.test/local/only.git'})
     remote=request(b,'POST','/api/repos',{'name':'Remote only','remote_url':'https://example.test/remote/only.git'},token)
     with sync_playwright() as p:
       browser=p.chromium.launch(executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
@@ -40,6 +39,14 @@ with tempfile.TemporaryDirectory() as root:
       page.on('pageerror', lambda e: errors.append(str(e)))
       page.goto(a)
       page.get_by_role('heading',name='Project overview').wait_for()
+      page.get_by_role('button',name='Register a repository',exact=True).click()
+      page.get_by_label(re.compile(r'^(?:Repository )?Name',re.I)).fill('Local only')
+      page.get_by_label(re.compile(r'^Remote URL',re.I)).fill('https://example.test/local/only.git')
+      page.get_by_role('dialog').get_by_role('button',name='Register',exact=True).click()
+      page.get_by_role('dialog').wait_for(state='hidden')
+      page.get_by_role('button',name='Open board',exact=True).wait_for()
+      local=next(repo for repo in request(a,'GET','/api/repos')['items'] if repo['name']=='Local only')
+      assert local['remote_url']=='https://example.test/local/only.git' and local['authority']=='local'
       page.get_by_role('button',name='Agents & peers',exact=True).click()
       page.get_by_role('button',name='Register a peer',exact=True).click()
       page.get_by_label('Peer base URL',exact=True).fill(b)
@@ -50,7 +57,7 @@ with tempfile.TemporaryDirectory() as root:
       page.wait_for_timeout(500)
       (out/'dialog.aria.txt').write_text(page.locator('body').aria_snapshot())
       page.screenshot(path=str(out/'remote-selection.png'),full_page=True)
-      evidence={'local_id':local['id'],'remote_id':remote['id'], 'control':control.evaluate('(e)=>({tag:e.tagName,options:[...e.querySelectorAll("option")].map(o=>({value:o.value,label:o.textContent}))})')}
+      evidence={'local_registration_ui':True,'local_id':local['id'],'remote_id':remote['id'], 'control':control.evaluate('(e)=>({tag:e.tagName,options:[...e.querySelectorAll("option")].map(o=>({value:o.value,label:o.textContent}))})')}
       (out/'result.json').write_text(json.dumps(evidence,indent=2))
       page.screenshot(path=str(out/'remote-selection.png'),full_page=True)
       if evidence['control']['tag']=='SELECT':

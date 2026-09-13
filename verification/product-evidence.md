@@ -8,7 +8,7 @@ be repeated on the artifact that is ultimately delivered.
 | Requirement | Current evidence | Remaining work |
 | --- | --- | --- |
 | LitAI project and native build | Authoritative Component, flavors and lock; native npm build and 33 generated tests passed | Current lifecycle acceptance, committed receipt and reusable admitted source |
-| Repository overview and inspector | Browser origin display and description persistence pass at desktop/mobile | Final artifact review; UI repository registration |
+| Repository overview and inspector | UI first-repository registration, origin display and description persistence pass | Repeat on final artifact |
 | Task attributes and SQLite persistence | Independent API roundtrip/restart covers title, description, state, labels, checklist, assignee, branch, cover, due date and dependencies; cycle and stale revision rejected | Repeat on final artifact |
 | Trello-style board | Rendered dark columns/cards, covers and horizontal board; create, search, desktop drag and settled mobile move pass | Rapid edit/save/move fails on stale revision; final reference comparison |
 | Editable workflow | Browser rename/add/reorder/delete with task migration pass at desktop/mobile | Repeat on final artifact |
