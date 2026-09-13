@@ -37,6 +37,20 @@ settings and peer routes, with their UI forms connected to actual backend writes
 Register named SSE event listeners (or handle every event through a stream parser): an
 onmessage-only listener does not receive named task events. Update cards on remote edits.
 
+Publish committed changes to already-connected SSE clients promptly (within one
+second locally); the 15-second keepalive timer is not the delivery mechanism.
+Verify a second HTTP client creates and edits a task while the browser stays on its
+board, and observe each change within two seconds without navigation or reload.
+
+The outbound peer endpoint accepts `{message: <A2A Message>}`. Validate and forward
+that complete message to the registered peer using JSON-RPC message/send. Preserve
+its messageId and DataPart contents so retries create one remote task and return
+the same remote A2A Task ID. Do not replace it with an empty `input.data` object or
+mint a new messageId for each retry. The browser peer form must construct this same
+documented shape. Test two actual local service processes with a token on the
+receiving process, register the peer, send a create_task message, retry it, and
+verify one remote board task. Keep credentials backend-only throughout history.
+
 Before finishing generation, audit every section of this Component against actual source
 and tests. Fix omissions instead of declaring requested behavior a known limit. Keep
 modules readable and split by backend store, MAC, Git, sessions, settings, LLM, MCP, A2A,

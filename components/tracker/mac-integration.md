@@ -34,6 +34,19 @@ On successful complete project and registry reads:
 7. Emit durable events for actual upstream changes, including state and deletion.
    Unchanged polling must not increment task revisions every five seconds.
 
+Workflow state names and IDs must not collide during this import. If a newly
+discovered MAC repo receives initial local-style states with generated IDs, an
+upstream state named `open` must reuse or deliberately replace the existing `open`
+state. Inserting a second state with the same repo/name violates the schema.
+Prefer installing the MAC workflow when creating a MAC repository. Keep state IDs
+valid across multiple repositories; a globally unique ID cannot be the same bare
+`open` for every repo. Map workflow IDs to upstream names at the adapter boundary.
+Verify with an empty database, one discovered repo and an existing upstream open
+task, then with a second discovered repo also containing an open task. Both task
+collections must load, complete sync must become available, and a subsequently
+registered unmatched repo must become local. Readiness of the HTTP socket alone
+does not establish that this import succeeded.
+
 Example: projects contains a summary with project="alpha", project_id="p-1",
 repository_url="https://example.test/team/alpha.git". Registry contains id="r-1",
 project="alpha", source="git", and the same metadata.repository_url. Tasks contains

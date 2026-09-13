@@ -9,6 +9,11 @@ if [[ -x /opt/homebrew/opt/node@22/bin/node ]]; then
   export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 fi
 node -e 'if (Number(process.versions.node.split(".")[0]) < 22) throw Error("Node 22+ is required")'
+tracker_git_version="$(git --version)"
+case "$tracker_git_version" in
+  'git version 2.50.1'|'git version 2.50.1 '*) ;;
+  *) echo 'Git version differs from the observed 2.50.1 build authority; refresh runtime.md before rebuilding.' >&2; exit 1 ;;
+esac
 if [[ $# -eq 0 ]]; then
   set -- rebuild components/tracker --allow-host-execution --keep-runtime
 fi

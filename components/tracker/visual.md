@@ -87,5 +87,15 @@ At desktop and 390px widths, open the board, create/edit/move a task, rename a
 workflow state, inspect a repository, visit Activity and Agents & peers, and
 exercise both Git modes including node selection, zoom/reset and filtering.
 Verify backend persistence and a second-client event while observing the page.
+
+Graph and Timeline retain visible navigation back to the board and between modes.
+After applying or clearing a branch filter, commit selection must still update the
+inspector; reuse the selection callback when rebuilding the SVG. Scope workspace
+sidebar styles to that sidebar: a commit inspector must not inherit a fixed sidebar
+position or the mobile off-screen transform. On mobile it appears within the page
+and the selected full hash and subject remain reachable. Route focus must not scroll
+the view heading underneath the sticky top bar. Verify zoom changes the visible
+graph scale, Reset restores it, and both filtered and unfiltered nodes remain
+keyboard-selectable under the actual CSP.
 Capture actual rendered views and inspect their coordinates and visible content;
 the presence of an SVG element or a button alone does not prove functionality.
