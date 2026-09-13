@@ -6,6 +6,10 @@ require a particular envelope key. Protocol JSON-RPC responses remain untouched.
 
 
 def entity_response(value):
+    if isinstance(value, list):
+        if any(isinstance(item, dict) and "jsonrpc" in item for item in value):
+            return value
+        return {"items": value}
     if not isinstance(value, dict) or "jsonrpc" in value or "error" in value:
         return value
     for key in ("repository", "repo", "task", "session", "peer"):

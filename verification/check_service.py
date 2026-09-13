@@ -538,13 +538,24 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                                 arguments['task'] = fields
                             else:
                                 arguments.update(fields)
-                            result = await client.call_tool('create_task', arguments)
+                            deadline = time.monotonic() + 10
+                            while True:
+                                result = await client.call_tool('create_task', arguments)
+                                if not result.is_error:
+                                    break
+                                # A fresh stdio process may still be discovering the fleet.
+                                # Retry only explicit unavailability, with a finite bound;
+                                # all other errors and any missing upstream write still fail.
+                                serialized = result.model_dump_json()
+                                assert 'mac_unavailable' in serialized and time.monotonic() < deadline, result
+                                await asyncio.sleep(0.2)
                             assert not result.is_error, result
                         assert any(method == 'POST' and path == '/tasks'
                                    and body.get('project') == fleet.project
                                    and body.get('title') == fields['title']
                                    for method, path, body in fleet.writes), fleet.writes
-                    asyncio.run(asyncio.wait_for(stdio_fleet_create(), timeout=25))
+                    run_phase('mac_stdio_initialization',
+                              lambda: asyncio.run(asyncio.wait_for(stdio_fleet_create(), timeout=25)))
                     via_a2a = rpc('message/send', {'message': {
                         'kind': 'message', 'role': 'user', 'messageId': str(uuid.uuid4()),
                         'parts': [{'kind': 'data', 'data': {
