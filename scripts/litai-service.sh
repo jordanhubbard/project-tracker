@@ -5,6 +5,8 @@ tracker_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$tracker_root"
 # Full-stack generation needs more than the CLI's 15-minute default.
 export LITERATE_AI_CODING_CLI_TIMEOUT_SECONDS="${LITERATE_AI_CODING_CLI_TIMEOUT_SECONDS:-3600}"
+# This adapter provides direct Read/Write/Edit tools under LitAI's no-shell generation policy.
+export CODING_CLI="${CODING_CLI:-claude}"
 if [[ -x /opt/homebrew/opt/node@22/bin/node ]]; then
   export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 fi
@@ -15,6 +17,6 @@ case "$tracker_git_version" in
   *) echo 'Git version differs from the observed 2.50.1 build authority; refresh runtime.md before rebuilding.' >&2; exit 1 ;;
 esac
 if [[ $# -eq 0 ]]; then
-  set -- rebuild components/tracker --model gpt-6-astra --allow-host-execution --keep-runtime
+  set -- rebuild components/tracker --allow-host-execution --keep-runtime
 fi
 exec litai "$@"

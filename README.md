@@ -22,7 +22,7 @@ litai verify
 ```
 
 The wrapper selects the installed Node 22 runtime, checks the observed Git 2.50.1
-build dependency, and explicitly selects GPT-6 Astra for generation. LitAI replays the
+build dependency, and selects Claude Code's direct file tools for generation. LitAI replays the
 exact npm lock through its supported dependency lifecycle. Build diagnostics and
 independent service/browser checks are recorded in the active work document.
 

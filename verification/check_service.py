@@ -463,6 +463,17 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                         time.sleep(0.2)
                     assert existing, ('MAC tasks were not imported', page,
                                       request('GET', '/health'))
+                    time.sleep(5.5)
+                    polled = request('GET', f"/api/tasks/{existing['id']}")
+                    assert polled['revision'] == existing['revision'], (
+                        'Unchanged MAC polling changed the task revision', existing, polled)
+                    equivalent = request('POST', '/api/repos', {
+                        'name': 'Equivalent SSH registration',
+                        'remote_url': 'git@example.test:team/mac-owned.git'}, (200, 201, 409))
+                    if 'error' not in equivalent:
+                        assert equivalent['id'] == fleet_id and equivalent['authority'] == 'mac', equivalent
+                    repositories = request('GET', '/api/repos')['items']
+                    assert len(repositories) == 1 and repositories[0]['id'] == fleet_id, repositories
                     assert not fleet.writes, ('Read-only startup mutated the fleet', fleet.writes)
                     unmatched = request('POST', '/api/repos', {
                         'name': 'Confirmed absent from MAC',
