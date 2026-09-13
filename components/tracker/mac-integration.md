@@ -118,3 +118,22 @@ upstream task is identical to its pre-outage contents. A healthy-to-failed or
 failed-to-healthy status transition is observable repository data. Avoid duplicate
 events on repeated polls with unchanged failure state. Verify healthy -> HTTP503
 -> healthy using the isolated fleet fixture, without browser reload or task edits.
+
+Detect the status transition across the complete synchronization operation. Read
+and retain each repository's previous sync_error before discovery, repository
+upsert, task import or reconciliation can change it; compare that original value
+with the final persisted status. Publish the actual change after persistence. A
+repository upsert that clears sync_error must not erase the information needed to
+publish recovery. Repeated healthy polls with identical tasks emit no duplicate
+recovery updates. Test recovery of an existing discovered repository, not just a
+helper that clears an untouched error field.
+
+Normalize MAC transport and rejection errors in the shared task service before
+REST, MCP or A2A adapters handle them. This includes new-task creation as well as
+field edits and lifecycle transitions. A MAC client exception carrying upstream
+unavailability must become the same service unavailable error on every path;
+it must not fall through a generic HTTP500/internal-error handler. With a matched
+repository and upstream503, POST a new task: return tracker503, insert no cache
+or local task, and preserve existing task revisions. Retain useful genuine4xx
+rejection details separately. Exercise creation, editing and transitions through
+the real shared service with an HTTP fleet fixture.

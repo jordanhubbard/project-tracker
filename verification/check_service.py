@@ -57,9 +57,6 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
 
 
         def request(method, path, body=None, expected=200):
-            if method == 'PATCH' and path.startswith('/api/tasks/') and isinstance(body, dict) and 'revision' in body:
-                body = dict(body)
-                body['expected_revision'] = body.pop('revision')
             data = None if body is None else json.dumps(body).encode()
             req = urllib.request.Request(base + path, data=data, method=method,
                                          headers={'Content-Type': 'application/json'})
@@ -298,7 +295,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert settings['llm_model'] == 'fixture-model', settings
                     request('PATCH', '/api/settings', {'llm_key': ''})
                     assert request('GET', '/api/settings')['llm_key_configured'] is True
-                    request('PATCH', '/api/settings', {'llm_key_clear': True})
+                    request('PATCH', '/api/settings', {'llm_key': None})
                     stop()
                     start()
                     cleared = request('GET', '/api/settings')

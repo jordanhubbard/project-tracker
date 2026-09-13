@@ -26,6 +26,7 @@ def entity_response(value):
                 "sessions",
                 "peers",
                 "events",
+                "activity",
             )
             if isinstance(value.get(key), list)
         ]

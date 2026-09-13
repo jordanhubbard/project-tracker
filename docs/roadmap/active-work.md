@@ -493,3 +493,26 @@ queue item or let `docs/roadmap/` become a plan archive.
 - Include realtime MAC sync-status notification and recovery in the next specification
   repair, together with fully legible short list headings. Preserve cached tasks and
   upstream-only mutations throughout outage and recovery.
+
+### Live-status final-source verification and MAC recovery repair
+
+- Generation at efc644d completed native acceptance with 50 tests. Final34-file
+  provenance is `_build/live-status-final-provenance.json`; native result is
+  `_build/live-status-native-result.json`. Every application file matches the
+  independently tested snapshot; final additions are tests and documentation.
+- Six of seven independent phases pass in `_build/live-status-independent/summary.json`:
+  board, peer UI, actual session expiry, empty/bounded Git, equal-time graph and
+  irregular-time graph. All15 board checks pass at desktop1440/mobile390,
+  including complete short list headings without clipping or overlapping actions.
+- Additional stale-editor conflict and missing-checkout navigation probes pass.
+- MAC outage now reaches already-open overview and inspector, but recovery does
+  not. `_build/live-status-transition-confirm/recovery-failure.json` records API
+  sync_error null while both views still show failure and only an outage event
+  arrived. Repository discovery clears the error before transition detection.
+- The service suite passes all other diagnostic phases, but new MAC task creation
+  during an upstream503 returns tracker500. The MAC client's typed unavailable
+  error bypasses the shared service error conversion on this path.
+- Next action in progress: require status comparison across the complete sync
+  transaction and consistent shared-service error normalization for MAC creation,
+  editing and transitions; preserve the passing board/protocol/Git behavior and
+  regenerate. Public build/run, receipt and complete handoff remain pending.

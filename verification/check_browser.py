@@ -35,8 +35,9 @@ def list_control(page, action, name):
         direct.click()
         return
     page.get_by_role('button', name=f'List menu for {name}', exact=True).click()
-    if action == 'Delete':
-        page.get_by_role('dialog').get_by_role('button', name='Delete list', exact=True).click()
+    menu_action = page.get_by_role('dialog').get_by_role('button', name=f'{action} list', exact=True)
+    if menu_action.count():
+        menu_action.click()
 
 def task_state(st):
     return st[state_field]
@@ -222,6 +223,23 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 page.keyboard.press("Escape")
                                 if page.url != board_url: page.goto(board_url)
 
+                        def heading_geometry():
+                            rows = page.locator('.board-list .list-name').evaluate_all("""nodes => nodes.map(e => {
+                                const r=e.getBoundingClientRect();
+                                const range=document.createRange(); range.selectNodeContents(e);
+                                const text=range.getBoundingClientRect();
+                                const siblings=[...e.parentElement.children].filter(x=>x!==e).map(x=>x.getBoundingClientRect());
+                                return {name:e.textContent,client:e.clientWidth,scroll:e.scrollWidth,
+                                    overlap:siblings.some(s=>text.left<s.right && text.right>s.left && text.top<s.bottom && text.bottom>s.top),
+                                    width:r.width};
+                            })""")
+                            (out / f'{name}-heading-geometry.json').write_text(json.dumps(rows,indent=2))
+                            assert rows, 'No board list headings'
+                            required = {'open','in_progress','blocked','review','completed','Ready desktop','Ready mobile'}
+                            assert all(r['scroll'] <= r['client'] and not r['overlap'] for r in rows if r['name'] in required), rows
+
+                        check("legible list headings", heading_geometry)
+
                         def board_scroll():
                             handle = page.locator('main').evaluate_handle("""root => [...root.querySelectorAll('*')].find(e =>
                                 e.clientWidth > 100 && e.scrollWidth > e.clientWidth + 32 &&
@@ -320,7 +338,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             dialog.get_by_label(re.compile(r'^Branch$', re.I)).fill('feature/browser-verification')
                             dialog.get_by_label(re.compile(r'^Due date$', re.I)).fill('2026-10-02')
                             dialog.get_by_role('combobox', name=re.compile(r'^Cover(?: colou?r)?$', re.I)).select_option('purple')
-                            dialog.get_by_role('combobox', name=re.compile(r'^Priority')).select_option('2')
+                            priority = dialog.get_by_label(re.compile(r'^Priority'))
+                            if priority.evaluate('e=>e.tagName') == 'SELECT': priority.select_option('2')
+                            else: priority.fill('2')
                             dialog.get_by_label(re.compile(r'^Labels', re.I)).fill('QA, UI')
                             dialog.get_by_role('listbox', name=re.compile(r'^(?:Depends on|Dependencies)', re.I)).select_option(prerequisite['id'])
                             dialog.get_by_role('button', name=re.compile(r'^Add checklist item$', re.I)).click()
@@ -400,6 +420,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             heading = title_control(page, name=re.compile(
                                 r"^" + re.escape(destination.get('display_name', destination['name'])) + r"(?:\s|$)", re.I))
                             column = page.locator(f'[data-state-id="{destination["id"]}"]')
+                            if not column.count(): column = page.get_by_role('region', name=f"List {destination['name']}", exact=True)
                             lists = column.get_by_role("list")
                             target = lists.first if lists.count() else column
                             card.drag_to(target)
@@ -440,10 +461,11 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             assert saved['name'] == new_name, saved
 
                         check("rename workflow state", workflow)
+                        check("legible renamed list heading", heading_geometry)
 
                         def workflow_lifecycle():
                             added_name = f'Browser column {name}'
-                            page.get_by_role('button', name=re.compile(r'^(?:\+ )?Add list$')).click()
+                            page.get_by_role('button', name=re.compile(r'^(?:(?:\+ )?Add list|Add a workflow list)$')).click()
                             dialog = page.get_by_role('dialog')
                             page.wait_for_timeout(400)
                             if not dialog.is_visible():
@@ -483,14 +505,14 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_role("button", name=re.compile(r"^(?:Back to board|Board)$")).or_(
                                 page.get_by_role("link", name="Board", exact=True)
                             ).or_(page.get_by_role("tab", name="Board", exact=True)).first.click()
-                            page.get_by_role("button", name="Add task", exact=True).first.wait_for()
+                            page.get_by_role("button", name=re.compile(r"^Add task(?: to .+)?$")).first.wait_for()
 
                         check("remote-only graph explains checkout requirement", remote_only_graph)
 
                         def inspector():
                             page.get_by_role("button", name="Inspector", exact=True).or_(
                                 page.get_by_role("link", name="Inspector", exact=True)
-                            ).or_(page.get_by_role("tab", name="Inspector", exact=True)).click()
+                            ).or_(page.get_by_role("tab", name="Inspector", exact=True)).first.click()
                             page.get_by_role('textbox', name=re.compile(r'^(?:Repository )?Description$',re.I)).wait_for()
                             origin = page.get_by_role('textbox', name='Remote URL', exact=True)
                             if origin.count():

@@ -297,3 +297,18 @@ Browser review includes the entire short list names at desktop1440/mobile390,
 without truncation by action buttons. It also observes a MAC fleet outage and
 recovery in an already-open overview/inspector without reload, with unchanged
 upstream tasks. Status changes must reach the view and cached tasks stay visible.
+
+The MAC status regression must run the complete service synchronization path with
+an HTTP fixture and an existing discovered repository: healthy, fleet503, then
+healthy with byte-equivalent upstream tasks. Capture emitted repository events and
+persisted repository data after each step. Require one failure update and one
+recovery update, and none for repeated unchanged polls. In the browser keep the
+overview and inspector open before the outage, observe both transitions without
+reload, and confirm cached tasks/revisions remain unchanged. A direct test of an
+error-clearing helper alone does not cover discovery/upsert ordering.
+
+In the same HTTP fixture exercise new-task creation during upstream503, in
+addition to existing-task edits and transitions. Require tracker503 and no cache
+insertion from REST, and the equivalent unavailable result from MCP and A2A.
+Typed client errors must cross the shared-service boundary as recognized service
+errors. Do not count a generic internal500 as an actionable fleet outage.
