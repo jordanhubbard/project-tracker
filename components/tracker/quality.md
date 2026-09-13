@@ -254,3 +254,22 @@ must exercise actual Git, not a mocked nonzero `git log` result. Verify the succ
 empty-output path of `git log --all --topo-order`; zero exit status alone does not
 mean history exists. Do not mark an unborn branch as detached. Retain nonempty and
 true detached-HEAD fixtures so the empty fix does not suppress valid history.
+
+
+## Integration wiring regressions
+
+Exercise the actual service entrypoint with raw process environment names
+TRACKER_MAC_URL, TRACKER_MAC_TOKEN, TRACKER_LLM_URL, TRACKER_LLM_MODEL and
+TRACKER_LLM_KEY. A settings projection helper accepting normalized lowercase keys
+must receive the normalized environment, not raw process.env. Secret consumers
+and configured booleans must use the same effective values. Test real HTTP
+requests after starting only with these environment variables: discover a MAC
+fixture project and call a mock LLM gateway. A pure helper test with hand-normalized
+keys does not cover the wiring. Keep database settings and explicit-clear tests.
+
+Workflow ordering remains a strict, contiguous sequence after deleting a list.
+After creating a final list, moving it left once and deleting it with migration,
+repeat that sequence in the same repository. Each newly added list appears last
+and moves exactly one position left. Do not insert at states.length while leaving
+old position gaps: that can duplicate a remaining position. Persist unique ordering
+and retain it across reloads; test at least two complete add/reorder/delete cycles.

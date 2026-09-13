@@ -95,3 +95,10 @@ stable as lists become empty. Let MAC enforce whether a transition is allowed.
 Test an open-only upstream project: in_progress succeeds through the actual transition
 endpoint, while a completed request reaches that endpoint and returns its deliberate
 lifecycle rejection. Rejecting both locally as unknown_state is incomplete integration.
+
+
+A genuine upstream 4xx lifecycle rejection returns a tracker 4xx response (preserve
+the upstream status where possible), with its useful rejection detail. HTTP 502
+is not the response for a valid upstream lifecycle denial. Keep that denial distinct
+from 503 unavailability and preserve the cached task's actual state. Test a rejected
+completed transition, including both HTTP status and unchanged local/upstream state.

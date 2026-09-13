@@ -1,14 +1,16 @@
 # Product completion evidence
 
-Current checkpoint: exact-runtime generation passed native admission with 19 tests
-(`_build/runtime-exact-native-result.json`). Independent checks retain a real
-empty-repository defect: successful `git log --all` with empty output incorrectly
-produces state `ok` and no visible empty-history message. Board interactions at
-both widths, peer UI, real expiry and irregular timeline checks pass. The final
-unmodified source is bound by `_build/runtime-exact-final-provenance.json`.
-Regeneration with the explicit empty-history fixture, complete final checks and
-public launch remain pending. See the latest [active work](../docs/roadmap/active-work.md).
-Earlier sections below are historical evidence and do not claim delivery.
+Current checkpoint: unborn-history generation passed native admission with 60 tests
+(`_build/unborn-native-result.json`). Actual empty/bounded Git browser checks and
+real session expiry pass. Final-source comparison retains environment-settings,
+sidebar navigation, repeated workflow position and zoom-geometry defects. Board
+checks pass 12/13 desktop and 11/13 mobile interactions; graph selection, timestamp
+spacing and branch/host associations pass after exact Hash-field synchronization.
+Evidence is bound by `_build/unborn-final-provenance.json`; retained diagnostics
+are `_build/unborn-board2`, `_build/unborn-graph4` and `_build/unborn-independent`.
+Regeneration, final independent checks and public launch remain pending. See the
+latest [active work](../docs/roadmap/active-work.md). Earlier sections are historical
+evidence and do not claim delivery.
 
 
 The latest complete retained source is `_build/contained-final-diagnostic`.

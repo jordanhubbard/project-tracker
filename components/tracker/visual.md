@@ -192,3 +192,27 @@ the title. The same second-client task title visible on the board is visible in 
 creation entry in Activity.
 Capture actual rendered views and inspect their coordinates and visible content;
 the presence of an SVG element or a button alone does not prove functionality.
+
+
+## Operable navigation and complete zoom
+
+Every visible workspace sidebar button has an actual route activation handler.
+A data-route attribute alone performs no navigation. From a repository board,
+click Activity and inspect titled task events; click Agents & peers and register
+an isolated peer; click sidebar Settings and edit configuration. Verify these
+actual controls at desktop/mobile widths, independently of header Settings and
+without substituting direct URL navigation for a dead sidebar button.
+
+Zoom must scale the rendered circle radius, edge widths and labels together with
+positions and the complete canvas. Multiplying node x/y and SVG width while leaving
+circle radius and text size fixed is only spacing, not the required graph zoom.
+A real circle's screen diameter must increase on the first Zoom in and return on
+Reset in both Graph and Timeline. Test rendered geometry, not only SVG width.
+
+Retain the supplied Trello reference's compact visual hierarchy: list names remain
+fully legible, with counts and compact actions; do not truncate short names such as
+blocked or in_progress because permanent controls consume the header width. Put
+secondary actions in an accessible list menu or a separate compact row. Task cards
+prioritize title, colored label strips, cover color and concise metadata. Keep
+secondary edit/move controls accessible without allowing repeated control rows to
+dominate the card. Review actual desktop/mobile screenshots against the reference.

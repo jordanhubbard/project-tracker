@@ -293,9 +293,9 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert settings['llm_key_configured'] is True, settings
                     assert settings['llm_url'] == environment['TRACKER_LLM_URL'], settings
                     assert settings['llm_model'] == 'fixture-model', settings
-                    request('PUT', '/api/settings', {'llm_key': ''})
+                    request('PATCH', '/api/settings', {'llm_key': ''})
                     assert request('GET', '/api/settings')['llm_key_configured'] is True
-                    request('PUT', '/api/settings', {'clear_llm_key': True})
+                    request('PATCH', '/api/settings', {'clear_llm_key': True})
                     stop()
                     start()
                     cleared = request('GET', '/api/settings')

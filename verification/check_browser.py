@@ -23,6 +23,9 @@ def open_task(page, title):
 def title_control(page, **kwargs):
     return page.get_by_text(kwargs['name'], exact=kwargs.get('exact', False))
 
+def gateway_control(page):
+    return page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)).last
+
 def task_state(st):
     return st[state_field]
 
@@ -431,11 +434,12 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_role('button', name=re.compile(r'^(?:\+ )?Add list$')).click()
                             dialog = page.get_by_role('dialog')
                             page.wait_for_timeout(400)
-                            new_states = api('GET', f"/api/repos/{repo['id']}/states")['items']
-                            added_default = new_states[-1]
-                            page.get_by_role('button', name=f"Rename list {added_default['name']}", exact=True).click()
+                            if not dialog.is_visible():
+                                new_states = api('GET', f"/api/repos/{repo['id']}/states")['items']
+                                added_default = new_states[-1]
+                                page.get_by_role('button', name=f"Rename list {added_default['name']}", exact=True).click()
                             dialog.get_by_role('textbox', name='List name', exact=True).fill(added_name)
-                            dialog.get_by_role('button', name='Save', exact=True).click()
+                            dialog.get_by_role('button', name=re.compile(r'^(?:Save|Add list)$')).click()
                             dialog.wait_for(state='hidden')
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
                             added = next(x for x in current if x['name'] == added_name)
@@ -483,7 +487,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 page.get_by_text(repo['remote_url'], exact=False).wait_for()
                             page.get_by_role("textbox", name=re.compile(r"^(?:Repository )?Description$", re.I)).fill(
                                 f"Repository description from {name}")
-                            page.get_by_role("button", name=re.compile(r"^Save(?: (?:description|repository))?$")).click()
+                            page.get_by_role("button", name=re.compile(r"^Save(?: (?:description|repository(?: details)?))?$")).click()
                             deadline = time.monotonic() + 2
                             while time.monotonic() < deadline:
                                 detail = api("GET", f"/api/repos/{repo['id']}")
@@ -541,7 +545,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 edit = page.get_by_role('button', name='Edit settings', exact=True)
                                 if edit.count(): edit.click()
                             open_settings()
-                            page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)).fill(
+                            gateway_control(page).fill(
                                 "http://127.0.0.1:9/v1"
                             )
                             page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?(?:API )?key", re.I)).fill(
@@ -560,23 +564,19 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 and saved["llm_model"] == "browser-fixture-model"
                             )
                             assert "disposable-browser-secret" not in json.dumps(saved)
-                            if not page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)).is_visible():
+                            if not gateway_control(page).is_visible():
                                 open_settings()
-                            page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)).wait_for(state="visible")
+                            gateway_control(page).wait_for(state="visible")
                             assert (
                                 page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?(?:API )?key", re.I)).input_value()
                                 == ""
                             )
                             page.reload(wait_until="domcontentloaded")
-                            if not page.get_by_label(
-                                re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)
-                            ).is_visible():
+                            if not gateway_control(page).is_visible():
                                 open_settings()
-                            page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)).wait_for()
+                            gateway_control(page).wait_for()
                             assert (
-                                page.get_by_label(
-                                    re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)
-                                ).input_value()
+                                gateway_control(page).input_value()
                                 == "http://127.0.0.1:9/v1"
                             )
                             assert (

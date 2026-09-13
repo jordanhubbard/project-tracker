@@ -405,3 +405,30 @@ queue item or let `docs/roadmap/` become a plan archive.
 - Next action: specify successful-empty-log behavior and an actual `git init`
   regression fixture, regenerate, then require final independent checks and the
   supported public build/run path. Native acceptance alone remains insufficient.
+
+
+### Final interaction and configuration regressions
+
+- The unborn-history generation passed native admission with 60 tests. Actual
+  empty and bounded Git browser checks and real session expiry pass. The final
+  source is retained in `_build/unborn-final-diagnostic` and bound by per-file
+  `_build/unborn-final-provenance.json`; native result is `unborn-native-result.json`.
+- Independent API checks reveal raw TRACKER_* environment variables passed to a
+  settings helper expecting lowercase fields. Environment-only LLM and MAC fail;
+  a separate stored-settings diagnostic proves their downstream integrations.
+- Rendered sidebar Activity/Agents/Settings buttons have data-route attributes but
+  no event handlers. Repeated workflow deletion then addition leaves duplicate
+  positions. Zoom scales coordinates while commit circles remain 16px. These are
+  product failures, not satisfied by native test success.
+- Board rerun passes 12/13 desktop and 11/13 mobile interactions. Graph rerun
+  confirms selection, real timestamp spacing and branch/host associations; only
+  geometry zoom remains. Exact selected Hash-field waits avoid confusing parent
+  hashes with the selected commit. Evidence: `_build/unborn-board2`,
+  `_build/unborn-graph4`, `_build/unborn-independent/summary.json` and
+  `_build/unborn-stored-settings2.log`. The MAC rejection status discrepancy also
+  needs an explicit 4xx contract while retaining upstream detail and cache state.
+- Visual comparison to the supplied Trello reference finds truncated list titles
+  under permanent header controls and overly dense card controls. Preserve compact
+  dark cards, colored labels/covers and legible list names in the repair.
+- Next action: regenerate from the clarified configuration, workflow and visual
+  authority; require all final independent checks and supported public launch.

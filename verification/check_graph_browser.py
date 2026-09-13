@@ -10,6 +10,11 @@ def commit_circle(node):
     return node if node.evaluate("n=>n.tagName.toLowerCase()") == 'circle' else node.locator('circle').first
 
 
+def expect_selected_hash(page, commit_hash):
+    inspector = page.locator("#commit-inspector, .commit-inspector, .inspector").first
+    value = inspector.locator('dt').filter(has_text=re.compile(r'^Hash$')).locator('xpath=following-sibling::dd[1]')
+    expect(value).to_have_text(commit_hash, timeout=2000)
+
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("entrypoint", type=Path)
 parser.add_argument("--node", default="/opt/homebrew/opt/node@22/bin/node")
@@ -303,12 +308,12 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 commit_circle(node).click()
                                 label = node.get_attribute("aria-label") or ""
                                 short_hash = re.search(r"[a-f0-9]{7,64}", label)
-                                expected_hash = node.get_attribute('data-hash')
+                                expected_hash = node.get_attribute('data-hash') or commit_circle(node).get_attribute('data-hash')
                                 if expected_hash:
-                                    expect(page.locator("#commit-inspector, .commit-inspector, .inspector").get_by_text(expected_hash, exact=True)).to_be_visible(timeout=2000)
+                                    expect_selected_hash(page, expected_hash)
                                 elif short_hash:
-                                    expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(re.escape(short_hash.group())), timeout=2000)
-                                details = page.locator("#commit-inspector, .commit-inspector, .inspector").inner_text()
+                                    expect(page.locator("#commit-inspector, .commit-inspector, .inspector").first).to_contain_text(re.compile(re.escape(short_hash.group())), timeout=2000)
+                                details = page.locator("#commit-inspector, .commit-inspector, .inspector").first.inner_text()
                                 match = re.search(r"\b([a-f0-9]{40,64})\b", details)
                                 center = commit_circle(node).evaluate(
                                     "n => {const p = n.ownerSVGElement.createSVGPoint(); p.x=n.cx.baseVal.value; p.y=n.cy.baseVal.value; return p.matrixTransform(n.getCTM()).x}"
@@ -323,8 +328,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 if far <= 0 or abs(near / far - 0.1) > 0.03:
                                     issues.append(f"Timeline: 0/10/100-second spacing is not proportional: {timeline_positions}")
                         commit_circle(page.locator("svg").get_by_role("button", name=re.compile(mergehash[:8]))).click()
-                        expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(mergehash, timeout=2000)
-                        selected = page.locator("#commit-inspector, .commit-inspector, .inspector").inner_text()
+                        expect_selected_hash(page, mergehash)
+                        selected = page.locator("#commit-inspector, .commit-inspector, .inspector").first.inner_text()
                         if re.search(r'\b(?:undefined|NaN)\b', selected):
                             issues.append(f'{mode} commit inspector contains an undefined value')
                         initial_width = page.locator("svg").first.evaluate("n=>n.getBoundingClientRect().width")
@@ -355,25 +360,25 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         filtered_node = page.locator("svg").get_by_role("button", name=re.compile(featurehash[:8]))
                         expect(filtered_node).to_be_visible(timeout=2000)
                         commit_circle(filtered_node).click()
-                        expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(re.escape(featurehash)), timeout=2000)
-                        filtered = page.locator("#commit-inspector, .commit-inspector, .inspector").inner_text()
+                        expect_selected_hash(page, featurehash)
+                        filtered = page.locator("#commit-inspector, .commit-inspector, .inspector").first.inner_text()
                         if feature_task_title not in filtered or main_task_title in filtered:
                             issues.append(f'{mode}: filtered feature inspector does not distinguish actual branch task associations')
 
                         inspector_bounds = page.locator(
                             "#commit-inspector, .commit-inspector, .inspector"
-                        ).bounding_box()
+                        ).first.bounding_box()
                         deadline = time.monotonic() + 2
                         while True:
                             try:
-                                page.locator("#commit-inspector, .commit-inspector, .inspector").scroll_into_view_if_needed(timeout=1000)
+                                page.locator("#commit-inspector, .commit-inspector, .inspector").first.scroll_into_view_if_needed(timeout=1000)
                                 break
                             except Exception:
                                 if time.monotonic() >= deadline:
                                     raise
                         inspector_bounds = page.locator(
                             "#commit-inspector, .commit-inspector, .inspector"
-                        ).bounding_box()
+                        ).first.bounding_box()
                         page.screenshot(
                             path=str(out / f"{name}-{mode.lower()}-filtered.png"),
                             full_page=True,
@@ -422,7 +427,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 "reset_width": reset,
                                 "inspector_visible": page.locator(
                                     "#commit-inspector, .commit-inspector, .inspector"
-                                ).is_visible(),
+                                ).first.is_visible(),
                             }
                         )
                     if dimensions["document"] > dimensions["viewport"]:
