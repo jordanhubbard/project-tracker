@@ -6,6 +6,10 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 from service_response import entity_response
 
+def commit_circle(node):
+    return node if node.evaluate("n=>n.tagName.toLowerCase()") == 'circle' else node.locator('circle').first
+
+
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("entrypoint", type=Path)
 parser.add_argument("--node", default="/opt/homebrew/opt/node@22/bin/node")
@@ -244,7 +248,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         page.wait_for_timeout(400)
                         if page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).input_value():
                             page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).select_option("")
-                        expect(page.locator("svg g[role=button]")).to_have_count(4, timeout=2000)
+                        expect(page.locator("svg [role=button]")).to_have_count(4, timeout=2000)
                         page.screenshot(
                             path=str(out / f"{name}-{mode.lower()}.png"), full_page=True
                         )
@@ -253,17 +257,17 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         )
                         timeline_positions = {}
                         if mode == "Timeline" and args.irregular_times:
-                            nodes = page.locator("svg g[role=button]")
+                            nodes = page.locator("svg [role=button]")
                             for index in range(nodes.count()):
                                 node = nodes.nth(index)
-                                node.locator("circle").first.click()
+                                commit_circle(node).click()
                                 label = node.get_attribute("aria-label") or ""
                                 short_hash = re.search(r"[a-f0-9]{7,64}", label)
                                 if short_hash:
                                     expect(page.locator("#commit-inspector, .commit-inspector")).to_contain_text(re.compile(r"Hash\s*" + short_hash.group()), timeout=2000)
                                 details = page.locator("#commit-inspector, .commit-inspector").inner_text()
                                 match = re.search(r"\bHash\s+([a-f0-9]{40,64})\b", details)
-                                center = node.locator("circle").first.evaluate(
+                                center = commit_circle(node).evaluate(
                                     "n => {const p = n.ownerSVGElement.createSVGPoint(); p.x=n.cx.baseVal.value; p.y=n.cy.baseVal.value; return p.matrixTransform(n.getCTM()).x}"
                                 )
                                 if match:
@@ -275,7 +279,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 far = timeline_positions[mainhash] - timeline_positions[basehash]
                                 if far <= 0 or abs(near / far - 0.1) > 0.03:
                                     issues.append(f"Timeline: 0/10/100-second spacing is not proportional: {timeline_positions}")
-                        page.locator("svg g[role=button]").first.locator("circle").first.click()
+                        commit_circle(page.locator("svg [role=button]").first).click()
                         expect(page.locator("#commit-inspector, .commit-inspector")).to_contain_text(mergehash, timeout=2000)
                         selected = page.locator("#commit-inspector, .commit-inspector").inner_text()
                         initial_width = page.locator("svg").first.evaluate("n=>n.getBoundingClientRect().width")
@@ -299,8 +303,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             or option["text"] in ("feature", "refs/heads/feature")
                         )
                         page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).select_option(feature_option)
-                        expect(page.locator("svg g[role=button]").first).to_have_attribute("aria-label", re.compile(featurehash[:7]), timeout=2000)
-                        page.locator("svg g[role=button]").first.locator("circle").first.click()
+                        expect(page.locator("svg [role=button]").first).to_have_attribute("aria-label", re.compile(featurehash[:7]), timeout=2000)
+                        commit_circle(page.locator("svg [role=button]").first).click()
                         expect(page.locator("#commit-inspector, .commit-inspector")).to_contain_text(re.compile(r"Hash\s*" + featurehash), timeout=2000)
                         filtered = page.locator("#commit-inspector, .commit-inspector").inner_text()
                         inspector_bounds = page.locator(

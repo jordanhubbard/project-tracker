@@ -140,6 +140,13 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                     dimensions = page.evaluate(
                         "({viewport:innerWidth,document:document.documentElement.scrollWidth})"
                     )
+                    if dimensions['document'] > dimensions['viewport']:
+                        overflow = page.evaluate("""() => [...document.querySelectorAll('body *')].map(e => {
+                            const r=e.getBoundingClientRect(); const p=e.parentElement; const s=getComputedStyle(e);
+                            return {tag:e.tagName,id:e.id,cls:String(e.className),left:r.left,right:r.right,width:r.width,
+                                    overflow:s.overflowX,position:s.position,parent:p?.className};
+                        }).filter(e=>e.width>0 && e.right>innerWidth+1).slice(0,40)""")
+                        (out / f'{name}-overflow.json').write_text(json.dumps(overflow, indent=2))
                     checks = []
                     if name in ("desktop", "mobile"):
 
@@ -196,8 +203,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 "button", name=re.compile(r"^Save(?: task)?$")
                             ).click()
                             page.get_by_role("dialog").wait_for(state="hidden")
-                            page.get_by_text(
-                                f"Browser-created task {name}", exact=True
+                            page.get_by_role("heading",
+                                name=f"Browser-created task {name}", exact=True
                             ).wait_for()
 
                         check("create task through dialog", create)
@@ -210,8 +217,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 ]
                                 if t["title"] == f"Browser-created task {name}"
                             )
-                            page.get_by_text(
-                                f"Browser-created task {name}", exact=True
+                            page.get_by_role("heading",
+                                name=f"Browser-created task {name}", exact=True
                             ).click()
                             page.get_by_role(
                                 "textbox", name="Description", exact=True
@@ -248,17 +255,17 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                     "priority": 1,
                                 },
                             )
-                            page.get_by_text(
-                                f"Remote change visible {name}", exact=True
+                            page.get_by_role("heading",
+                                name=f"Remote change visible {name}", exact=True
                             ).wait_for(timeout=2000)
 
                             updated_title = f"Remote attribute update visible {name}"
                             api("PATCH", f"/api/tasks/{created['id']}", {
                                 "revision": created['revision'], "title": updated_title,
                                 "description": "Updated by an independent HTTP client"})
-                            page.get_by_text(updated_title, exact=True).wait_for(timeout=2000)
-                            assert not page.get_by_text(f"Remote change visible {name}", exact=True).is_visible()
-                            page.get_by_text(updated_title, exact=True).click()
+                            page.get_by_role("heading", name=updated_title, exact=True).wait_for(timeout=2000)
+                            assert not page.get_by_role("heading", name=f"Remote change visible {name}", exact=True).is_visible()
+                            page.get_by_role("heading", name=updated_title, exact=True).click()
                             description = page.get_by_role("textbox", name="Description", exact=True)
                             description.wait_for()
                             assert description.input_value() == "Updated by an independent HTTP client"
@@ -271,11 +278,13 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             local_filter = page.get_by_role("searchbox", name=re.compile("filter", re.I))
                             search = local_filter if local_filter.count() else page.get_by_role("searchbox").first
                             search.fill(f"Browser-created task {name}")
-                            page.get_by_text(f"Browser-created task {name}", exact=True).wait_for()
+                            search.press("Tab")
+                            page.get_by_role("heading", name=f"Browser-created task {name}", exact=True).wait_for()
                             page.wait_for_timeout(300)
-                            assert not page.get_by_text(f"Remote attribute update visible {name}", exact=True).is_visible()
+                            assert not page.get_by_role("heading", name=f"Remote attribute update visible {name}", exact=True).is_visible()
                             search.fill("")
-                            page.get_by_text(f"Remote attribute update visible {name}", exact=True).wait_for()
+                            search.press("Tab")
+                            page.get_by_role("heading", name=f"Remote attribute update visible {name}", exact=True).wait_for()
 
                         check("search filters and restores task cards", search_tasks)
 
@@ -336,6 +345,20 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 else:
                                     dialog.accept(new_name)
 
+                            if page.get_by_role("button", name="List menu", exact=True).count():
+                                def menu_prompt(dialog):
+                                    dialog.accept('rename' if 'Type' in dialog.message else new_name)
+                                page.on('dialog', menu_prompt)
+                                try:
+                                    page.get_by_role('region', name=f'{old_name} column', exact=True).get_by_role('button', name='List menu', exact=True).click()
+                                finally:
+                                    page.remove_listener('dialog', menu_prompt)
+                                deadline = time.monotonic() + 2
+                                while time.monotonic() < deadline:
+                                    if any(x['name'] == new_name for x in api('GET', f"/api/repos/{repo['id']}/states")['items']):
+                                        return
+                                    page.wait_for_timeout(100)
+                                raise AssertionError('List menu rename did not persist')
                             page.once("dialog", rename)
                             control = page.get_by_role(
                                 "button", name=f"Edit {old_name}", exact=True
@@ -361,6 +384,54 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         check("rename workflow state", workflow)
 
                         def workflow_lifecycle():
+                            if page.get_by_role('button', name='List menu', exact=True).count():
+                                added_name = f'Browser column {name}'
+                                page.once('dialog', lambda dialog: dialog.accept(added_name))
+                                page.get_by_role('button', name='Add list', exact=True).click()
+                                deadline = time.monotonic() + 2
+                                added = None
+                                while time.monotonic() < deadline:
+                                    current = api('GET', f"/api/repos/{repo['id']}/states")['items']
+                                    added = next((x for x in current if x['name'] == added_name), None)
+                                    if added:
+                                        break
+                                    page.wait_for_timeout(100)
+                                assert added, 'Add list did not persist'
+                                column = page.get_by_role('region', name=f'{added_name} column', exact=True)
+                                earlier = page.get_by_role('button', name=f'Move {added_name} earlier', exact=True).or_(
+                                    column.get_by_role('button', name=re.compile(r'^(?:Move (?:list )?left|Earlier|Up)$', re.I)))
+                                reordered = earlier.count() > 0
+                                if reordered:
+                                    earlier.first.click()
+                                    deadline = time.monotonic() + 2
+                                    while time.monotonic() < deadline:
+                                        current = api('GET', f"/api/repos/{repo['id']}/states")['items']
+                                        if next(i for i, x in enumerate(current) if x['id'] == added['id']) == len(current) - 2:
+                                            break
+                                        page.wait_for_timeout(100)
+                                    assert next(i for i, x in enumerate(current) if x['id'] == added['id']) == len(current) - 2, current
+                                migrating = api('POST', f"/api/repos/{repo['id']}/tasks", {
+                                    'title': f'Workflow migration {name}', 'state': added['id']})
+                                page.get_by_role('heading', name=migrating['title'], exact=True).wait_for()
+                                destination = next(x for x in current if x['id'] != added['id'])
+                                def delete_prompt(dialog):
+                                    dialog.accept('delete' if 'Type' in dialog.message else destination['name'])
+                                page.on('dialog', delete_prompt)
+                                try:
+                                    page.get_by_role('region', name=f'{added_name} column', exact=True).get_by_role('button', name='List menu', exact=True).click()
+                                finally:
+                                    page.remove_listener('dialog', delete_prompt)
+                                deadline = time.monotonic() + 2
+                                while time.monotonic() < deadline:
+                                    current = api('GET', f"/api/repos/{repo['id']}/states")['items']
+                                    if all(x['id'] != added['id'] for x in current):
+                                        break
+                                    page.wait_for_timeout(100)
+                                assert all(x['id'] != added['id'] for x in current), current
+                                assert api('GET', f"/api/tasks/{migrating['id']}")['state'] == destination['id']
+                                checks.append({'check': 'add and delete populated workflow state', 'passed': True})
+                                assert reordered, 'Workflow state reordering has no usable control in the list menu UI'
+                                return
                             def open_editor():
                                 page.get_by_role("button", name=re.compile("edit (?:workflow|lists)", re.I)).first.click()
                                 page.get_by_role("dialog").wait_for()
@@ -391,7 +462,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             assert index == len(current) - 2, current
                             migrating = api("POST", f"/api/repos/{repo['id']}/tasks", {
                                 'title': f"Workflow migration {name}", 'state': added['id']})
-                            page.get_by_text(migrating['title'], exact=True).wait_for()
+                            page.get_by_role("heading", name=migrating['title'], exact=True).wait_for()
                             page.wait_for_timeout(300)
                             open_editor()
                             target_name = current[0]['name']
@@ -423,7 +494,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_role("button", name="Inspector", exact=True).or_(
                                 page.get_by_role("link", name="Inspector", exact=True)
                             ).or_(page.get_by_role("tab", name="Inspector", exact=True)).click()
-                            page.get_by_role('heading', name=re.compile(r'^Inspector')).wait_for()
+                            page.get_by_role('heading', name=re.compile(r'inspector', re.I)).wait_for()
                             origin = page.get_by_role('textbox', name='Remote URL', exact=True)
                             if origin.count():
                                 assert origin.input_value() == repo['remote_url']
@@ -485,13 +556,13 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_role(
                                 "button", name="Settings", exact=True
                             ).click()
-                            page.get_by_label(re.compile(r"^(?:LLM )?Gateway URL$", re.I)).fill(
+                            page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)).fill(
                                 "http://127.0.0.1:9/v1"
                             )
-                            page.get_by_label(re.compile(r"^(?:LLM )?API key")).fill(
+                            page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?(?:API )?key", re.I)).fill(
                                 "disposable-browser-secret"
                             )
-                            page.get_by_label(re.compile(r"^(?:LLM )?Model$", re.I)).fill(
+                            page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Model$", re.I)).fill(
                                 "browser-fixture-model"
                             )
                             page.get_by_role(
@@ -504,33 +575,33 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 and saved["llm_model"] == "browser-fixture-model"
                             )
                             assert "disposable-browser-secret" not in json.dumps(saved)
-                            if not page.get_by_label(re.compile(r"^(?:LLM )?Gateway URL$", re.I)).is_visible():
+                            if not page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)).is_visible():
                                 page.get_by_role("button", name="Settings", exact=True).click()
-                            page.get_by_label(re.compile(r"^(?:LLM )?Gateway URL$", re.I)).wait_for(state="visible")
+                            page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)).wait_for(state="visible")
                             assert (
-                                page.get_by_label(re.compile(r"^(?:LLM )?API key")).input_value()
+                                page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?(?:API )?key", re.I)).input_value()
                                 == ""
                             )
                             page.reload(wait_until="domcontentloaded")
                             if not page.get_by_label(
-                                re.compile(r"^(?:LLM )?Gateway URL$", re.I)
+                                re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)
                             ).is_visible():
                                 page.get_by_role(
                                     "button", name="Settings", exact=True
                                 ).click()
-                            page.get_by_label(re.compile(r"^(?:LLM )?Gateway URL$", re.I)).wait_for()
+                            page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)).wait_for()
                             assert (
                                 page.get_by_label(
-                                    re.compile(r"^(?:LLM )?Gateway URL$", re.I)
+                                    re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)
                                 ).input_value()
                                 == "http://127.0.0.1:9/v1"
                             )
                             assert (
-                                page.get_by_label(re.compile(r"^(?:LLM )?Model$", re.I)).input_value()
+                                page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Model$", re.I)).input_value()
                                 == "browser-fixture-model"
                             )
                             assert (
-                                page.get_by_label(re.compile(r"^(?:LLM )?API key")).input_value()
+                                page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?(?:API )?key", re.I)).input_value()
                                 == ""
                             )
 

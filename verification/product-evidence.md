@@ -1,49 +1,40 @@
 # Product completion evidence
 
-The latest tested candidate is retained at `_build/ui-final-diagnostic`. It is
-**not an admitted artifact**: native validation rejected a missing resolved peer
-edge in its source BOM. Earlier Fable observations remain historical evidence;
-passing checks must be repeated on the artifact ultimately delivered.
-The active regeneration is recorded in `_build/active-run.json`.
-
-Current review: board creation/edit/move, workflow lifecycle, live task edits,
-inspector saves and Settings pass at desktop/mobile. Board document widths are
-1526/1440 and 1299/390, so layout still fails. Service checks pass except checkout
-symlink identity, which creates a duplicate repository. Expiry remains active at
-110 seconds. Peer registration succeeds but opening the message dialog throws
-`Illegal invocation`. Graph selection/filter/zoom and timestamp-proportional placement pass after
-waiting for asynchronous rendering. Mobile inspector overflow is confirmed.
-Empty Git history and detached HEAD pass API checks. Desktop/mobile empty and
-truncated graph views also pass (`_build/ui-final-git-states/result.json`), including
-a reachable real boundary-parent marker. Visual comparison finds
-poor contrast in the pale task-move controls; final visual acceptance remains open. These results supersede the older candidate
-rows below where noted. Evidence: `_build/ui-final-browser.log`,
-`_build/ui-service-alias.log`, `_build/ui-expiry-browser/result.json`,
-`_build/ui-final-peer/page-errors.json`, `_build/ui-final-graph-ready.log`.
-
-Replacement backend snapshot `_build/polish-backend-diagnostic` now passes all
-27 generated native cases and the full independent backend suite, including alias
-identity, authenticated peer retries, real reporter sessions and MAC containment.
-Evidence: `_build/polish-native-diagnostic.log` and `_build/polish-backend-ready.log`.
-This is an in-progress snapshot; its frontend and LitAI admission remain unverified.
+The latest generated candidate is retained at `_build/polish-final-diagnostic`.
+It is not the delivered application. LitAI run68694 is still under native validation;
+its state is recorded in `_build/active-run.json`. Independent observations below
+come from the preceding snapshots of this same generation. Final source changed
+`frontend/dialogs.js` to use explicit named form elements, and changed test metadata;
+repeat affected tests before final delivery.
 
 | Requirement | Current evidence | Remaining work |
 | --- | --- | --- |
-| LitAI project and native build | Authoritative Component, flavors and lock; native npm build and 33 generated tests passed | Current lifecycle acceptance, committed receipt and reusable admitted source |
-| Repository overview and inspector | UI first-repository registration, origin display and description persistence pass | Repeat on final artifact |
-| Task attributes and SQLite persistence | Independent API roundtrip/restart covers title, description, state, labels, checklist, assignee, branch, cover, due date and dependencies; cycle and stale revision rejected | Repeat on final artifact |
-| Trello-style board | Rendered dark columns/cards, covers and horizontal board; create, search, desktop drag and settled mobile move pass | Rapid edit/save/move fails on stale revision; final reference comparison |
-| Editable workflow | Browser rename/add/reorder/delete with task migration pass at desktop/mobile | Repeat on final artifact |
-| Live task changes | Creation and title/description-update delivery plus durable SSE replay pass | Final invalidation/routing consistency |
-| Actual coding sessions by host | Real reporter child PID, hostname, CLI, branch and stopped lifecycle pass in API; same real PID appears in Fleet | Live stopped/expired state and overview counts in browser |
-| Git timeline and relationship graph | Real fork/merge parents; equal and unequal timestamp SVG layouts; selected hashes before/after filter; zoom and visible mobile inspector pass | Repeat on final artifact; review empty/error/truncated history states |
-| MAC authority and local fallback | Discovery, canonical SSH equivalence, metadata import, stable polling, all-protocol fleet writes, lifecycle rejection, confirmed absence and outage containment pass | Final artifact and configured-fleet setup review |
-| Official MCP | Official HTTP and stdio SDK clients create/read tasks; stdio waits boundedly for MAC readiness | Repeat on final artifact |
-| A2A peering | Durable task IDs, retry idempotency, two-process authenticated forwarding and token redaction pass | Peer UI currently offers sender IDs instead of receiver IDs |
-| Backend LLM configuration | Mock gateway prefix/auth/context and redaction pass; desktop settings save/reload passes | Mobile Settings control currently hidden |
-| Public runnable application | Diagnostic source runs locally in isolated fixtures | `litai build --from-accepted-source`, actual `litai run`, health and browser verification |
+| LitAI build and admission | Exact npm manifest/lock; missing Hono peer edge is now present; 27 generated tests pass independently | Native lifecycle result and current receipt |
+| Repository overview and inspector | First registration, origin display, description save pass in browser | Final artifact repeat |
+| Task attributes and SQLite | Full attribute roundtrip, restart, dependencies, cycle rejection and revision conflict pass | Final artifact repeat |
+| Trello board | Dark rail/list/card structure, colored covers, readable move controls; create/edit/rapid move/search/desktop drag pass | Document overflow from hidden absolute labels; final visual review |
+| Workflow editing | Rename, add and delete populated states with migration pass | No usable reorder control in generated list-menu UI |
+| Live task activity | Second-client create/edit/detail update and durable SSE replay pass | Final artifact repeat |
+| Physical coding sessions | Real child PID, hostname, CLI, branch, stopped lifecycle and Fleet display pass | Final artifact repeat |
+| Session expiry | Idle browser becomes stale at 90.03 seconds and sidebar count becomes zero | Final artifact repeat |
+| Checkout identity | Real checkout and symlink registration share one identity | Final artifact repeat |
+| Git DAG/timeline | Real fork/merge ancestry, equal/irregular timestamps, selection, zoom/filter, mobile inspector pass | Final artifact repeat |
+| Empty/truncated Git | Prior candidate browser check passes empty state and reachable boundary marker; current backend passes 1,005-commit truncation | Run browser state checker on final artifact |
+| MAC authority | Import, stable polling, SSH equivalence, all-protocol writes, lifecycle rejection, confirmed absence and outage containment pass | Final artifact repeat; setup documentation review |
+| Official MCP | Official HTTP and stdio SDK clients pass | Final artifact repeat |
+| A2A peers | Durable tasks, restart/idempotency, authenticated forwarding, token redaction; two-instance UI remote task creation/removal pass | Final artifact repeat |
+| LLM configuration | Gateway mock verifies prefix/auth/context; desktop/mobile Settings persistence and redaction pass | Final artifact repeat |
+| Public launch path | Diagnostic source runs in isolated fixtures | Accepted-source build, actual litai run, health and final browser checks |
 
-Diagnostic logs and screenshots are indexed in `docs/roadmap/active-work.md`.
+Evidence includes `_build/polish-backend-ready.log`,
+`_build/polish-native-diagnostic.log`, `_build/polish-board-controls.log`,
+`_build/polish-peer-ready/result.json`, `_build/polish-expiry/result.json`,
+`_build/polish-graph-ready.log` and `_build/polish-graph-irregular.log`.
+
+The isolated browser-only overflow experiment in `_build/polish-overflow-diagnosis`
+changed card-action positioning temporarily: widths became 1440/390, then returned
+to 1525/1245 after restoring the original style. It identifies the cause; it is not
+a passing product result. Generated source was not edited.
+
 `check_all.py` runs the independent product suite and does not issue a LitAI receipt.
-No production MAC fleet writes, external repository publication or release is required
-for this local project task.
+No production MAC writes, external publication or release is required for this task.
