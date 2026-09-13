@@ -358,6 +358,56 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
 
                         check("rename workflow state", workflow)
 
+                        def workflow_lifecycle():
+                            def open_editor():
+                                page.get_by_role("button", name=re.compile("edit workflow", re.I)).first.click()
+                                page.get_by_role("dialog").wait_for()
+
+                            def save_editor():
+                                page.get_by_role("dialog").get_by_role("button", name="Save", exact=True).click()
+                                page.get_by_role("dialog").wait_for(state="hidden")
+                                page.wait_for_timeout(400)
+
+                            added_name = f"Browser column {name}"
+                            open_editor()
+                            page.once("dialog", lambda dialog: dialog.accept(added_name))
+                            page.get_by_role("dialog").get_by_role("button", name="Add list", exact=True).click()
+                            page.get_by_role("button", name=f"Move {added_name} earlier", exact=True).click()
+                            save_editor()
+                            current = api("GET", f"/api/repos/{repo['id']}/states")["items"]
+                            added = next(x for x in current if x['name'] == added_name)
+                            index = next(i for i, x in enumerate(current) if x['id'] == added['id'])
+                            assert index == len(current) - 2, current
+                            migrating = api("POST", f"/api/repos/{repo['id']}/tasks", {
+                                'title': f"Workflow migration {name}", 'state': added['id']})
+                            page.get_by_text(migrating['title'], exact=True).wait_for()
+                            page.wait_for_timeout(300)
+                            open_editor()
+                            target_name = current[0]['name']
+                            page.once("dialog", lambda dialog: dialog.accept(target_name))
+                            row = page.get_by_role("dialog").locator("li").filter(
+                                has=page.get_by_role("textbox", name=f"State {index + 1} name", exact=True))
+                            row.get_by_role("button", name="Delete", exact=True).click()
+                            save_editor()
+                            remaining = api("GET", f"/api/repos/{repo['id']}/states")["items"]
+                            assert not any(x['id'] == added['id'] for x in remaining), remaining
+                            assert api("GET", f"/api/tasks/{migrating['id']}")['state'] == current[0]['id']
+
+                        check("add reorder and delete populated workflow state", workflow_lifecycle)
+
+                        def remote_only_graph():
+                            page.get_by_role("button", name="Graph", exact=True).or_(
+                                page.get_by_role("link", name="Graph", exact=True)
+                            ).or_(page.get_by_role("tab", name="Graph", exact=True)).click()
+                            page.locator("main").get_by_text(re.compile("checkout", re.I)).wait_for()
+                            assert page.locator('main svg [role="button"]').count() == 0
+                            page.get_by_role("button", name="Board", exact=True).or_(
+                                page.get_by_role("link", name="Board", exact=True)
+                            ).or_(page.get_by_role("tab", name="Board", exact=True)).click()
+                            page.get_by_role("button", name="Add task", exact=True).wait_for()
+
+                        check("remote-only graph explains checkout requirement", remote_only_graph)
+
                         def inspector():
                             page.get_by_role("button", name="Inspector", exact=True).or_(
                                 page.get_by_role("link", name="Inspector", exact=True)

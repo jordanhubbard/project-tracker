@@ -11,7 +11,7 @@ be repeated on the artifact that is ultimately delivered.
 | Repository overview and inspector | Browser origin display and description persistence pass at desktop/mobile | Final artifact review; UI repository registration |
 | Task attributes and SQLite persistence | Independent API roundtrip/restart covers title, description, state, labels, checklist, assignee, branch, cover, due date and dependencies; cycle and stale revision rejected | Repeat on final artifact |
 | Trello-style board | Rendered dark columns/cards, covers and horizontal board; create, search, desktop drag and settled mobile move pass | Rapid edit/save/move fails on stale revision; final reference comparison |
-| Editable workflow | Browser rename passes; generated native tests cover populated-state destination policy | UI add, reorder and delete/migrate tasks on final artifact |
+| Editable workflow | Browser rename/add/reorder/delete with task migration pass at desktop/mobile | Repeat on final artifact |
 | Live task changes | Creation and title/description-update delivery plus durable SSE replay pass | Final invalidation/routing consistency |
 | Actual coding sessions by host | Real reporter child PID, hostname, CLI, branch and stopped lifecycle pass in API; same real PID appears in Fleet | Live stopped/expired state and overview counts in browser |
 | Git timeline and relationship graph | Real fork/merge parents; equal and unequal timestamp SVG layouts; selected hashes before/after filter; zoom and visible mobile inspector pass | Repeat on final artifact; review empty/error/truncated history states |
