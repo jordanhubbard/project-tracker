@@ -10,7 +10,7 @@ export CODING_CLI="${CODING_CLI:-claude}"
 if [[ -x /opt/homebrew/opt/node@22/bin/node ]]; then
   export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 fi
-node -e 'if (Number(process.versions.node.split(".")[0]) < 22) throw Error("Node 22+ is required")'
+node -e 'if (process.versions.node !== "22.23.2") throw Error("Node differs from observed 22.23.2 build authority; refresh runtime.md before rebuilding")'
 tracker_git_version="$(git --version)"
 case "$tracker_git_version" in
   'git version 2.50.1'|'git version 2.50.1 '*) ;;

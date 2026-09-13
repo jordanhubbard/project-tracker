@@ -293,9 +293,9 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert settings['llm_key_configured'] is True, settings
                     assert settings['llm_url'] == environment['TRACKER_LLM_URL'], settings
                     assert settings['llm_model'] == 'fixture-model', settings
-                    request('PATCH', '/api/settings', {'llm_key': ''})
+                    request('PUT', '/api/settings', {'llm_key': ''})
                     assert request('GET', '/api/settings')['llm_key_configured'] is True
-                    request('PATCH', '/api/settings', {'clear': ['llm_key']})
+                    request('PUT', '/api/settings', {'llm_key_clear': True})
                     stop()
                     start()
                     cleared = request('GET', '/api/settings')
@@ -370,7 +370,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     def peer_task(response):
                         envelope = response.get('response', response)
                         assert isinstance(envelope, dict) and 'error' not in envelope, response
-                        result = envelope.get('result', envelope.get('task', envelope))
+                        result = envelope.get('result', envelope.get('remote_task', envelope.get('task', envelope)))
                         assert isinstance(result, dict) and result.get('kind') == 'task', response
                         return result
                     sent_task = peer_task(sent)

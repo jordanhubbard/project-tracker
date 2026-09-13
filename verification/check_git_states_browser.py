@@ -105,7 +105,7 @@ with tempfile.TemporaryDirectory(prefix='tracker-git-states-') as temporary:
                     marker.first.scroll_into_view_if_needed()
                     expect(marker.first).to_be_visible()
                     page.screenshot(path=str(out / f'{width}-boundary.png'), full_page=True)
-                    page.get_by_role('button', name='Timeline', exact=True).or_(page.get_by_role('tab', name='Timeline', exact=True)).or_(page.get_by_role('link', name='Timeline', exact=True)).click()
+                    page.get_by_role('button', name='Timeline', exact=True).or_(page.get_by_role('tab', name='Timeline', exact=True)).or_(page.get_by_role('link', name='Timeline', exact=True)).first.click()
                     page.wait_for_timeout(400)
                     page.screenshot(path=str(out / f'{width}-bounded-timeline.png'), full_page=True)
                     (out / f'{width}-bounded-timeline.aria.txt').write_text(page.locator('body').aria_snapshot())

@@ -24,6 +24,12 @@ admission adapter matches manifest/import authority against component names;
 it does not combine CycloneDX group with name. Apply the same rule to every
 scoped transitive package, including @hono/node-server and @types/node.
 Use Node built-ins for HTTP, SQLite, Git subprocesses, filesystem, crypto and events.
+This build uses the independently observed Node.js 22.23.2 runtime. Its source
+SBOM component SHALL use name node, purl pkg:generic/node@22.23.2, isExternal true,
+and exact version 22.23.2 with runtime kind and scope. Do not emit a versionRange
+for this component: the installed admission adapter does not resolve a generic
+Node runtime range from its toolchain observation. This exact declaration records
+the runtime actually used for the authorized build and independent execution checks.
 Git 2.30.0 or newer is a required host runtime dependency. This macOS build is bound
 to the independently observed host Git 2.50.1 (`git --version` reports
 `git version 2.50.1 (Apple Git-155)`). Its source SBOM component has

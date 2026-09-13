@@ -1,12 +1,13 @@
 # Product completion evidence
 
-Current checkpoint: the layout generation passed native acceptance (48 cases),
-backend protocols, peer UI, expiry, task editing, mobile width and bounded-history
-views. Remaining rendered failures are workflow deletion, remote-only navigation,
-small-graph zoom, nearby labels, and task/session branch associations. See the
-latest [active work](../docs/roadmap/active-work.md) and the final-source audit under
-`_build/layout-final-independent` and `_build/layout-branch-audit`. Earlier tables
-below are historical snapshots and do not claim delivery.
+Current checkpoint: the interaction generation passes all seven independent phases
+in `_build/interactions-independent/summary.json`, including desktop/mobile workflow
+migration, zoom, label spacing and actual branch task/session associations. Final
+application code matches that tested snapshot. Native admission failed on the
+source SBOM's unresolved Node range; runtime authority now pins the observed exact
+22.23.2. Rebuild, native acceptance and public launch verification remain pending.
+See the latest [active work](../docs/roadmap/active-work.md). Earlier sections below
+are historical evidence and do not claim delivery.
 
 
 The latest complete retained source is `_build/contained-final-diagnostic`.

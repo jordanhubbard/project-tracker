@@ -302,9 +302,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 label = node.get_attribute("aria-label") or ""
                                 short_hash = re.search(r"[a-f0-9]{7,64}", label)
                                 if short_hash:
-                                    expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(r"Hash\s*:?\s*" + short_hash.group()), timeout=2000)
+                                    expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(re.escape(short_hash.group())), timeout=2000)
                                 details = page.locator("#commit-inspector, .commit-inspector, .inspector").inner_text()
-                                match = re.search(r"\bHash\s*:?\s+([a-f0-9]{40,64})\b", details)
+                                match = re.search(r"\b([a-f0-9]{40,64})\b", details)
                                 center = commit_circle(node).evaluate(
                                     "n => {const p = n.ownerSVGElement.createSVGPoint(); p.x=n.cx.baseVal.value; p.y=n.cy.baseVal.value; return p.matrixTransform(n.getCTM()).x}"
                                 )
@@ -350,7 +350,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         filtered_node = page.locator("svg").get_by_role("button", name=re.compile(featurehash[:8]))
                         expect(filtered_node).to_be_visible(timeout=2000)
                         commit_circle(filtered_node).click()
-                        expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(r"Hash\s*:?\s*" + featurehash), timeout=2000)
+                        expect(page.locator("#commit-inspector, .commit-inspector, .inspector")).to_contain_text(re.compile(re.escape(featurehash)), timeout=2000)
                         filtered = page.locator("#commit-inspector, .commit-inspector, .inspector").inner_text()
                         if feature_task_title not in filtered or main_task_title in filtered:
                             issues.append(f'{mode}: filtered feature inspector does not distinguish actual branch task associations')
@@ -376,10 +376,10 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         if invalid:
                             issues.append(f"{mode}: invalid SVG coordinates")
                         selected_hash = re.search(
-                            r"\bHash\s*:?\s+([a-f0-9]{40,64})\b", selected
+                            r"\b([a-f0-9]{40,64})\b", selected
                         )
                         filtered_hash = re.search(
-                            r"\bHash\s*:?\s+([a-f0-9]{40,64})\b", filtered
+                            r"\b([a-f0-9]{40,64})\b", filtered
                         )
                         if not selected_hash or selected_hash.group(1) != mergehash:
                             issues.append(

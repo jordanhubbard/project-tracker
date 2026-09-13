@@ -371,3 +371,21 @@ queue item or let `docs/roadmap/` become a plan archive.
   and the feature-filtered inspector incorrectly includes main-only tasks.
   `_build/layout-branch-audit` retains these results and screenshots. The next
   generation must implement these associations, not only the underlying API data.
+
+
+### Runtime admission after passing interaction verification
+
+- The interaction generation passes all seven independent phases: backend protocols,
+  all board interactions at both viewport sizes, peer UI, real session expiry,
+  empty/bounded history, equal-time and irregular-time graph checks. Workflow
+  migration, zoom geometry, label spacing and real branch task/host associations
+  now pass without generated-source edits or browser overrides.
+- Evidence: `_build/interactions-independent/summary.json` is complete and passing;
+  `_build/interactions-final-provenance.json` binds the final unmodified source.
+  Final application code is unchanged from the complete-source test snapshot.
+- Native rebuild exited with `dependencies.source-range-unresolved` because its
+  SBOM declared generic Node only as a range. Runtime authority now requires the
+  independently observed exact Node 22.23.2, alongside exact Git 2.50.1.
+- Next action: rebuild with exact runtime metadata, require native admission and
+  final artifact checks, then verify the supported build/run path before delivery.
+  Independent test success does not stand in for native acceptance.

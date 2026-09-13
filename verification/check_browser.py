@@ -297,7 +297,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             task = next(t for t in api('GET', f"/api/repos/{repo['id']}/tasks")['items']
                                         if t['title'] == f'Browser-created task {name}')
                             prerequisite = api('POST', f"/api/repos/{repo['id']}/tasks", {
-                                'title': f'Browser prerequisite {name}', 'state': task_state(states[0])})
+                                'title': f'Browser prerequisite {name}', 'state': task_state(api('GET', f"/api/repos/{repo['id']}/states")['items'][0])})
                             title_control(page, name=prerequisite['title'], exact=True).wait_for(timeout=2000)
                             open_task(page, task['title'])
                             dialog = page.get_by_role('dialog')
@@ -305,7 +305,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             dialog.get_by_label(re.compile(r'^Branch$', re.I)).fill('feature/browser-verification')
                             dialog.get_by_label(re.compile(r'^Due date$', re.I)).fill('2026-10-02')
                             dialog.get_by_role('combobox', name=re.compile(r'^Cover(?: colou?r)?$', re.I)).select_option('purple')
-                            dialog.get_by_label('Priority', exact=True).fill('2')
+                            dialog.get_by_label('Priority', exact=True).select_option('2')
                             dialog.get_by_label(re.compile(r'^Labels', re.I)).fill('QA, UI')
                             dialog.get_by_role('listbox', name=re.compile(r'^(?:Depends on|Dependencies)', re.I)).select_option(prerequisite['id'])
                             dialog.get_by_role('button', name=re.compile(r'^Add checklist item$', re.I)).click()
@@ -416,10 +416,10 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
                             old = current[0]
                             new_name = f'Ready {name}'
-                            page.get_by_role('button', name=f"List menu for {old['name']}", exact=True).click()
+                            page.get_by_role('button', name=f"Rename list {old['name']}", exact=True).click()
                             dialog = page.get_by_role('dialog')
                             dialog.get_by_role('textbox', name='List name', exact=True).fill(new_name)
-                            dialog.get_by_role('button', name='Rename', exact=True).click()
+                            dialog.get_by_role('button', name='Rename list', exact=True).click()
                             dialog.wait_for(state='hidden')
                             saved = next(x for x in api('GET', f"/api/repos/{repo['id']}/states")['items'] if x['id'] == old['id'])
                             assert saved['name'] == new_name, saved
@@ -431,7 +431,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_role('button', name=re.compile(r'^(?:\+ )?Add list$')).click()
                             dialog = page.get_by_role('dialog')
                             dialog.get_by_role('textbox', name='List name', exact=True).fill(added_name)
-                            dialog.get_by_role('button', name='Add', exact=True).click()
+                            dialog.get_by_role('button', name='Add list', exact=True).click()
                             dialog.wait_for(state='hidden')
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
                             added = next(x for x in current if x['name'] == added_name)
@@ -440,14 +440,13 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
                             assert current[-2]['id'] == added['id'], current
                             page.reload()
-                            page.get_by_role('button', name=f'List menu for {added_name}', exact=True).wait_for()
+                            page.get_by_role('button', name=f'Delete list {added_name}', exact=True).wait_for()
                             assert api('GET', f"/api/repos/{repo['id']}/states")['items'] == current
                             migrating = api('POST', f"/api/repos/{repo['id']}/tasks", {'title': f'Workflow migration {name}', 'state': task_state(added)})
                             title_control(page, name=migrating['title'], exact=True).wait_for()
                             destination = next(x for x in current if x['id'] != added['id'])
-                            page.get_by_role('button', name=f'List menu for {added_name}', exact=True).click()
-                            dialog.get_by_role('button', name=re.compile(r'^Delete(?: list)?$')).click()
-                            dialog.get_by_role('combobox', name=re.compile(r'Destination|Move.*to',re.I)).select_option(task_state(destination))
+                            page.get_by_role('button', name=f'Delete list {added_name}', exact=True).click()
+                            dialog.get_by_role('combobox', name=re.compile(r'Destination|Move.*to',re.I)).select_option(label=destination['name'])
                             dialog.get_by_role('button', name=re.compile(r'Delete|Confirm',re.I)).click()
                             dialog.wait_for(state='hidden')
                             assert all(x['id'] != added['id'] for x in api('GET', f"/api/repos/{repo['id']}/states")['items'])
