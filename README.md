@@ -17,14 +17,14 @@ Build and verify with the installed LitAI CLI:
 
 ```sh
 litai lock components/tracker
-./scripts/litai-service.sh rebuild components/tracker --allow-host-execution --keep-runtime
+./scripts/litai-service.sh
 litai verify
 ```
 
-The service wrapper selects the installed Node 22 runtime; LitAI replays the exact
-npm lock through its supported dependency lifecycle. Python dependency support in the
-installed LitAI lifecycle is incomplete, so the product now uses Node SQLite and the
-official JavaScript MCP SDK. The original Python flavor is retained as diagnostic history.
+The wrapper selects the installed Node 22 runtime, checks the observed Git 2.50.1
+build dependency, and explicitly selects GPT-6 Astra for generation. LitAI replays the
+exact npm lock through its supported dependency lifecycle. Build diagnostics and
+independent service/browser checks are recorded in the active work document.
 
 MAC is authoritative for matched projects; unmatched repositories use local tasks.
 An unavailable configured fleet must never be mistaken for an unmatched repository.
