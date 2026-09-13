@@ -3,7 +3,7 @@ namespace: project-tracker
 version: 1.0.0
 display_name: Project Tracker
 profiles: ["application", "service", "full-stack"]
-specification_roots: ["component.md", "runtime.md", "mac-integration.md", "quality.md"]
+specification_roots: ["component.md", "runtime.md", "mac-integration.md", "quality.md", "visual.md"]
 sample: false
 inheritable: false
 provides:

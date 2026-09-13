@@ -132,3 +132,10 @@ queue item or let `docs/roadmap/` become a plan archive.
 - Exercised a real temporary Git fork/merge fixture. The API returned the exact parent edges. Rendered Graph produced NaN node/edge coordinates and an effectively empty canvas; Timeline overlapped commits sharing the same timestamp. Screenshots and API evidence are under `_build/diagnostic-graph`. Both modes still need usable layouts, selection, zoom/reset and branch filtering in the final candidate.
 - Added an explicit `--diagnostic-continue` mode to the independent service verifier. It collects later phase failures and still exits nonzero; ordinary acceptance remains fail-fast. Reporter invocation now uses the framework-required JSON argument array and a disposable token.
 - That diagnostic run confirmed three failing phases on the old final candidate: LLM gateway path prefix, host reporter failing to publish its running child, and MAC auto-discovery returning an empty repo collection after the fixture's successful upstream reads. Log: `_build/node-remaining-diagnostics.log`. The active revised build already includes contract clarification for those behaviors; retest its final output.
+
+### Exact source SBOM retry cause
+
+- Structured tracing identified `coding_cli.generated_metadata_invalid`. Extracted the rejected BOM from the generation diff and reproduced its underlying cause: `sbom.source-version-missing` for the external Git component, which omitted both version and versionRange.
+- A diagnostic copy adding Git's purl and versionRange `vers:generic/>=2.30.0` passed both strict source validation and the exact authority reconciliation path. No lifecycle evidence was modified or admitted by this diagnostic.
+- Deliberately stopped build 74422 / PID 32931 and generator PID 36217 after identifying this concrete repair. Build is terminal (143). Preserve its debug trace and rejected BOM; do not resume that handle.
+- Next repair is authoritative: state the Git runtime range and clarify the verified graph, timeline, cover-style and navigation requirements in a separate visual specification, then regenerate with existing full acceptance gates.

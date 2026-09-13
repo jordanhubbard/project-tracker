@@ -12,6 +12,10 @@ Copy each verbatim into source/package.json and source/package-lock.json. Do not
 npm during generation or infer a partial lock. The authorized lifecycle owns dependency
 replay. Enumerate every package and real parent dependency edge in the source BOM.
 Use Node built-ins for HTTP, SQLite, Git subprocesses, filesystem, crypto and events.
+Git 2.30.0 or newer is a required host runtime dependency. Its source SBOM component
+has purl pkg:generic/git, isExternal true and versionRange vers:generic/>=2.30.0;
+omit version unless the exact installed version is independently resolved. An external
+Git entry without versionRange is invalid. Classify it as system with runtime scope.
 Use node:sqlite DatabaseSync with WAL and busy_timeout; bound operations so requests
 remain responsive. The HTTP service may use specified timers, network IO and subprocess
 argv as required by the product; portable JSON-only restrictions do not remove these
