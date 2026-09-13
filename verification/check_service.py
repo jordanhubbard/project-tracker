@@ -323,19 +323,25 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                         'remote_url': 'https://example.test/peer/repository.git'}, expected=201)
                     registered = request('POST', '/api/peers', {
                         'url': peer_base, 'name': 'Isolated peer', 'token': peer_token}, 201)
-                    assert peer_token not in json.dumps(registered), registered
-                    assert peer_token not in json.dumps(request('GET', '/api/peers'))
+                    def peer_response_redaction():
+                        assert peer_token not in json.dumps(registered), registered
+                        assert peer_token not in json.dumps(request('GET', '/api/peers'))
+                    run_phase('peer_response_redaction', peer_response_redaction)
                     peer_message = {'kind': 'message', 'role': 'user',
                         'messageId': str(uuid.uuid4()), 'parts': [{'kind': 'data', 'data': {
                             'operation': 'create_task', 'repo_id': remote_repo['id'],
                             'task': {'title': 'Created through authenticated peer'}}}]}
                     sent = request('POST', f"/api/peers/{registered['id']}/messages",
                                    {'message': peer_message})
-                    assert 'result' in sent, sent
-                    assert sent['result']['status']['state'] == 'completed', sent
+                    def peer_task(response):
+                        result = response.get('result', response.get('task', response))
+                        assert isinstance(result, dict) and result.get('kind') == 'task', response
+                        return result
+                    sent_task = peer_task(sent)
+                    assert sent_task['status']['state'] == 'completed', sent
                     retried = request('POST', f"/api/peers/{registered['id']}/messages",
                                       {'message': peer_message})
-                    assert retried['result']['id'] == sent['result']['id'], retried
+                    assert peer_task(retried)['id'] == sent_task['id'], retried
                     rows = peer_request('GET', f"/api/repos/{remote_repo['id']}/tasks")['items']
                     assert sum(t['title'] == 'Created through authenticated peer'
                                for t in rows) == 1, rows
