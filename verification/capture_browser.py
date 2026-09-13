@@ -43,6 +43,16 @@ def capture(base: str, output: Path, executable: str | None) -> None:
                 })''')
                 if dimensions['document'] > dimensions['viewport']:
                     issues.append(f'Document overflow: {dimensions}')
+                invalid_svg = page.locator('svg').evaluate_all('''elements => {
+                    const geometry = new Set(['x', 'y', 'cx', 'cy', 'x1', 'x2', 'y1',
+                        'y2', 'width', 'height', 'd', 'points', 'transform', 'viewBox']);
+                    return elements.flatMap(svg => [svg, ...svg.querySelectorAll('*')]
+                        .flatMap(node => [...node.attributes]
+                            .filter(attribute => geometry.has(attribute.name) &&
+                                /NaN|Infinity|undefined/.test(attribute.value))
+                            .map(attribute => `${node.tagName}.${attribute.name}=${attribute.value}`)));
+                }''')
+                issues.extend(f'Invalid SVG geometry: {value}' for value in invalid_svg)
                 body = page.locator('body').inner_text()
                 for invalid in ('NaN', 'Infinity', '[object Object]'):
                     if invalid in body:
