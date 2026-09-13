@@ -442,6 +442,35 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert any(method == 'POST' and path == '/tasks'
                                and body.get('project') == fleet.project
                                for method, path, body in fleet.writes), fleet.writes
+                    async def mcp_fleet_create():
+                        from mcp import Client
+                        async with Client(base + '/mcp', read_timeout_seconds=8) as client:
+                            catalog = await client.list_tools()
+                            tool = next(item for item in catalog.tools if item.name == 'create_task')
+                            properties = tool.input_schema.get('properties', {})
+                            fields = {'title': 'Route MAC task through MCP'}
+                            arguments = {'repo_id': fleet_id}
+                            if 'task' in properties:
+                                arguments['task'] = fields
+                            else:
+                                arguments.update(fields)
+                            result = await client.call_tool('create_task', arguments)
+                            assert not result.is_error, result
+                        assert any(method == 'POST' and path == '/tasks'
+                                   and body.get('project') == fleet.project
+                                   and body.get('title') == fields['title']
+                                   for method, path, body in fleet.writes), fleet.writes
+                    asyncio.run(asyncio.wait_for(mcp_fleet_create(), timeout=20))
+                    via_a2a = rpc('message/send', {'message': {
+                        'kind': 'message', 'role': 'user', 'messageId': str(uuid.uuid4()),
+                        'parts': [{'kind': 'data', 'data': {
+                            'operation': 'create_task', 'repo_id': fleet_id,
+                            'task': {'title': 'Route MAC task through A2A'}}}]}})
+                    assert via_a2a['result']['status']['state'] == 'completed', via_a2a
+                    assert any(method == 'POST' and path == '/tasks'
+                               and body.get('project') == fleet.project
+                               and body.get('title') == 'Route MAC task through A2A'
+                               for method, path, body in fleet.writes), fleet.writes
                     request('PATCH', f"/api/tasks/{existing['id']}", {
                         'revision': existing['revision'], 'labels': ['updated']})
                     preserved = next(item for item in fleet.tasks if item['id'] == 'task_fixture_1')
@@ -481,6 +510,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                 'authenticated peer roundtrip and retry idempotency',
                 'peer credential redaction and removal',
                 'real Git fork and merge parent edges', 'MAC discovery and task routing',
+                'MAC write routing through official MCP and A2A',
                 'physical-host reporter child PID and stopped lifecycle',
                 'MAC metadata preservation', 'MAC lifecycle rejection',
                 'confirmed MAC absence permits local work',
