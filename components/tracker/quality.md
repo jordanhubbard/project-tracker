@@ -134,3 +134,13 @@ stopped within two seconds without navigating or reloading. Expiry must also upd
 the visible derived status and counts after the configured heartbeat deadline.
 Persist relevant session events for replay. The event name is an implementation
 choice, but emitting and subscribing must agree across every entity change surface.
+
+Peer messaging UI addresses the receiving instance's repository IDs. Never populate
+"Remote repository id" from the sender's local overview: two instances assign
+different IDs even when they track similar URLs. Either accept a validated explicit
+remote ID in a labelled text input, or discover the peer's repositories through the
+backend using its stored credential and present that remote catalogue. In a two-
+instance UI scenario with disjoint repositories, register the receiver, choose or
+enter its repository ID, send a create_task request and observe that task in the
+receiver's database plus a useful result/history entry in the sender. Keep tokens
+backend-only; do not require a direct authenticated browser fetch to the peer.

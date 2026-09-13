@@ -18,5 +18,8 @@ case "$tracker_git_version" in
 esac
 if [[ $# -eq 0 ]]; then
   set -- rebuild components/tracker --allow-host-execution --keep-runtime
+  if [[ "$CODING_CLI" == claude ]]; then
+    set -- "$@" --model claude-fable-5-1
+  fi
 fi
 exec litai "$@"
