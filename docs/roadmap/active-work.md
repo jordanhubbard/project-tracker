@@ -432,3 +432,24 @@ queue item or let `docs/roadmap/` become a plan archive.
   dark cards, colored labels/covers and legible list names in the repair.
 - Next action: regenerate from the clarified configuration, workflow and visual
   authority; require all final independent checks and supported public launch.
+
+
+### Physical host annotations in branch views
+
+- The wiring generation passed native admission with 45 tests. Its backend
+  diagnostics, all 13 desktop/mobile board interactions, peer UI, actual session
+  expiry and empty/bounded-history views pass. Equal and irregular timestamp
+  checks confirm real edges, selection, spacing, zoom and branch task filtering.
+- Final frontend matches the tested snapshot. Both graph checks retain one
+  failure: the graph API projection drops session hostname, and the branch panel
+  renders only CLI/status. Fleet correctly shows the actual host and child PID.
+  The required branch-to-physical-host association is therefore still incomplete.
+- Evidence: `_build/wiring-native-result.json`, `_build/wiring-final-provenance.json`,
+  `_build/wiring-board2`, `_build/wiring-peer2`, `_build/wiring-git-states2`,
+  `_build/wiring-graph2` and `_build/wiring-graph-equal2`. Original fullsuite logs
+  include selector failures corrected by these reruns. Late backend changes
+  preserve local tasks during MAC discovery and correct entrypoint handling;
+  `_build/wiring-final-backend.log` records their final-source verification.
+- Next action: retain actual hostnames through the graph session projection and
+  rendered selected-branch association, regenerate and require all final checks
+  plus the supported public build/run path. Preserve the current passing behavior.

@@ -340,7 +340,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         zoomed_node_width = commit_circle(page.locator('svg [role=button]').first).evaluate('n=>n.getBoundingClientRect().width')
                         if zoomed_node_width <= initial_node_width + .1:
                             issues.append(f'{mode}: Zoom in did not enlarge commit geometry ({initial_node_width} -> {zoomed_node_width})')
-                        page.get_by_role('button', name=re.compile(r'^Reset(?: the graph scale)?$')).click()
+                        page.get_by_role('button', name=re.compile(r'^Reset(?: zoom| the graph scale)?$')).click()
                         page.wait_for_timeout(400)
                         reset = page.locator('svg').first.evaluate('n=>n.getBoundingClientRect().width')
                         reset_node_width = commit_circle(page.locator('svg [role=button]').first).evaluate('n=>n.getBoundingClientRect().width')

@@ -102,7 +102,14 @@ with tempfile.TemporaryDirectory(prefix='tracker-git-states-') as temporary:
                     assert boundary and 0 < len(known) < 1005
                     marker = page.locator('svg').get_by_role('button', name=re.compile(next(iter(boundary))[:7])).or_(
                         page.locator('svg').locator('text').filter(has_text=re.compile(next(iter(boundary))[:7])))
-                    marker.first.scroll_into_view_if_needed()
+                    scroll_deadline = time.monotonic() + 3
+                    while True:
+                        try:
+                            marker.first.scroll_into_view_if_needed()
+                            break
+                        except Exception as error:
+                            if 'not attached to the DOM' not in str(error) or time.monotonic() >= scroll_deadline:
+                                raise
                     expect(marker.first).to_be_visible()
                     page.screenshot(path=str(out / f'{width}-boundary.png'), full_page=True)
                     page.get_by_role('button', name='Timeline', exact=True).or_(page.get_by_role('tab', name='Timeline', exact=True)).or_(page.get_by_role('link', name='Timeline', exact=True)).first.click()

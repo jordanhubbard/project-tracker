@@ -26,6 +26,15 @@ def title_control(page, **kwargs):
 def gateway_control(page):
     return page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Gateway URL$", re.I)).last
 
+def list_control(page, action, name):
+    direct = page.get_by_role('button', name=f'{action} list {name}', exact=True)
+    if direct.count():
+        direct.click()
+        return
+    page.get_by_role('button', name=f'List menu for {name}', exact=True).click()
+    if action == 'Delete':
+        page.get_by_role('dialog').get_by_role('button', name='Delete list', exact=True).click()
+
 def task_state(st):
     return st[state_field]
 
@@ -419,10 +428,10 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
                             old = current[0]
                             new_name = f'Ready {name}'
-                            page.get_by_role('button', name=f"Rename list {old['name']}", exact=True).click()
+                            list_control(page, 'Rename', old['name'])
                             dialog = page.get_by_role('dialog')
                             dialog.get_by_role('textbox', name='List name', exact=True).fill(new_name)
-                            dialog.get_by_role('button', name='Save', exact=True).click()
+                            dialog.get_by_role('button', name=re.compile(r'^(?:Save|Rename(?: list)?)$')).click()
                             dialog.wait_for(state='hidden')
                             saved = next(x for x in api('GET', f"/api/repos/{repo['id']}/states")['items'] if x['id'] == old['id'])
                             assert saved['name'] == new_name, saved
@@ -448,12 +457,12 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
                             assert current[-2]['id'] == added['id'], current
                             page.reload()
-                            page.get_by_role('button', name=f'Delete list {added_name}', exact=True).wait_for()
+                            page.get_by_role('button', name=f'Delete list {added_name}', exact=True).or_(page.get_by_role('button', name=f'List menu for {added_name}', exact=True)).wait_for()
                             assert api('GET', f"/api/repos/{repo['id']}/states")['items'] == current
                             migrating = api('POST', f"/api/repos/{repo['id']}/tasks", {'title': f'Workflow migration {name}', 'state': task_state(added)})
                             title_control(page, name=migrating['title'], exact=True).wait_for()
                             destination = next(x for x in current if x['id'] != added['id'])
-                            page.get_by_role('button', name=f'Delete list {added_name}', exact=True).click()
+                            list_control(page, 'Delete', added_name)
                             dialog.get_by_role('combobox', name=re.compile(r'Destination|Move.*to',re.I)).select_option(label=destination['name'])
                             dialog.get_by_role('button', name=re.compile(r'Delete|Confirm',re.I)).click()
                             dialog.wait_for(state='hidden')

@@ -273,3 +273,14 @@ repeat that sequence in the same repository. Each newly added list appears last
 and moves exactly one position left. Do not insert at states.length while leaving
 old position gaps: that can duplicate a remaining position. Persist unique ordering
 and retain it across reloads; test at least two complete add/reorder/delete cycles.
+
+
+## Branch-to-physical-host integration
+
+Start an actual disposable session reporter child on main in a fork/merge fixture.
+Confirm its physical hostname in the stored session, graph response association and
+Fleet row. Open Graph with no branch filter, select main's tip and assert the exact
+hostname is visibly rendered. Repeat in Timeline and verify feature filtering
+excludes a main-only host. Stop the child and observe stopped status. A graph
+projection containing only session_id, branch, cli and status fails this contract;
+the actual hostname must survive that projection and reach the branch view.

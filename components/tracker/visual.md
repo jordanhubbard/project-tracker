@@ -216,3 +216,18 @@ secondary actions in an accessible list menu or a separate compact row. Task car
 prioritize title, colored label strips, cover color and concise metadata. Keep
 secondary edit/move controls accessible without allowing repeated control rows to
 dominate the card. Review actual desktop/mobile screenshots against the reference.
+
+
+## Physical host identity in branch associations
+
+Graph and Timeline visibly show the actual physical hostname for active coding
+sessions associated with the selected commit's branch. Carry that hostname from
+the reporter through the graph API projection into the visible session annotation.
+Showing only CLI and status loses the physical-host association; showing the host
+only in Fleet is insufficient for these branch views.
+
+On an unfiltered repository graph, selecting the main branch tip shows the exact
+hostname of an active reporter on main. An always-visible branch-association panel
+may also provide this information. Do not require an undisclosed branch-filter
+choice before any active host becomes visible. Filtering feature excludes hosts
+associated only with main. Keep task annotations scoped to the actual branch.

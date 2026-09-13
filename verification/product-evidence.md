@@ -1,16 +1,15 @@
 # Product completion evidence
 
-Current checkpoint: unborn-history generation passed native admission with 60 tests
-(`_build/unborn-native-result.json`). Actual empty/bounded Git browser checks and
-real session expiry pass. Final-source comparison retains environment-settings,
-sidebar navigation, repeated workflow position and zoom-geometry defects. Board
-checks pass 12/13 desktop and 11/13 mobile interactions; graph selection, timestamp
-spacing and branch/host associations pass after exact Hash-field synchronization.
-Evidence is bound by `_build/unborn-final-provenance.json`; retained diagnostics
-are `_build/unborn-board2`, `_build/unborn-graph4` and `_build/unborn-independent`.
-Regeneration, final independent checks and public launch remain pending. See the
-latest [active work](../docs/roadmap/active-work.md). Earlier sections are historical
-evidence and do not claim delivery.
+Current checkpoint: wiring generation passed native admission with 45 tests
+(`_build/wiring-native-result.json`). Backend diagnostics, all 13 board interactions
+at both widths, peer UI, real session expiry and empty/bounded Git browser checks
+pass. Graph selection, branch task associations, timestamp spacing and zoom pass.
+One product defect remains: graph session projections omit the physical hostname
+and their frontend does not show it, although Fleet does. Final frontend matches
+the tested snapshot; `_build/wiring-final-provenance.json` binds the final source.
+The focused graph-host repair, final independent checks and public launch remain
+pending. See the latest [active work](../docs/roadmap/active-work.md). Earlier
+sections are historical evidence and do not claim delivery.
 
 
 The latest complete retained source is `_build/contained-final-diagnostic`.

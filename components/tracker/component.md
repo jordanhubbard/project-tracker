@@ -159,6 +159,9 @@ when HEAD itself is unborn. Both Graph and Timeline render the empty message whi
 retaining navigation back to the board.
 Include parents outside the bounded window as boundary nodes. Display actual merge
 edges, forks, branch tip labels, timestamps and active task/session branch overlays.
+Graph session associations retain the actual reporter hostname together with session
+ID, branch, CLI and derived active status. Do not drop hostname when projecting
+stored sessions into graph response data, or substitute the backend's own host.
 Graph mode draws SVG node-edge DAG; timeline mode positions by time with lanes and
 explicit timestamp axis. Both offer zoom/reset, scroll/pan, node selection with commit
 inspector, branch filter and task links. Never infer parent edges from chronological
