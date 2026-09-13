@@ -202,6 +202,30 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert repo_id in result.model_dump_json(), result
             asyncio.run(asyncio.wait_for(mcp_roundtrip(), timeout=30))
 
+            def mcp_stdio_roundtrip():
+                async def exercise():
+                    from mcp import Client
+                    from mcp.client.stdio import StdioServerParameters
+                    transport = StdioServerParameters(command=command[0],
+                        args=command[1:] + [json.dumps(['service', 'mcp'])],
+                        env=environment)
+                    async with Client(transport, read_timeout_seconds=8) as client:
+                        catalog = await client.list_tools()
+                        create = next(tool for tool in catalog.tools if tool.name == 'create_task')
+                        properties = create.input_schema.get('properties', {})
+                        fields = {'title': 'Created through stdio MCP'}
+                        arguments = {'repo_id': repo_id}
+                        if 'task' in properties:
+                            arguments['task'] = fields
+                        else:
+                            arguments.update(fields)
+                        result = await client.call_tool('create_task', arguments)
+                        assert not result.is_error, result
+                    rows = request('GET', f'/api/repos/{repo_id}/tasks')['items']
+                    assert sum(row['title'] == fields['title'] for row in rows) == 1, rows
+                asyncio.run(asyncio.wait_for(exercise(), timeout=25))
+            run_phase('mcp_stdio', mcp_stdio_roundtrip)
+
             def llm_gateway():
                 llm_calls = []
                 fixture_key = 'disposable-llm-secret-' + str(uuid.uuid4())
@@ -469,6 +493,28 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                                    and body.get('title') == fields['title']
                                    for method, path, body in fleet.writes), fleet.writes
                     asyncio.run(asyncio.wait_for(mcp_fleet_create(), timeout=20))
+                    async def stdio_fleet_create():
+                        from mcp import Client
+                        from mcp.client.stdio import StdioServerParameters
+                        transport = StdioServerParameters(command=command[0],
+                            args=command[1:] + [json.dumps(['service', 'mcp'])], env=environment)
+                        async with Client(transport, read_timeout_seconds=8) as client:
+                            catalog = await client.list_tools()
+                            tool = next(item for item in catalog.tools if item.name == 'create_task')
+                            properties = tool.input_schema.get('properties', {})
+                            fields = {'title': 'Route MAC task through stdio MCP'}
+                            arguments = {'repo_id': fleet_id}
+                            if 'task' in properties:
+                                arguments['task'] = fields
+                            else:
+                                arguments.update(fields)
+                            result = await client.call_tool('create_task', arguments)
+                            assert not result.is_error, result
+                        assert any(method == 'POST' and path == '/tasks'
+                                   and body.get('project') == fleet.project
+                                   and body.get('title') == fields['title']
+                                   for method, path, body in fleet.writes), fleet.writes
+                    asyncio.run(asyncio.wait_for(stdio_fleet_create(), timeout=25))
                     via_a2a = rpc('message/send', {'message': {
                         'kind': 'message', 'role': 'user', 'messageId': str(uuid.uuid4()),
                         'parts': [{'kind': 'data', 'data': {
