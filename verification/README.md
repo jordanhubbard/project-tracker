@@ -49,8 +49,8 @@ After the automated suite passes, review these flows against the same artifact:
   then remove it. Verify both success and unavailable-peer feedback.
 - Display an actual reporter child session in the fleet and repository views with
   its host, process, CLI and branch; observe stopped/expired state.
-- Exercise the assistant UI against a local mock gateway, including configured,
-  unconfigured and upstream-error states. Confirm browser responses contain no key.
+- Verify that settings show whether the LLM is configured. The service suite tests
+  the assistant endpoint against a local mock gateway and checks key redaction.
 - Verify visible MAC offline/unresolved indicators and actionable conflict errors;
   fixture outages must preserve cached tasks without enabling local shadow writes.
 

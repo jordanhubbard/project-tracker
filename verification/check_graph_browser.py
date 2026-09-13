@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Verify real Git ancestry and browser graph interactions in an isolated service."""
 
-import argparse, json, os, re, socket, subprocess, tempfile, time, urllib.request
+import argparse, json, os, re, socket, subprocess, sys, tempfile, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from service_response import entity_response
@@ -188,6 +188,49 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                     dimensions = page.evaluate(
                         "({viewport:innerWidth,document:document.documentElement.scrollWidth})"
                     )
+                    reporter_verified = False
+                    if name == "desktop":
+                        pid_file = Path(data) / "browser-reporter.pid"
+                        release_file = Path(data) / "browser-reporter.release"
+                        child_code = (
+                            'import os, pathlib, time; '
+                            f'pathlib.Path({str(pid_file)!r}).write_text(str(os.getpid())); '
+                            f'path = pathlib.Path({str(release_file)!r}); '
+                            'deadline = time.monotonic() + 25\n'
+                            'while not path.exists() and time.monotonic() < deadline: time.sleep(0.1)\n'
+                        )
+                        reporter_args = ['service', 'session', '--repo', str(gitroot),
+                                         '--cli', 'other', '--', sys.executable, '-c', child_code]
+                        reporter = subprocess.Popen(
+                            [args.node, str(args.entrypoint.resolve()), json.dumps(reporter_args)],
+                            env=dict(env, TRACKER_URL=base), stdout=log, stderr=log)
+                        try:
+                            deadline = time.monotonic() + 10
+                            while not pid_file.exists() and time.monotonic() < deadline:
+                                page.wait_for_timeout(100)
+                            child_pid = int(pid_file.read_text())
+                            page.get_by_role("button", name="Fleet", exact=True).or_(
+                                page.get_by_role("link", name="Fleet", exact=True)
+                            ).or_(page.get_by_role("tab", name="Fleet", exact=True)).click()
+                            pid_cell = page.get_by_role("cell", name=str(child_pid), exact=True)
+                            pid_cell.wait_for(timeout=10000)
+                            row = pid_cell.locator("..")
+                            assert socket.gethostname() in row.inner_text(), row.inner_text()
+                            assert 'other' in row.inner_text() and 'main' in row.inner_text(), row.inner_text()
+                            release_file.touch()
+                            assert reporter.wait(timeout=8) == 0
+                            row.get_by_text("stopped", exact=True).wait_for(timeout=4000)
+                            page.screenshot(path=str(out / "desktop-reporter-fleet.png"), full_page=True)
+                            reporter_verified = True
+                        finally:
+                            release_file.touch()
+                            if reporter.poll() is None:
+                                reporter.terminate()
+                                try:
+                                    reporter.wait(timeout=5)
+                                except subprocess.TimeoutExpired:
+                                    reporter.kill()
+                                    reporter.wait(timeout=5)
                     checks = []
                     for mode in ("Graph", "Timeline"):
                         if mode == "Timeline":
@@ -318,6 +361,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             "dimensions": dimensions,
                             "graph_checks": checks,
                             "real_git_parent_edges": True,
+                            "actual_reporter_visible": reporter_verified,
                         }
                     )
                     page.close()

@@ -345,6 +345,23 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
 
                         check("rename workflow state", workflow)
 
+                        def inspector():
+                            page.get_by_role("button", name="Inspector", exact=True).or_(
+                                page.get_by_role("link", name="Inspector", exact=True)
+                            ).or_(page.get_by_role("tab", name="Inspector", exact=True)).click()
+                            page.get_by_text(repo['remote_url'], exact=True).wait_for()
+                            page.get_by_role("textbox", name="Description", exact=True).fill(
+                                f"Repository description from {name}")
+                            page.get_by_role("button", name="Save description", exact=True).click()
+                            deadline = time.monotonic() + 2
+                            while time.monotonic() < deadline:
+                                if api("GET", f"/api/repos/{repo['id']}")['description'] == f"Repository description from {name}":
+                                    return
+                                page.wait_for_timeout(100)
+                            raise AssertionError("Repository inspector did not persist description")
+
+                        check("repository inspector displays origin and saves description", inspector)
+
                         def activity():
                             if name == "mobile":
                                 page.get_by_role(
