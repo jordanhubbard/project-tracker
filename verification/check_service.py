@@ -477,6 +477,44 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                 run_phase('local_checkout_alias', local_checkout_alias)
             run_phase('git_and_reporter', git_and_reporter)
 
+            def bounded_git_history():
+                checkout = (root / 'long-history').resolve()
+                checkout.mkdir()
+                git_env = dict(environment, GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull)
+                subprocess.run(['git', '-C', str(checkout), 'init', '-b', 'main'],
+                               env=git_env, check=True, capture_output=True)
+                count = 1005
+                stream = []
+                for index in range(1, count + 1):
+                    message = f'History commit {index}\n'
+                    stream.append(f'commit refs/heads/main\nmark :{index}\n'
+                                  f'committer Fixture <fixture@example.test> {1700000000 + index} +0000\n'
+                                  f'data {len(message)}\n{message}')
+                    if index > 1:
+                        stream.append(f'from :{index - 1}\n')
+                    stream.append('\n')
+                subprocess.run(['git', '-C', str(checkout), 'fast-import', '--quiet'],
+                               input=''.join(stream), text=True, env=git_env,
+                               check=True, capture_output=True, timeout=20)
+                repo = request('POST', '/api/repos', {
+                    'name': 'Bounded history', 'local_path': str(checkout)}, 201)
+                graph = request('GET', f"/api/repos/{repo['id']}/graph")
+                assert 0 < len(graph['commits']) < count, len(graph['commits'])
+                assert graph['truncated'], graph
+                known = {commit['hash'] for commit in graph['commits']}
+                boundary = {parent for commit in graph['commits']
+                            for parent in commit['parents'] if parent not in known}
+                assert boundary, 'Truncation dropped real parents outside the returned window'
+                actual_lines = subprocess.check_output(
+                    ['git', '-C', str(checkout), 'rev-list', '--all', '--parents'],
+                    env=git_env, text=True, timeout=5).splitlines()
+                actual = {parts[0]: parts[1:] for parts in map(str.split, actual_lines)}
+                for commit in graph['commits']:
+                    assert commit['parents'] == actual[commit['hash']], commit
+                print(f'Bounded history: {len(known)}/{count} commits, {len(boundary)} boundary parents',
+                      file=sys.stderr)
+            run_phase('bounded_git_history', bounded_git_history)
+
             def mac_authority():
                 from mac_fixture import MacFixture
                 stop()
