@@ -193,14 +193,14 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         if mode == "Timeline":
                             page.get_by_role("button", name="Board", exact=True).or_(
                                 page.get_by_role("link", name="Board", exact=True)
-                            ).click()
+                            ).or_(page.get_by_role("tab", name="Board", exact=True)).click()
                             page.wait_for_timeout(200)
                         page.get_by_role("button", name=mode, exact=True).or_(
                             page.get_by_role("link", name=mode, exact=True)
-                        ).click()
+                        ).or_(page.get_by_role("tab", name=mode, exact=True)).click()
                         page.wait_for_timeout(400)
-                        if page.locator("#branch-filter").input_value():
-                            page.locator("#branch-filter").select_option("")
+                        if page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).input_value():
+                            page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).select_option("")
                         page.screenshot(
                             path=str(out / f"{name}-{mode.lower()}.png"), full_page=True
                         )
@@ -213,7 +213,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             for index in range(nodes.count()):
                                 node = nodes.nth(index)
                                 node.click()
-                                details = page.locator("#commit-inspector").inner_text()
+                                details = page.locator("#commit-inspector, .commit-inspector").inner_text()
                                 match = re.search(r"\bHash\s+([a-f0-9]{40,64})\b", details)
                                 center = node.locator("circle").first.evaluate(
                                     "n => {const p = n.ownerSVGElement.createSVGPoint(); p.x=n.cx.baseVal.value; p.y=n.cy.baseVal.value; return p.matrixTransform(n.getCTM()).x}"
@@ -228,7 +228,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 if far <= 0 or abs(near / far - 0.1) > 0.03:
                                     issues.append(f"Timeline: 0/10/100-second spacing is not proportional: {timeline_positions}")
                         page.locator("svg g[role=button]").first.click()
-                        selected = page.locator("#commit-inspector").inner_text()
+                        selected = page.locator("#commit-inspector, .commit-inspector").inner_text()
                         page.get_by_role("button", name="Zoom in", exact=True).click()
                         zoomed = page.locator("svg").first.evaluate(
                             "(node)=>node.getBoundingClientRect().width"
@@ -237,7 +237,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         reset = page.locator("svg").first.evaluate(
                             "(node)=>node.getBoundingClientRect().width"
                         )
-                        options = page.locator("#branch-filter option").evaluate_all(
+                        options = page.locator("#branch-filter, select").filter(has=page.locator("option", has_text="All branches")).locator("option").evaluate_all(
                             "nodes => nodes.map(node => ({value:node.value, text:node.textContent}))"
                         )
                         feature_option = next(
@@ -246,15 +246,15 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             if option["value"] in (featurehash, "refs/heads/feature")
                             or option["text"] in ("feature", "refs/heads/feature")
                         )
-                        page.locator("#branch-filter").select_option(feature_option)
+                        page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).select_option(feature_option)
                         page.locator("svg g[role=button]").first.click()
-                        filtered = page.locator("#commit-inspector").inner_text()
+                        filtered = page.locator("#commit-inspector, .commit-inspector").inner_text()
                         inspector_bounds = page.locator(
-                            "#commit-inspector"
+                            "#commit-inspector, .commit-inspector"
                         ).bounding_box()
-                        page.locator("#commit-inspector").scroll_into_view_if_needed()
+                        page.locator("#commit-inspector, .commit-inspector").scroll_into_view_if_needed()
                         inspector_bounds = page.locator(
-                            "#commit-inspector"
+                            "#commit-inspector, .commit-inspector"
                         ).bounding_box()
                         page.screenshot(
                             path=str(out / f"{name}-{mode.lower()}-filtered.png"),
@@ -305,7 +305,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 "zoomed_width": zoomed,
                                 "reset_width": reset,
                                 "inspector_visible": page.locator(
-                                    "#commit-inspector"
+                                    "#commit-inspector, .commit-inspector"
                                 ).is_visible(),
                             }
                         )

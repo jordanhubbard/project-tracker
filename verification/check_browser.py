@@ -5,7 +5,7 @@ Usage: python verification/check_browser.py /path/to/main.js
 This checks board behavior; graph and protocol checks remain separate.
 """
 
-import argparse, json, os, re, socket, subprocess, tempfile, time, urllib.request
+import argparse, json, os, re, socket, subprocess, tempfile, time, traceback, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from service_response import entity_response
@@ -148,6 +148,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 fn()
                                 checks.append({"check": label, "passed": True})
                             except Exception as e:
+                                traceback.print_exc()
                                 checks.append(
                                     {
                                         "check": label,
@@ -253,6 +254,55 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
 
                         check("second-client SSE update", remote)
 
+                        def search_tasks():
+                            search = page.get_by_role("searchbox").first
+                            search.fill(f"Browser-created task {name}")
+                            page.get_by_text(f"Browser-created task {name}", exact=True).wait_for()
+                            page.wait_for_timeout(300)
+                            assert not page.get_by_text(f"Remote change visible {name}", exact=True).is_visible()
+                            search.fill("")
+                            page.get_by_text(f"Remote change visible {name}", exact=True).wait_for()
+
+                        check("search filters and restores task cards", search_tasks)
+
+                        def drag_task():
+                            # Start after the earlier edit/move phase settles, so this
+                            # independently exercises the actual drag/drop path.
+                            page.wait_for_timeout(500)
+                            task = next(t for t in api("GET", f"/api/repos/{repo['id']}/tasks")["items"]
+                                        if t['title'] == f"Browser-created task {name}")
+                            destination = states[2]
+                            card = page.locator('[draggable="true"]').filter(
+                                has=page.get_by_text(task['title'], exact=True))
+                            heading = page.get_by_role("heading", name=re.compile(
+                                r"^" + re.escape(destination['name']) + r"(?:\s|$)", re.I))
+                            column = heading.locator("..")
+                            target = column.get_by_role("list").first
+                            card.drag_to(target)
+                            deadline = time.monotonic() + 2
+                            while time.monotonic() < deadline:
+                                if api("GET", f"/api/tasks/{task['id']}")["state"] == destination['id']:
+                                    return
+                                page.wait_for_timeout(100)
+                            raise AssertionError("Drag did not persist the destination state")
+
+                        if name == "desktop":
+                            check("drag moves a task between lists", drag_task)
+                        else:
+                            def mobile_move():
+                                page.wait_for_timeout(500)
+                                task = next(t for t in api("GET", f"/api/repos/{repo['id']}/tasks")["items"]
+                                            if t['title'] == f"Browser-created task {name}")
+                                page.get_by_role("combobox", name=re.compile(
+                                    f"Move.*Browser-created task {name}")).select_option(states[2]['id'])
+                                deadline = time.monotonic() + 2
+                                while time.monotonic() < deadline:
+                                    if api("GET", f"/api/tasks/{task['id']}")["state"] == states[2]['id']:
+                                        return
+                                    page.wait_for_timeout(100)
+                                raise AssertionError("Mobile keyboard move did not persist")
+                            check("mobile accessible move with loaded revision", mobile_move)
+
                         def workflow():
                             current = api("GET", f"/api/repos/{repo['id']}/states")[
                                 "items"
@@ -277,9 +327,14 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             )
                             if not control.count():
                                 control = page.get_by_role(
-                                    "button", name="Edit workflow", exact=True
+                                    "button", name=re.compile("edit workflow", re.I)
                                 ).first
                             control.click()
+                            if page.get_by_role("dialog", name="Edit workflow states").count():
+                                page.get_by_label("State 1 name", exact=True).fill(new_name)
+                                page.get_by_role("dialog").get_by_role("button", name="Save", exact=True).click()
+                                page.get_by_role("dialog").wait_for(state="hidden")
+                                page.remove_listener("dialog", rename)
                             page.wait_for_timeout(500)
                             assert any(
                                 x["name"] == new_name
@@ -295,7 +350,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 page.get_by_role(
                                     "button",
                                     name=re.compile(
-                                        "menu|sidebar|Toggle repositories", re.I
+                                        "^menu$|sidebar|Toggle repositories", re.I
                                     ),
                                 ).click()
                             page.get_by_role("button", name="Activity", exact=True).or_(
@@ -324,7 +379,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                     page.get_by_role(
                                         "button",
                                         name=re.compile(
-                                            "menu|sidebar|Toggle repositories", re.I
+                                            "^menu$|sidebar|Toggle repositories", re.I
                                         ),
                                     ).click()
 
@@ -334,17 +389,17 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_role(
                                 "button", name="Settings", exact=True
                             ).click()
-                            page.get_by_label("Gateway URL", exact=True).fill(
+                            page.get_by_label(re.compile(r"^(?:LLM )?Gateway URL$", re.I)).fill(
                                 "http://127.0.0.1:9/v1"
                             )
-                            page.get_by_label(re.compile(r"^API key")).fill(
+                            page.get_by_label(re.compile(r"^(?:LLM )?API key")).fill(
                                 "disposable-browser-secret"
                             )
-                            page.get_by_label("Model", exact=True).fill(
+                            page.get_by_label(re.compile(r"^(?:LLM )?Model$", re.I)).fill(
                                 "browser-fixture-model"
                             )
                             page.get_by_role(
-                                "button", name="Save settings", exact=True
+                                "button", name=re.compile(r"^Save(?: settings)?$")
                             ).click()
                             page.wait_for_timeout(500)
                             saved = api("GET", "/api/settings")
@@ -353,30 +408,33 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 and saved["llm_model"] == "browser-fixture-model"
                             )
                             assert "disposable-browser-secret" not in json.dumps(saved)
+                            if not page.get_by_label(re.compile(r"^(?:LLM )?Gateway URL$", re.I)).is_visible():
+                                page.get_by_role("button", name="Settings", exact=True).click()
+                            page.get_by_label(re.compile(r"^(?:LLM )?Gateway URL$", re.I)).wait_for(state="visible")
                             assert (
-                                page.get_by_label(re.compile(r"^API key")).input_value()
+                                page.get_by_label(re.compile(r"^(?:LLM )?API key")).input_value()
                                 == ""
                             )
                             page.reload(wait_until="domcontentloaded")
                             if not page.get_by_label(
-                                "Gateway URL", exact=True
+                                re.compile(r"^(?:LLM )?Gateway URL$", re.I)
                             ).is_visible():
                                 page.get_by_role(
                                     "button", name="Settings", exact=True
                                 ).click()
-                            page.get_by_label("Gateway URL", exact=True).wait_for()
+                            page.get_by_label(re.compile(r"^(?:LLM )?Gateway URL$", re.I)).wait_for()
                             assert (
                                 page.get_by_label(
-                                    "Gateway URL", exact=True
+                                    re.compile(r"^(?:LLM )?Gateway URL$", re.I)
                                 ).input_value()
                                 == "http://127.0.0.1:9/v1"
                             )
                             assert (
-                                page.get_by_label("Model", exact=True).input_value()
+                                page.get_by_label(re.compile(r"^(?:LLM )?Model$", re.I)).input_value()
                                 == "browser-fixture-model"
                             )
                             assert (
-                                page.get_by_label(re.compile(r"^API key")).input_value()
+                                page.get_by_label(re.compile(r"^(?:LLM )?API key")).input_value()
                                 == ""
                             )
 
