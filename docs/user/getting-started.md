@@ -1,89 +1,92 @@
-# Getting started
+# Getting started with Project Tracker
 
 [Project guide](../README.md) → getting started
 
-<!-- DOC-IDENTITY: Replace this section with your project's own description.
-     A downstream project's getting-started document must describe the project
-     itself — what it is, what it does, how to install and use it — not the
-     framework that built it. Delete this comment block and the placeholder
-     sections below, replacing them with your actual product documentation.
-     The "Development workflow" section at the bottom may be kept as-is for
-     contributors. -->
+Project Tracker brings repository boards, task activity, physical coding sessions,
+and real Git history into one workspace. The browser displays and edits this data;
+the backend owns SQLite, upstream credentials, MAC synchronization, MCP and A2A.
 
-## What is this project?
+## Current availability
 
-> **Replace this section.** Describe what this project is, what problem it solves,
-> and who it is for. A reader should understand the project's purpose without
-> knowing anything about Literate AI.
+The application is still being verified. There is no accepted installation or
+background service registration yet. Do not use a retained diagnostic snapshot as
+a production installation. The [active work record](../roadmap/active-work.md) and
+[product evidence](../../verification/product-evidence.md) identify the current
+candidate, passing checks and remaining work.
 
-## Installation
+This local build targets macOS with Node.js 22.23.2, the observed Git 2.50.1 host
+runtime, and the installed LitAI CLI. Other host installations have not been
+validated. A local checkout is needed to display a repository's real Git history;
+a remote URL alone is enough to identify a repository and track its tasks.
 
-> **Replace this section.** Document the exact artifact or package to obtain,
-> installation destination, supported host prerequisites, complete non-secret
-> configuration, environment-backed credentials, persistence and network
-> assumptions, startup order, health/readiness checks, one verified request with
-> its expected result, upgrade or rollback, and uninstall or cleanup.
->
-> Contributor-only `litai rebuild` commands and internal smoke harnesses do not
-> count as installation. If packaging or service registration is not implemented,
-> say so prominently and link the active work that owns that gap rather than
-> inventing commands.
+## Repository and task workflow
 
-## Usage
+The overview lists tracked repositories and their task/session counts. Open a
+repository to use its board. Each list represents a workflow state. Create a task,
+open a card to edit its details, or move it through the accessible move control or
+drag and drop. Task details include description, labels, priority, assignee, branch,
+due date, cover, checklist and dependencies. Changes arrive live from other clients.
 
-> **Replace this section.** Show how a user interacts with the installed project:
-> representative commands, API calls, configuration, or UI workflows.
+The repository inspector shows origin, local checkout, authority, synchronization
+state and task/session information. Graph shows actual parent relationships;
+Timeline spaces commits by time. Select a commit to inspect its hash, parents,
+author and subject. Branch filters and zoom controls help explore the history.
+Activity shows task changes. Fleet shows reported physical-host sessions.
 
----
+## MAC authority and settings
 
-## Development workflow
+Configure the MAC fleet URL and credential in Settings when the tracker should
+use an existing fleet. Matching MAC projects remain authoritative: edits use MAC's
+APIs and rejected transitions stay rejected. A successful discovery with no matching
+project permits local tracking. An unavailable configured fleet cannot establish
+that a repository is unmatched; unresolved writes fail until discovery succeeds.
+Existing cached fleet data remains visible during an outage.
 
-This project uses [Literate AI](https://github.com/NVIDIA-dev/literate-ai) to
-keep specifications as durable authority and generate source, current tests, and a
-CycloneDX source SBOM into a disposable workspace. The commands below are for
-contributors, not end users.
+Settings also holds the assistant gateway URL, model and backend-only key. The
+tracker appends the chat-completions path to the configured gateway prefix. Blank
+credential fields preserve saved secrets; explicit clear controls remove them.
+The browser never receives saved secret values. Core repository/task work does
+not require an LLM connection.
 
-Validate the project and inspect the exact recipe (planning does not invoke a
-model or execute generated code):
+## Physical coding sessions and peers
 
-```console
-litai project validate
-litai lock --check
-litai plan samples/hello-component
+Session visibility requires a reporter on the physical host running the coding
+CLI. It wraps the actual child process and reports hostname, PID, CLI, checkout and
+branch to the tracker. A stopped child is shown as stopped; a lost heartbeat expires
+instead of remaining active indefinitely. `TRACKER_URL` and `TRACKER_ACCESS_TOKEN`
+configure the reporter's backend connection. The exact installed reporter command
+will be recorded here after the accepted artifact's launch path is verified.
+
+Agents can use the official MCP endpoint or A2A. In Agents & peers, register a peer
+instance and its backend-stored token, then address a repository ID belonging to
+that receiving instance when sending a task request. Retrying the same A2A message
+ID must return the original task instead of creating a duplicate.
+
+## Data and operations
+
+`TRACKER_DATA_DIR` selects the backend data directory. Back up the complete directory
+while the service is stopped, including its SQLite files and credential file.
+Copying a changing database and WAL independently is not a verified backup method.
+Restore into a stopped service's data directory and verify health and repository
+contents before resuming clients.
+
+The intended default bind is loopback. Remote use requires an access token and an
+operator-managed secure endpoint. Final startup, health, upgrade and cleanup
+commands remain pending the accepted installation; no service or distribution
+package is currently claimed.
+
+## Contributor verification
+
+Specifications are the application authority. The local lifecycle wrapper uses the
+pinned Node/npm dependency closure and the selected coding CLI:
+
+```sh
+litai lock components/tracker
+./scripts/litai-service.sh
+litai verify
 ```
 
-Every non-empty initialized project begins with a portable hello Component. With an
-authenticated coding CLI and the selected host toolchain, prove the complete local
-lifecycle before changing it:
-
-```console
-litai rebuild samples/hello-component --project . \
-  --allow-host-execution --update-receipt
-```
-
-The rebuild generates source and current tests from the specification, builds a
-runnable artifact, runs both generated and independent acceptance tests, executes the
-application, and commits the compact current passing receipt. Modify
-`samples/hello-component/component.md` to begin the first application, or use
-`litai init --empty` when no starter is wanted.
-
-Invoke the `Execute:` command printed by rebuild with `{"name":"LitAI"}` as its one
-argument. The known output is exactly
-`{"greeting":"Hello, LitAI!","name":"LitAI"}`.
-
-```mermaid
-flowchart LR
-    Spec[Specification] --> Recipe((Exact recipe))
-    Flavor[Selected Flavors] --> Recipe
-    Skill[Pinned skills] --> Recipe
-    Workflow[Workflow] --> Recipe
-    Route[Routing] --> Recipe
-    Recipe --> Source[Disposable source + tests + SBOM]
-    Source --> Build[Authorized build and verification]
-```
-
-`+flavor` selects a variation and `-flavor` removes one. Explicit Component and
-Flavor requirements outrank defaults, so `-bazel` removes the scaffold's Bazel
-preference before prompt assembly. Read the [framework flow](framework-flow.md) before
-adding a lifecycle driver that compiles or runs generated source, and use the
-[project map](project-layout.md) to change the owning artifact.
+The independent checks under [verification](../../verification/README.md) exercise
+isolated databases, synthetic MAC/LLM endpoints, actual child processes and Chrome.
+They do not write to the production fleet or substitute for a LitAI admission
+receipt. Generated source and diagnostic output live in disposable build storage.
