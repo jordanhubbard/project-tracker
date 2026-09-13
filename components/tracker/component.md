@@ -82,8 +82,10 @@ subprocess argv with timeouts, never shell interpolation or network clone on use
 Configure TRACKER_MAC_URL and TRACKER_MAC_TOKEN on backend, with settings UI for URL
 and write-only password input. Synchronize `/projects`, `/bridge/repositories`,
 `/tasks`, `/agents`, `/machines` on startup and every 5 seconds via a background job.
-Read MAC actual contracts: project records have id/name/metadata; bridge repositories
-have id/name/path/source/project/metadata. Match normalized repository URL from registry
+MAC `/projects` returns summaries with project/project_id/repository_url/metadata;
+bridge repositories have id/name/path/source/project/metadata. `source` is a kind such
+as "git", not a repository URL. Prefer metadata.repository_url, then project summary
+repository_url, then canonical local path. Match normalized repository URL from registry
 metadata or canonical local path, with explicit mac_project override for ambiguity.
 MAC `/projects/{project}` is project detail. Registry and projects successful enumeration
 is needed before declaring absence. A configured unavailable fleet yields unresolved
@@ -111,13 +113,20 @@ nonempty deleted states require explicit destination and atomically move tasks. 
 state IDs differ from display names. Local tasks can move freely; MAC states retain MAC
 IDs and lifecycle enforcement, with clear rejection messages and no false success.
 
-MAC task create POST `/tasks` accepts title, description, project, priority, metadata,
+MAC task create POST `/tasks` accepts title, description, project, integer priority, metadata,
 dependencies and actor. PATCH maps to PUT `/tasks/{id}` for fields; lifecycle change maps
 to POST `/tasks/{id}/transition` {target_state,actor:"human",detail:{}}. Store tracker
 labels/checklists/cover/branch under metadata.project_tracker while preserving unrelated
 metadata. Preserve MAC ID and owner_agent_id. Project-filter task collections locally
 if upstream is unfiltered. On multi-step failure refresh actual upstream state and
 explain which change applied. Never pretend a network timeout proves absence or success.
+Map named UI priorities to documented integer values; default to integer 1, never null.
+On each successful sync, upsert every project-scoped upstream task into the board's
+read store; preserving a snapshot without updating board reads is insufficient.
+Successful projects AND registry enumeration with no match selects local authority.
+For example source="git" plus metadata.repository_url="https://example.test/a/b.git"
+must match git@example.test:a/b.git; an unrelated URL becomes local after a successful
+enumeration, and remains unresolved when either enumeration fails.
 
 ## Physical hosts and coding sessions
 
