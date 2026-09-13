@@ -91,15 +91,18 @@ def check(command: list[str]) -> None:
                 'remote_url': 'https://example.test/team/acceptance.git'}, 201)
             assert repo['authority'] == 'local', repo
             repo_id = repo['id']
+            workflow = request('GET', f'/api/repos/{repo_id}/states')['items']
+            in_progress = next(state['id'] for state in workflow
+                               if state.get('name') == 'in_progress')
             task = request('POST', f'/api/repos/{repo_id}/tasks', {
                 'title': 'Persist and edit', 'description': 'Initial description'}, 201)
             task_id = task['id']
             changed = request('PATCH', f'/api/tasks/{task_id}', {
                 'revision': task['revision'], 'title': 'Edited title',
-                'state': 'in_progress', 'labels': ['integration'],
+                'state': in_progress, 'labels': ['integration'],
                 'checklist': [{'text': 'Restart proof', 'done': True}]})
             assert changed['title'] == 'Edited title', changed
-            assert changed['state'] == 'in_progress', changed
+            assert changed['state'] == in_progress, changed
             assert changed['revision'] > task['revision'], changed
             request('PATCH', f'/api/tasks/{task_id}', {
                 'revision': task['revision'], 'title': 'Stale writer'}, 409)
@@ -145,8 +148,8 @@ def check(command: list[str]) -> None:
             assert int(following['id']) > int(first['id']), (first, following)
             message = {'kind': 'message', 'role': 'user', 'messageId': str(uuid.uuid4()),
                        'parts': [{'kind': 'data', 'data': {
-                           'operation': 'create_task', 'arguments': {
-                               'repo_id': repo_id, 'title': 'Peer idempotency'}}}]}
+                           'operation': 'create_task', 'repo_id': repo_id,
+                           'task': {'title': 'Peer idempotency'}}}]}
             result = rpc('message/send', {'message': message})
             assert 'result' in result, result
             peer_task = result['result']
@@ -172,11 +175,11 @@ def check(command: list[str]) -> None:
                     assert {'list_repositories', 'get_task', 'create_task',
                             'update_task', 'list_sessions', 'get_branch_graph'} <= names, names
                     get_tool = next(tool for tool in tools.tools if tool.name == 'get_task')
-                    properties = get_tool.inputSchema.get('properties', {})
+                    properties = get_tool.input_schema.get('properties', {})
                     id_key = 'task_id' if 'task_id' in properties else 'id'
                     assert id_key in properties, get_tool
                     result = await client.call_tool('get_task', {id_key: task_id})
-                    assert not result.isError, result
+                    assert not result.is_error, result
                     assert task_id in result.model_dump_json(), result
                     resources = await client.list_resources()
                     assert any(str(item.uri) == 'tracker://repositories'

@@ -112,3 +112,12 @@ queue item or let `docs/roadmap/` become a plan archive.
 - The timeout override and MAC corrections are committed; refreshed lock and authority gates pass. Fresh lifecycle session 16642 / PID 27607 is active, logging to `_build/tracker-node-long-rebuild.log`.
 - The MAC acceptance fixture now additionally requires local task work for a confirmed unmatched repository while the fleet is configured, and unresolved authority for a new repository registered during an outage. Syntax checked; app execution pending.
 - Extended the service verifier to run the real host-side reporter with a disposable child command and verify its physical hostname, child PID, repo/branch and stopped status. This tests reporter behavior; it does not claim deployment on remote hosts. Execution against the app remains pending.
+
+### Final Node candidate diagnosis
+
+- Session 16642 is terminal (exit 2). The lifecycle rejected duplicate installed copies of content-type before the native build. Its first invocation had retried; the final source remained available. The source snapshot watcher (10566) has ended.
+- A compatible npm closure retains MCP SDK 1.30.0 and pins body-parser 2.2.1, type-is 2.0.1 and negotiator 1.0.0 within their upstream semver ranges. npm ci passes and the actual native `load_npm_source_authority` accepts all 91 packages. This is stronger than the earlier graph-projector-only preflight.
+- An isolated diagnostic copy of the final source passed local edits, revision conflicts, restart persistence, heartbeat/stopped records, SSE replay, A2A idempotency/get/cancel/restart and official MCP tool/resource roundtrip. This is diagnostic execution, not LitAI admission.
+- Corrected verifier assumptions: local state IDs are obtained from the workflow endpoint; A2A uses repo_id/task DataPart fields; installed Python MCP SDK uses input_schema/is_error attributes.
+- LLM verification failed because the generated client discarded the configured /v1 gateway path. Preserve this regression check. Subsequent Git/reporter/MAC/browser checks have not yet run in this suite.
+- Next authority repair: adopt the preflighted npm closure, clarify MAC discovery/deduplication/reporter association and gateway URL prefixes, then rebuild with a structured debug log.

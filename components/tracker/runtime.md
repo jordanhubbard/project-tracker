@@ -20,7 +20,20 @@ explicit persistent-service operations.
 #### package.json
 
 ```json
-{"name":"project-tracker","version":"1.0.0","private":true,"type":"module","dependencies":{"@modelcontextprotocol/sdk":"1.30.0"}}
+{
+  "name": "project-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0"
+  },
+  "overrides": {
+    "body-parser": "2.2.1",
+    "type-is": "2.0.1",
+    "negotiator": "1.0.0"
+  }
+}
 ```
 
 #### package-lock.json
@@ -138,34 +151,21 @@ explicit persistent-service operations.
       }
     },
     "node_modules/body-parser": {
-      "version": "2.3.0",
-      "resolved": "https://registry.npmjs.org/body-parser/-/body-parser-2.3.0.tgz",
-      "integrity": "sha512-2cGmJupaNgg+QUwVLAucDuWuoMZ6EX9iHDRswZ5lsNYEmwPaRknMPCLZz07yTzVq/83p4o/wzbDZbBrTvGGTIw==",
+      "version": "2.2.1",
+      "resolved": "https://registry.npmjs.org/body-parser/-/body-parser-2.2.1.tgz",
+      "integrity": "sha512-nfDwkulwiZYQIGwxdy0RUmowMhKcFVcYXUU7m4QlKYim1rUtg83xm2yjZ40QjDuc291AJjjeSc9b++AWHSgSHw==",
       "license": "MIT",
       "dependencies": {
         "bytes": "^3.1.2",
-        "content-type": "^2.0.0",
+        "content-type": "^1.0.5",
         "debug": "^4.4.3",
-        "http-errors": "^2.0.1",
-        "iconv-lite": "^0.7.2",
+        "http-errors": "^2.0.0",
+        "iconv-lite": "^0.7.0",
         "on-finished": "^2.4.1",
-        "qs": "^6.15.2",
-        "raw-body": "^3.0.2",
-        "type-is": "^2.1.0"
+        "qs": "^6.14.0",
+        "raw-body": "^3.0.1",
+        "type-is": "^2.0.1"
       },
-      "engines": {
-        "node": ">=18"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/express"
-      }
-    },
-    "node_modules/body-parser/node_modules/content-type": {
-      "version": "2.1.0",
-      "resolved": "https://registry.npmjs.org/content-type/-/content-type-2.1.0.tgz",
-      "integrity": "sha512-mj7UPXE0jaqaOsukNZRUEfEi2AcL7C/vwmwcHV0O97eO1E1pxBZuyjlZrx5seTaNBg1U6+o35wpa35Qfcc+7ag==",
-      "license": "MIT",
       "engines": {
         "node": ">=18"
       },
@@ -772,32 +772,12 @@ explicit persistent-service operations.
       "license": "MIT"
     },
     "node_modules/negotiator": {
-      "version": "1.1.0",
-      "resolved": "https://registry.npmjs.org/negotiator/-/negotiator-1.1.0.tgz",
-      "integrity": "sha512-NMPBRMJgiQHjbd8phG3Vebdx4kZ1H121rbl5IkMqeOsahptB9BKo/d7oJ3zTXqTgagn2bWlNSXkh0QUGM31RYg==",
-      "license": "MIT",
-      "dependencies": {
-        "content-type": "^2.1.0"
-      },
-      "engines": {
-        "node": ">=18"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/express"
-      }
-    },
-    "node_modules/negotiator/node_modules/content-type": {
-      "version": "2.1.0",
-      "resolved": "https://registry.npmjs.org/content-type/-/content-type-2.1.0.tgz",
-      "integrity": "sha512-mj7UPXE0jaqaOsukNZRUEfEi2AcL7C/vwmwcHV0O97eO1E1pxBZuyjlZrx5seTaNBg1U6+o35wpa35Qfcc+7ag==",
+      "version": "1.0.0",
+      "resolved": "https://registry.npmjs.org/negotiator/-/negotiator-1.0.0.tgz",
+      "integrity": "sha512-8Ofs/AUQh8MaEcrlq5xOX0CQ9ypTF5dl78mjlMNfOK08fzpgTHQRQPBxcPlEtIw0yRpws+Zo/3r+5WRby7u3Gg==",
       "license": "MIT",
       "engines": {
-        "node": ">=18"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/express"
+        "node": ">= 0.6"
       }
     },
     "node_modules/object-assign": {
@@ -1130,34 +1110,17 @@ explicit persistent-service operations.
       }
     },
     "node_modules/type-is": {
-      "version": "2.1.0",
-      "resolved": "https://registry.npmjs.org/type-is/-/type-is-2.1.0.tgz",
-      "integrity": "sha512-faYHw0anBbc/kWF3zFTEnxSFOAGUX9GFbOBthvDdLsIlEoWOFOtS0zgCiQYwIskL9iGXZL3kAXD8OoZ4GmMATA==",
+      "version": "2.0.1",
+      "resolved": "https://registry.npmjs.org/type-is/-/type-is-2.0.1.tgz",
+      "integrity": "sha512-OZs6gsjF4vMp32qrCbiVSkrFmXtG/AZhY3t0iAMrMBiAZyV9oALtXO8hsrHbMXF9x6L3grlFuwW2oAz7cav+Gw==",
       "license": "MIT",
       "dependencies": {
-        "content-type": "^2.0.0",
+        "content-type": "^1.0.5",
         "media-typer": "^1.1.0",
         "mime-types": "^3.0.0"
       },
       "engines": {
-        "node": ">= 18"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/express"
-      }
-    },
-    "node_modules/type-is/node_modules/content-type": {
-      "version": "2.1.0",
-      "resolved": "https://registry.npmjs.org/content-type/-/content-type-2.1.0.tgz",
-      "integrity": "sha512-mj7UPXE0jaqaOsukNZRUEfEi2AcL7C/vwmwcHV0O97eO1E1pxBZuyjlZrx5seTaNBg1U6+o35wpa35Qfcc+7ag==",
-      "license": "MIT",
-      "engines": {
-        "node": ">=18"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/express"
+        "node": ">= 0.6"
       }
     },
     "node_modules/unpipe": {
@@ -1244,3 +1207,5 @@ framework dependency is required. Read and validate bounded JSON for REST and A2
 - **THEN** it negotiates a supported version and receives the actual shared database task
 
 The operator normalized orphan optional peer metadata for node_modules/debug. These entries named no declared peer dependency; no package, integrity, version or dependency edge was changed. The normalized lock is verified by npm ci before generation.
+
+The transitive overrides remain within parent dependency ranges and avoid multiple installed content-type versions, which the installed native npm lifecycle cannot represent. The exact closure is verified with both npm ci and the native npm source-authority loader.

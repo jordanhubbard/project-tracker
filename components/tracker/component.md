@@ -3,7 +3,7 @@ namespace: project-tracker
 version: 1.0.0
 display_name: Project Tracker
 profiles: ["application", "service", "full-stack"]
-specification_roots: ["component.md", "runtime.md"]
+specification_roots: ["component.md", "runtime.md", "mac-integration.md", "quality.md"]
 sample: false
 inheritable: false
 provides:
@@ -164,7 +164,8 @@ TRACKER_LLM_URL, TRACKER_LLM_KEY and TRACKER_LLM_MODEL supply defaults. Settings
 returns only configured booleans for secrets; password fields never refill existing
 keys. Blank preserves; an explicit clear operation removes. Backend-only call
 POST `/api/assistant` accepts a question and repo_id and uses gateway `/chat/completions`
-with bounded repository/task context, server-side bearer key and timeout. Return answer
+with bounded repository/task context, server-side bearer key and timeout. Preserve URL
+path prefixes: gateway http://localhost:9000/v1 calls /v1/chat/completions. Return answer
 and source context IDs; no key in browser requests, SSE, errors, logs or database
 exports. LLM unconfigured has a clear UI state; core task work never depends on LLM.
 Assistant only summarizes/suggests, does not execute commands or silently mutate tasks.
@@ -183,6 +184,8 @@ Implement A2A JSON-RPC at `/a2a`, publish `/.well-known/agent-card.json`; pin an
 explicitly advertise supported A2A 0.3.0 (not unsupported latest). Use protocol-conformant
 message/send, tasks/get, tasks/cancel, Task with kind/id/contextId/status/artifacts,
 Message with kind/role/messageId/parts, DataPart with kind:data and validated operation.
+For create_task, DataPart.data is {operation:"create_task",repo_id,task:{title,...}};
+get_task uses {operation:"get_task",task_id}, and update_task adds task:{...fields}.
 Operations list_repositories/list_tasks/get_task/create_task/update_task share REST
 service. Returned A2A Tasks and input message IDs are durable; retries are idempotent.
 Completed synchronous operations cannot be cancelled (TaskNotCancelable error), unknown
@@ -239,40 +242,5 @@ no page-level horizontal overflow. Accessible form labels, semantic landmarks, f
 trap/escape for dialogs, keyboard operable controls, reduced-motion support.
 Settings UI manages MAC and LLM URLs, write-only credentials, peers, connection tests.
 
-## Required verification
 
-Generated tests exercise real HTTP and SQLite persistence after restart, replayed SSE,
-concurrent edit conflict, workflow migration, task metadata/dependencies validation,
-MAC fixture match and task writes, outage without local fallback, SSH/HTTPS identity,
-heartbeat expiry, real temporary Git fork and merge graph with bounded ancestry,
-LLM mock verifying server-side secret and browser redaction, MCP SDK tool roundtrip,
-A2A malformed methods/idempotency/get/cancel and two peer app instances.
-Browser tests at desktop and mobile verify overview -> board -> create/edit/move task,
-state editing, search, inspector, graph/timeline selection, SSE update from second client,
-settings redaction, peer flow, no console errors and no page overflow. Isolate tests
-from user's real fleet and database. Never contact production upstreams during tests.
-Document launch, configuration, backup, MAC authority behavior, reporter deployment,
-protocol client examples and known limits in generated README. Smoke run verifies actual
-store/API, not fabricated summary output. Acceptance must launch the full service.
-
-## Completeness requirements from candidate review
-
-Implement every named UI view in this application. Graph and Timeline must render
-interactive SVG edges/nodes and a timestamp axis; a JSON dump or instruction for other
-clients to render them is not an implementation. Provide working repository registration,
-workflow editing, settings, peer management, session fleet and repository inspector
-controls. Task editing must preserve fields the user did not change, including cover,
-checklist, dependencies and due date. Support drag and accessible move controls.
-
-Instantiate and schedule the MAC adapter in the actual application lifecycle. Successful
-snapshots must import/match projects and route writes to the right MAC endpoint. A
-standalone unused client class does not implement the integration. Implement persistent
-settings and peer routes, with their UI forms connected to actual backend writes.
-Register named SSE event listeners (or handle every event through a stream parser): an
-onmessage-only listener does not receive named task events. Update cards on remote edits.
-
-Before finishing generation, audit every section of this Component against actual source
-and tests. Fix omissions instead of declaring requested behavior a known limit. Keep
-modules readable and split by backend store, MAC, Git, sessions, settings, LLM, MCP, A2A,
-peers, HTTP, frontend board, frontend graph and frontend dialogs. Do not trim the product
-to fit a single small file. Tests and smoke modes must call product behavior.
+The complete verification and implementation requirements in quality.md also apply.
