@@ -11,6 +11,12 @@ The application SHALL use the exact following package manifest and complete npm 
 Copy each verbatim into source/package.json and source/package-lock.json. Do not run
 npm during generation or infer a partial lock. The authorized lifecycle owns dependency
 replay. Enumerate every package and real parent dependency edge in the source BOM.
+Include resolved peerDependencies and present optionalDependencies, not only the
+`dependencies` field. For example @hono/node-server@2.1.1 has a resolved peer edge
+to hono@4.13.7; leaving its dependsOn empty fails native dependency validation.
+Resolve each installed dependency by its actual nearest node_modules lock path,
+including nested overridden versions. Absent optional peers need no invented edge.
+Audit every lock package against the source BOM before finishing generation.
 Use Node built-ins for HTTP, SQLite, Git subprocesses, filesystem, crypto and events.
 Git 2.30.0 or newer is a required host runtime dependency. This macOS build is bound
 to the independently observed host Git 2.50.1 (`git --version` reports

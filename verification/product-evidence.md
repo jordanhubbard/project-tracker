@@ -1,9 +1,21 @@
 # Product completion evidence
 
-The latest tested candidate is the retained final Fable source in
-`_build/fable-final-diagnostic`. It is **not an admitted artifact**. The active
-replacement is tracked in `_build/active-run.json`. Passing observations below must
-be repeated on the artifact that is ultimately delivered.
+The latest tested candidate is retained at `_build/ui-final-diagnostic`. It is
+**not an admitted artifact**: native validation rejected a missing resolved peer
+edge in its source BOM. Earlier Fable observations remain historical evidence;
+passing checks must be repeated on the artifact ultimately delivered.
+The active regeneration is recorded in `_build/active-run.json`.
+
+Current review: board creation/edit/move, workflow lifecycle, live task edits,
+inspector saves and Settings pass at desktop/mobile. Board document widths are
+1526/1440 and 1299/390, so layout still fails. Service checks pass except checkout
+symlink identity, which creates a duplicate repository. Expiry remains active at
+110 seconds. Peer registration succeeds but opening the message dialog throws
+`Illegal invocation`. Graph checks are being made tolerant of asynchronous rendering;
+mobile inspector overflow is confirmed. These results supersede the older candidate
+rows below where noted. Evidence: `_build/ui-final-browser.log`,
+`_build/ui-service-alias.log`, `_build/ui-expiry-browser/result.json`,
+`_build/ui-final-peer/page-errors.json`, `_build/ui-final-graph-ready.log`.
 
 | Requirement | Current evidence | Remaining work |
 | --- | --- | --- |

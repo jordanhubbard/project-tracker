@@ -170,7 +170,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                         if separator and key:
                             fields[key] = value.lstrip()
                 raise AssertionError('SSE stream ended without a replayable event')
-            first = first_event()
+            first = first_event("0")
             stop()
             start()
             following = first_event(first['id'])
@@ -370,7 +370,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
             run_phase('two_peer_instances', two_peer_instances)
 
             def git_and_reporter():
-                git_root = root / 'git-fixture'
+                git_root = (root / 'git-fixture').resolve()
                 git_root.mkdir()
                 git_env = dict(environment, GIT_AUTHOR_NAME='Tracker acceptance',
                                GIT_AUTHOR_EMAIL='tracker@example.test',
@@ -416,7 +416,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     'while not path.exists() and time.monotonic() < deadline: time.sleep(0.1)\n'
                 )
                 reporter_env = dict(environment, TRACKER_URL=base,
-                                    TRACKER_ACCESS_TOKEN='disposable-reporter-token')
+                                    TRACKER_ACCESS_TOKEN='')
                 reporter_arguments = ['service', 'session', '--repo', str(git_root),
                                       '--cli', 'other', '--', sys.executable, '-c', child_code]
                 reporter = subprocess.Popen(command + [json.dumps(reporter_arguments)],
@@ -435,7 +435,8 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                         if reporter.poll() is not None:
                             raise AssertionError('Host reporter exited before reporting its child')
                         time.sleep(0.1)
-                    assert observed, 'Host reporter did not publish the running child PID'
+                    assert observed, ('Host reporter did not publish the running child PID',
+                                      request('GET', '/api/sessions'), request('GET', '/api/repos'))
                     assert observed['hostname'] == socket.gethostname(), observed
                     assert observed['repo_id'] == git_repo['id'], observed
                     assert observed['branch'] == 'main', observed
@@ -453,6 +454,19 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                         except subprocess.TimeoutExpired:
                             reporter.kill()
                             reporter.wait(timeout=5)
+                def local_checkout_alias():
+                    alias = root / 'git-alias'
+                    alias.symlink_to(git_root, target_is_directory=True)
+                    ids_before = {item['id'] for item in request('GET', '/api/repos')['items']}
+                    aliased = request('POST', '/api/repos', {
+                        'name': 'Same checkout through alias', 'local_path': str(alias)}, (200, 201, 409))
+                    ids_after = {item['id'] for item in request('GET', '/api/repos')['items']}
+                    assert ids_after == ids_before, (git_repo, aliased)
+                    if 'id' in aliased:
+                        assert aliased['id'] == git_repo['id'], (git_repo, aliased)
+                    else:
+                        assert aliased.get('error'), aliased
+                run_phase('local_checkout_alias', local_checkout_alias)
             run_phase('git_and_reporter', git_and_reporter)
 
             def mac_authority():

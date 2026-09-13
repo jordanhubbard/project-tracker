@@ -118,8 +118,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                     page.on("response", lambda r: issues.append(f"HTTP {r.status}: {r.url}") if r.status >= 400 else None)
                     page.goto(base, wait_until="domcontentloaded")
                     try:
-                        page.get_by_role("button", name="Open board", exact=True).or_(
-                            page.get_by_role("link", name="Open board", exact=True)
+                        page.get_by_role("button", name=re.compile(r"^Open board(?: for .+)?$", re.I)).or_(
+                            page.get_by_role("link", name=re.compile(r"^Open board(?: for .+)?$", re.I))
                         ).click()
                     except Exception:
                         page.screenshot(
@@ -182,7 +182,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         def create():
                             page.get_by_role(
                                 "button", name="Add task", exact=True
-                            ).click()
+                            ).first.click()
                             page.get_by_label("Title", exact=True).fill(
                                 f"Browser-created task {name}"
                             )
@@ -190,7 +190,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 "textbox", name="Description", exact=True
                             ).fill("Saved from browser")
                             page.get_by_label(
-                                "Labels (comma separated)", exact=True
+                                re.compile(r"^Labels", re.I)
                             ).fill("QA")
                             page.get_by_role(
                                 "button", name=re.compile(r"^Save(?: task)?$")
@@ -268,7 +268,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         check("second-client SSE update", remote)
 
                         def search_tasks():
-                            search = page.get_by_role("searchbox").first
+                            local_filter = page.get_by_role("searchbox", name=re.compile("filter", re.I))
+                            search = local_filter if local_filter.count() else page.get_by_role("searchbox").first
                             search.fill(f"Browser-created task {name}")
                             page.get_by_text(f"Browser-created task {name}", exact=True).wait_for()
                             page.wait_for_timeout(300)
@@ -290,7 +291,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             heading = page.get_by_role("heading", name=re.compile(
                                 r"^" + re.escape(destination['name']) + r"(?:\s|$)", re.I))
                             column = heading.locator("..")
-                            target = column.get_by_role("list").first
+                            lists = column.get_by_role("list")
+                            target = lists.first if lists.count() else column
                             card.drag_to(target)
                             deadline = time.monotonic() + 2
                             while time.monotonic() < deadline:
@@ -340,12 +342,12 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             )
                             if not control.count():
                                 control = page.get_by_role(
-                                    "button", name=re.compile("edit workflow", re.I)
+                                    "button", name=re.compile("edit (?:workflow|lists)", re.I)
                                 ).first
                             control.click()
-                            if page.get_by_role("dialog", name="Edit workflow states").count():
+                            if page.get_by_role("textbox", name="State 1 name", exact=True).count():
                                 page.get_by_label("State 1 name", exact=True).fill(new_name)
-                                page.get_by_role("dialog").get_by_role("button", name="Save", exact=True).click()
+                                page.get_by_role("dialog").get_by_role("button", name=re.compile(r"^Save(?: workflow)?$")).click()
                                 page.get_by_role("dialog").wait_for(state="hidden")
                                 page.remove_listener("dialog", rename)
                             page.wait_for_timeout(500)
@@ -360,19 +362,28 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
 
                         def workflow_lifecycle():
                             def open_editor():
-                                page.get_by_role("button", name=re.compile("edit workflow", re.I)).first.click()
+                                page.get_by_role("button", name=re.compile("edit (?:workflow|lists)", re.I)).first.click()
                                 page.get_by_role("dialog").wait_for()
 
                             def save_editor():
-                                page.get_by_role("dialog").get_by_role("button", name="Save", exact=True).click()
+                                page.get_by_role("dialog").get_by_role("button", name=re.compile(r"^Save(?: workflow)?$")).click()
                                 page.get_by_role("dialog").wait_for(state="hidden")
                                 page.wait_for_timeout(400)
 
                             added_name = f"Browser column {name}"
                             open_editor()
-                            page.once("dialog", lambda dialog: dialog.accept(added_name))
+                            def add_prompt(dialog):
+                                dialog.accept(added_name)
+                            page.once("dialog", add_prompt)
                             page.get_by_role("dialog").get_by_role("button", name="Add list", exact=True).click()
-                            page.get_by_role("button", name=f"Move {added_name} earlier", exact=True).click()
+                            page.remove_listener("dialog", add_prompt)
+                            names = page.get_by_role("dialog").get_by_role("textbox", name=re.compile(r"^State \d+ name$"))
+                            names.last.fill(added_name)
+                            earlier = page.get_by_role("button", name=f"Move {added_name} earlier", exact=True)
+                            if earlier.count():
+                                earlier.click()
+                            else:
+                                names.last.locator("..").get_by_role("button", name="Up", exact=True).click()
                             save_editor()
                             current = api("GET", f"/api/repos/{repo['id']}/states")["items"]
                             added = next(x for x in current if x['name'] == added_name)
@@ -384,9 +395,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.wait_for_timeout(300)
                             open_editor()
                             target_name = current[0]['name']
-                            page.once("dialog", lambda dialog: dialog.accept(target_name))
-                            row = page.get_by_role("dialog").locator("li").filter(
-                                has=page.get_by_role("textbox", name=f"State {index + 1} name", exact=True))
+                            page.once("dialog", lambda dialog: dialog.accept(
+                                current[0]['id'] if re.search("state id", dialog.message, re.I) else target_name))
+                            row = page.get_by_role("dialog").get_by_role("textbox", name=f"State {index + 1} name", exact=True).locator("..")
                             row.get_by_role("button", name="Delete", exact=True).click()
                             save_editor()
                             remaining = api("GET", f"/api/repos/{repo['id']}/states")["items"]
@@ -404,7 +415,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_role("button", name="Board", exact=True).or_(
                                 page.get_by_role("link", name="Board", exact=True)
                             ).or_(page.get_by_role("tab", name="Board", exact=True)).click()
-                            page.get_by_role("button", name="Add task", exact=True).wait_for()
+                            page.get_by_role("button", name="Add task", exact=True).first.wait_for()
 
                         check("remote-only graph explains checkout requirement", remote_only_graph)
 
@@ -412,10 +423,15 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_role("button", name="Inspector", exact=True).or_(
                                 page.get_by_role("link", name="Inspector", exact=True)
                             ).or_(page.get_by_role("tab", name="Inspector", exact=True)).click()
-                            page.get_by_text(repo['remote_url'], exact=True).wait_for()
+                            page.get_by_role('heading', name=re.compile(r'^Inspector')).wait_for()
+                            origin = page.get_by_role('textbox', name='Remote URL', exact=True)
+                            if origin.count():
+                                assert origin.input_value() == repo['remote_url']
+                            else:
+                                page.get_by_text(repo['remote_url'], exact=True).wait_for()
                             page.get_by_role("textbox", name="Description", exact=True).fill(
                                 f"Repository description from {name}")
-                            page.get_by_role("button", name="Save description", exact=True).click()
+                            page.get_by_role("button", name=re.compile(r"^Save (?:description|repository)$")).click()
                             deadline = time.monotonic() + 2
                             while time.monotonic() < deadline:
                                 if api("GET", f"/api/repos/{repo['id']}")['description'] == f"Repository description from {name}":

@@ -36,22 +36,22 @@ with tempfile.TemporaryDirectory() as root:
       browser=p.chromium.launch(executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
       page=browser.new_page(viewport={'width':1440,'height':1000});page.set_default_timeout(5000)
       errors=[]
-      page.on('pageerror', lambda e: errors.append(str(e)))
+      page.on('pageerror', lambda e: (errors.append(str(e)), (out/'page-errors.json').write_text(json.dumps(errors))))
       page.goto(a)
       page.get_by_role('heading',name='Project overview').wait_for()
-      page.get_by_role('button',name='Register a repository',exact=True).click()
+      page.get_by_role('button',name=re.compile(r'^Register (?:a )?repository$')).click()
       page.get_by_label(re.compile(r'^(?:Repository )?Name',re.I)).fill('Local only')
       page.get_by_label(re.compile(r'^Remote URL',re.I)).fill('https://example.test/local/only.git')
       page.get_by_role('dialog').get_by_role('button',name='Register',exact=True).click()
       page.get_by_role('dialog').wait_for(state='hidden')
-      page.get_by_role('button',name='Open board',exact=True).wait_for()
       local=next(repo for repo in request(a,'GET','/api/repos')['items'] if repo['name']=='Local only')
       assert local['remote_url']=='https://example.test/local/only.git' and local['authority']=='local'
       page.get_by_role('button',name='Agents & peers',exact=True).click()
-      page.get_by_role('button',name='Register a peer',exact=True).click()
-      page.get_by_label('Peer base URL',exact=True).fill(b)
-      page.get_by_label('Peer token (stored backend-only)',exact=True).fill(token)
-      page.get_by_role('button',name='Register',exact=True).click()
+      if page.get_by_role('button',name='Register a peer',exact=True).count():
+        page.get_by_role('button',name='Register a peer',exact=True).click()
+      page.get_by_label(re.compile(r'^Peer (?:base )?URL$')).fill(b)
+      page.get_by_label(re.compile(r'^(?:Peer t|T)oken \(stored backend-only\)$')).fill(token)
+      page.get_by_role('button',name=re.compile(r'^Register(?: peer)?$')).click()
       page.get_by_role('button',name='Send message',exact=True).click()
       control=page.get_by_role('combobox',name='Remote repository id',exact=True).or_(page.get_by_role('textbox',name='Remote repository id',exact=True))
       page.wait_for_timeout(500)
@@ -65,11 +65,13 @@ with tempfile.TemporaryDirectory() as root:
         control.select_option(remote['id'])
       else:control.fill(remote['id'])
       page.get_by_label('Task title',exact=True).fill('Created through peer UI')
-      page.get_by_role('button',name='Send',exact=True).click();page.wait_for_timeout(1000)
+      page.get_by_role('button',name=re.compile(r'^Send(?: create_task)?$')).click();page.wait_for_timeout(1000)
       tasks=request(b,'GET',f"/api/repos/{remote['id']}/tasks",token=token)['items']
       assert any(t['title']=='Created through peer UI' for t in tasks), tasks
       assert token not in json.dumps(request(a,'GET','/api/peers'))
-      page.get_by_role('button',name='Remove',exact=True).click()
+      if page.get_by_role('dialog').count():
+        page.get_by_role('dialog').get_by_role('button',name='Close',exact=True).click()
+      page.get_by_role('button',name=re.compile(r'^Remove(?: peer)?$')).click()
       deadline=time.monotonic()+2
       while request(a,'GET','/api/peers')['items'] and time.monotonic()<deadline:page.wait_for_timeout(100)
       assert not request(a,'GET','/api/peers')['items']

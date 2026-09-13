@@ -144,3 +144,33 @@ instance UI scenario with disjoint repositories, register the receiver, choose o
 enter its repository ID, send a create_task request and observe that task in the
 receiver's database plus a useful result/history entry in the sender. Keep tokens
 backend-only; do not require a direct authenticated browser fetch to the peer.
+
+
+## Additional observed browser and identity regressions
+
+A running session whose last heartbeat reaches 90 seconds must become stale in an
+already-open Fleet view and its sidebar active count must become zero, without any
+new HTTP mutation, heartbeat, navigation or page reload. A read-time status helper
+alone cannot notify an idle browser. Schedule bounded deadline checks in the service,
+publish persisted expiry changes exactly once per status transition, and refresh
+all session views/counts. A subsequent fresh heartbeat can reactivate that session.
+
+Canonicalize existing local checkout paths through filesystem realpath before
+identity matching. Register a real checkout, then register a symlink to it: return
+the same repository or an explicit duplicate conflict without a second record.
+The reporter's Git-resolved root must associate with this same repository. On macOS,
+/var and /private/var aliases must not create different repositories. Preserve the
+specified remote-origin canonicalization and MAC authority rules.
+
+Constrain application grid/flex tracks and children so their intrinsic board widths
+do not widen the document. At both 1440px and 390px, document.scrollWidth must not
+exceed the viewport; the board itself scrolls horizontally to reveal every column.
+Use shrinkable tracks/children (for example minmax(0,1fr) and min-width:0) where
+needed. Do not merely clip body overflow and leave controls offscreen. Repository
+metric labels use human state names, never UUID-prefixed internal state IDs.
+
+Click Send message on a registered peer and assert a usable dialog opens with no
+browser exception, then send an actual remote task. Browser crypto methods require
+their receiver: use crypto.randomUUID() as a method call or bind it explicitly;
+extracting the function and invoking it unbound throws Illegal invocation in Chrome.
+Generate the retry-stable message ID once per message draft and retain it on retry.

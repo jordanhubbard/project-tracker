@@ -3,7 +3,7 @@
 
 import argparse, json, os, re, socket, subprocess, sys, tempfile, time, urllib.request
 from pathlib import Path
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 from service_response import entity_response
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -61,7 +61,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                 break
             except OSError:
                 time.sleep(0.1)
-        gitroot = Path(data) / "checkout"
+        gitroot = (Path(data) / "checkout").resolve()
         gitroot.mkdir()
         git_env = dict(
             env,
@@ -166,8 +166,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                     page.on("response", lambda r: issues.append(f"HTTP {r.status}: {r.url}") if r.status >= 400 else None)
                     page.goto(base, wait_until="domcontentloaded")
                     try:
-                        page.get_by_role("button", name="Open board", exact=True).or_(
-                            page.get_by_role("link", name="Open board", exact=True)
+                        page.get_by_role("button", name=re.compile(r"^Open board(?: for .+)?$", re.I)).or_(
+                            page.get_by_role("link", name=re.compile(r"^Open board(?: for .+)?$", re.I))
                         ).click()
                     except Exception:
                         page.screenshot(
@@ -255,7 +255,11 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             nodes = page.locator("svg g[role=button]")
                             for index in range(nodes.count()):
                                 node = nodes.nth(index)
-                                node.click()
+                                node.locator("circle").first.click()
+                                label = node.get_attribute("aria-label") or ""
+                                short_hash = re.search(r"[a-f0-9]{7,64}", label)
+                                if short_hash:
+                                    expect(page.locator("#commit-inspector, .commit-inspector")).to_contain_text(short_hash.group(), timeout=2000)
                                 details = page.locator("#commit-inspector, .commit-inspector").inner_text()
                                 match = re.search(r"\bHash\s+([a-f0-9]{40,64})\b", details)
                                 center = node.locator("circle").first.evaluate(
@@ -270,13 +274,17 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 far = timeline_positions[mainhash] - timeline_positions[basehash]
                                 if far <= 0 or abs(near / far - 0.1) > 0.03:
                                     issues.append(f"Timeline: 0/10/100-second spacing is not proportional: {timeline_positions}")
-                        page.locator("svg g[role=button]").first.click()
+                        page.locator("svg g[role=button]").first.locator("circle").first.click()
+                        expect(page.locator("#commit-inspector, .commit-inspector")).to_contain_text(mergehash, timeout=2000)
                         selected = page.locator("#commit-inspector, .commit-inspector").inner_text()
+                        initial_width = page.locator("svg").first.evaluate("n=>n.getBoundingClientRect().width")
                         page.get_by_role("button", name="Zoom in", exact=True).click()
+                        page.wait_for_function("w=>document.querySelector('svg')?.getBoundingClientRect().width>w", arg=initial_width, timeout=2000)
                         zoomed = page.locator("svg").first.evaluate(
                             "(node)=>node.getBoundingClientRect().width"
                         )
                         page.get_by_role("button", name="Reset", exact=True).click()
+                        page.wait_for_function("w=>document.querySelector('svg')?.getBoundingClientRect().width<w", arg=zoomed, timeout=2000)
                         reset = page.locator("svg").first.evaluate(
                             "(node)=>node.getBoundingClientRect().width"
                         )
@@ -290,12 +298,20 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             or option["text"] in ("feature", "refs/heads/feature")
                         )
                         page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).select_option(feature_option)
-                        page.locator("svg g[role=button]").first.click()
+                        page.locator("svg g[role=button]").first.locator("circle").first.click()
+                        expect(page.locator("#commit-inspector, .commit-inspector")).to_contain_text(featurehash, timeout=2000)
                         filtered = page.locator("#commit-inspector, .commit-inspector").inner_text()
                         inspector_bounds = page.locator(
                             "#commit-inspector, .commit-inspector"
                         ).bounding_box()
-                        page.locator("#commit-inspector, .commit-inspector").scroll_into_view_if_needed()
+                        deadline = time.monotonic() + 2
+                        while True:
+                            try:
+                                page.locator("#commit-inspector, .commit-inspector").scroll_into_view_if_needed(timeout=1000)
+                                break
+                            except Exception:
+                                if time.monotonic() >= deadline:
+                                    raise
                         inspector_bounds = page.locator(
                             "#commit-inspector, .commit-inspector"
                         ).bounding_box()

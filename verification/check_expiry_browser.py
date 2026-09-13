@@ -60,8 +60,8 @@ with tempfile.TemporaryDirectory(prefix='tracker-expiry-') as data:
             page = browser.new_page(viewport={'width': 1440, 'height': 1000})
             page.set_default_timeout(5000)
             page.goto(base)
-            page.get_by_role('button', name='Open board', exact=True).or_(
-                page.get_by_role('link', name='Open board', exact=True)).click()
+            page.get_by_role('button', name=re.compile(r'^Open board(?: for .+)?$',re.I)).or_(
+                page.get_by_role('link', name=re.compile(r'^Open board(?: for .+)?$',re.I))).click()
             page.get_by_role('tab', name='Fleet', exact=True).or_(
                 page.get_by_role('button', name='Fleet', exact=True)).or_(
                 page.get_by_role('link', name='Fleet', exact=True)).click()
