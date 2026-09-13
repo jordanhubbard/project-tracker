@@ -7,6 +7,7 @@ The command is launched with --litai-serve, --host and --port appended.
 from __future__ import annotations
 
 import asyncio
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
@@ -14,6 +15,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import uuid
 import urllib.error
@@ -183,6 +185,50 @@ def check(command: list[str]) -> None:
                     assert repo_id in result.model_dump_json(), result
             asyncio.run(asyncio.wait_for(mcp_roundtrip(), timeout=30))
 
+            llm_calls = []
+            fixture_key = 'disposable-llm-secret-' + str(uuid.uuid4())
+
+            class Gateway(BaseHTTPRequestHandler):
+                def log_message(self, *_):
+                    pass
+
+                def do_POST(self):
+                    payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+                    llm_calls.append((self.path, self.headers.get('Authorization'), payload))
+                    encoded = json.dumps({'choices': [{'message': {
+                        'role': 'assistant', 'content': 'Fixture summary of tracker work'}}]}).encode()
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(encoded)))
+                    self.end_headers()
+                    self.wfile.write(encoded)
+
+            gateway = ThreadingHTTPServer(('127.0.0.1', 0), Gateway)
+            gateway_thread = threading.Thread(target=gateway.serve_forever, daemon=True)
+            gateway_thread.start()
+            try:
+                stop()
+                environment.update(TRACKER_LLM_URL=f'http://127.0.0.1:{gateway.server_port}/v1',
+                                   TRACKER_LLM_KEY=fixture_key, TRACKER_LLM_MODEL='fixture-model')
+                start()
+                settings = request('GET', '/api/settings')
+                assert fixture_key not in json.dumps(settings), settings
+                answer = request('POST', '/api/assistant', {
+                    'question': 'Summarize current work', 'repo_id': repo_id})
+                assert 'Fixture summary' in json.dumps(answer), answer
+                assert fixture_key not in json.dumps(answer), answer
+                assert len(llm_calls) == 1, llm_calls
+                path, authorization, payload = llm_calls[0]
+                assert path == '/v1/chat/completions', path
+                assert authorization == 'Bearer ' + fixture_key
+                assert payload['model'] == 'fixture-model', payload
+                assert 'Edited title' in json.dumps(payload), payload
+                assert fixture_key not in json.dumps(payload), payload
+            finally:
+                gateway.shutdown()
+                gateway.server_close()
+                gateway_thread.join(timeout=2)
+
             git_root = root / 'git-fixture'
             git_root.mkdir()
             git_env = dict(environment, GIT_AUTHOR_NAME='Tracker acceptance',
@@ -269,6 +315,7 @@ def check(command: list[str]) -> None:
                 'database restart', 'session heartbeat and stop', 'SSE replay after restart',
                 'A2A durable tasks', 'A2A idempotent creation',
                 'A2A terminal cancellation rejection', 'official MCP client roundtrip',
+                'backend LLM gateway and secret redaction',
                 'real Git fork and merge parent edges', 'MAC discovery and task routing',
                 'MAC metadata preservation', 'MAC lifecycle rejection',
                 'MAC outage without local fallback']}))

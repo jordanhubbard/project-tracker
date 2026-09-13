@@ -106,3 +106,4 @@ queue item or let `docs/roadmap/` become a plan archive.
 - Added `verification/capture_browser.py` for desktop/mobile screenshots, accessibility snapshots and rendering failures. It is syntax checked; actual application rendering and control interactions remain pending.
 - The independent service verifier now prints its disposable server log on failure so startup and protocol failures retain diagnostics.
 - Pending specification correction after the current build: `/projects` returns summaries with `project` and `project_id`, not raw project records with `id` and `name`. The fixture already reflects the actual contract. Also explicitly specify integer MAC task priority.
+- Added a disposable localhost LLM gateway check to the service verifier: verify the requested model and repository context, gateway bearer header and redacted browser responses. Syntax passes; application execution remains pending.
