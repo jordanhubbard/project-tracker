@@ -264,6 +264,52 @@ def check(command: list[str]) -> None:
             assert set(commits[merge_hash]['parents']) == {feature_hash, main_hash}, graph
             assert commits[feature_hash]['parents'] == [base_hash], graph
             assert commits[main_hash]['parents'] == [base_hash], graph
+
+            child_pid_file = root / 'reported-child.pid'
+            child_release_file = root / 'release-reported-child'
+            child_code = (
+                'import os, pathlib, time; '
+                f'pathlib.Path({str(child_pid_file)!r}).write_text(str(os.getpid())); '
+                f'path = pathlib.Path({str(child_release_file)!r}); '
+                'deadline = time.monotonic() + 20\n'
+                'while not path.exists() and time.monotonic() < deadline: time.sleep(0.1)\n'
+            )
+            reporter_env = dict(environment, TRACKER_URL=base, TRACKER_ACCESS_TOKEN='')
+            reporter = subprocess.Popen(command + ['session', '--repo', str(git_root),
+                                        '--cli', 'other', '--', sys.executable, '-c', child_code],
+                                        env=reporter_env, stdout=log, stderr=log)
+            try:
+                deadline = time.monotonic() + 12
+                observed = None
+                while time.monotonic() < deadline:
+                    if child_pid_file.exists():
+                        child_pid = int(child_pid_file.read_text())
+                        observed = next((item for item in request('GET', '/api/sessions')['items']
+                                         if item.get('pid') == child_pid
+                                         and item.get('status') == 'running'), None)
+                        if observed:
+                            break
+                    if reporter.poll() is not None:
+                        raise AssertionError('Host reporter exited before reporting its child')
+                    time.sleep(0.1)
+                assert observed, 'Host reporter did not publish the running child PID'
+                assert observed['hostname'] == socket.gethostname(), observed
+                assert observed['repo_id'] == git_repo['id'], observed
+                assert observed['branch'] == 'main', observed
+                child_release_file.touch()
+                assert reporter.wait(timeout=8) == 0
+                ended = next(item for item in request('GET', '/api/sessions')['items']
+                             if item['session_id'] == observed['session_id'])
+                assert ended['status'] == 'stopped', ended
+            finally:
+                child_release_file.touch()
+                if reporter.poll() is None:
+                    reporter.terminate()
+                    try:
+                        reporter.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        reporter.kill()
+                        reporter.wait(timeout=5)
             from mac_fixture import MacFixture
             stop()
             with MacFixture() as fleet:
@@ -331,6 +377,7 @@ def check(command: list[str]) -> None:
                 'A2A terminal cancellation rejection', 'official MCP client roundtrip',
                 'backend LLM gateway and secret redaction',
                 'real Git fork and merge parent edges', 'MAC discovery and task routing',
+                'physical-host reporter child PID and stopped lifecycle',
                 'MAC metadata preservation', 'MAC lifecycle rejection',
                 'confirmed MAC absence permits local work',
                 'MAC outage without local fallback']}))
