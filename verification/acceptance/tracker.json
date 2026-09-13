@@ -72,6 +72,19 @@
     {
       "path": "/api/settings",
       "expected_status": 200
+    },
+    {
+      "path": "/openapi.json",
+      "expected_status": 200,
+      "expected_text_contains": [
+        "openapi",
+        "/api/repos",
+        "/api/tasks"
+      ]
+    },
+    {
+      "path": "/api/peers",
+      "expected_status": 200
     }
   ]
 }

@@ -25,3 +25,6 @@ dist/
 .testmondata
 .testmondata-journal
 .testmondata.identity.json
+
+# Transient lifecycle mutexes.
+.litai-locks/

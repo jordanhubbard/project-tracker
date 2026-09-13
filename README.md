@@ -17,9 +17,13 @@ Build and verify with the installed LitAI CLI:
 
 ```sh
 litai lock components/tracker
-litai rebuild components/tracker --allow-host-execution --keep-runtime
+./scripts/litai-service.sh rebuild components/tracker --allow-host-execution --keep-runtime
 litai verify
 ```
+
+The service wrapper uses `uv` to create an isolated interpreter under `_build/`
+and install the exact runtime closure recorded by the project-owned Python service
+flavor. The portable standard-library sample is excluded from product builds.
 
 MAC is authoritative for matched projects; unmatched repositories use local tasks.
 An unavailable configured fleet must never be mistaken for an unmatched repository.

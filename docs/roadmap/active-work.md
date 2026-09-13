@@ -46,7 +46,28 @@ queue item or let `docs/roadmap/` become a plan archive.
 - `litai onboard create` completed with the full-stack project type.
 - `litai lock components/tracker` passed; `litai project validate` passed.
 - Independent service probes are authored in `verification/acceptance/tracker.json`; they have not passed yet.
-- In progress: LitAI source generation and build. Inspect `_build/tracker-rebuild.log` and the live process before deciding whether to resume or retry. No runnable app is claimed.
+- The first run ended with `dependencies.import-bom-mismatch` for an artifact-generated static-data import; its source also omitted required protocol behavior. Preserve it as failed evidence, not a working app. The corrected run is in progress; inspect `_build/tracker-service-rebuild.log` and revalidate its process before retrying.
 - Chrome headless automation was launched successfully from isolated `_build/browser-qa`; product browser checks remain pending.
 - No Git remote is configured; LitAI tracker/peer survey reported unsupported forge and skipped remote reconciliation.
 - After the build, verify all product requirements, protocol clients and Trello visual fidelity; the initial service probes alone do not prove the whole goal.
+
+### [ ] TRACK-002 — Service runtime flavor and complete candidate
+
+- **Priority:** P0
+- **Owner:** flavors/python-service
+- **Direction:** Preserve the requested backend protocols and full application rather than accept omitted SDK and upstream integrations.
+- **Conclusion:** The portable Python flavor constrains generation to stdlib; select a project-owned service flavor with declared runtime dependencies. The first candidate failed dependency observation and omitted required behavior.
+- **Depends on:** none
+- **Implementation:**
+  - [x] Select a service Python flavor and bind its exact dependencies to an isolated runtime.
+  - [ ] Regenerate the full application and review every requirement.
+- **Evidence:**
+  - [ ] Service builds with the declared SDKs and passes protocol and browser checks.
+
+### Service flavor evidence
+
+- Corrected default selectors resolve the project-owned `python-service` flavor. The greeting sample is retained outside the active product component roots.
+- `litai verify` passes authority and current lock gates; the application test receipt is still missing.
+- The service runtime imports FastAPI and MCP 2.2.0, including the real SDK Streamable HTTP constructor.
+- `scripts/litai-service.sh --version` passed after syncing all 33 pinned runtime packages; the lifecycle selected that isolated interpreter.
+- `verification/check_service.py` is an independent disposable-instance verifier for persistence, conflicting edits, and A2A idempotency/get/cancel; syntax checked, product execution pending.

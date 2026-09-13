@@ -5,8 +5,7 @@
   "profile": "canonical",
   "agent_skill": "SKILL.md",
   "component_roots": [
-    "components",
-    "samples"
+    "components"
   ],
   "flavor_roots": [
     "flavors"
@@ -106,9 +105,8 @@
     "minimum_test_count": 1
   },
   "default_flavor_selectors": [
-    "+flavor://literate-ai/lang-python",
+    "+flavor://project-tracker/python-service",
     "+flavor://literate-ai/build-make",
-    "+flavor://literate-ai/package-pip",
     "+flavor://literate-ai/os-macos"
   ],
   "mcp_roots": [
@@ -120,7 +118,7 @@
     "default_branch": "main",
     "main_state": "free",
     "pre_release_version": null,
-    "default_component": null,
+    "default_component": "components/tracker",
     "sample_component_roots": [
       "samples"
     ],
