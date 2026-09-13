@@ -236,11 +236,13 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                     reporter.kill()
                                     reporter.wait(timeout=5)
                     checks = []
+                    back = page.get_by_role('button', name='Back to board', exact=True)
+                    if back.count(): back.click()
                     for mode in ("Graph", "Timeline"):
                         if mode == "Timeline":
-                            page.get_by_role("button", name="Board", exact=True).or_(
-                                page.get_by_role("link", name="Board", exact=True)
-                            ).or_(page.get_by_role("tab", name="Board", exact=True)).click()
+                            page.get_by_role("button", name=re.compile(r"^(?:Back to board|Board)$")).or_(
+                                page.get_by_role("link", name=re.compile(r"^(?:Back to board|Board)$"))
+                            ).or_(page.get_by_role("tab", name=re.compile(r"^(?:Back to board|Board)$"))).click()
                             page.wait_for_timeout(200)
                         page.get_by_role("button", name=mode, exact=True).or_(
                             page.get_by_role("link", name=mode, exact=True)
@@ -293,6 +295,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         reset = page.locator("svg").first.evaluate(
                             "(node)=>node.getBoundingClientRect().width"
                         )
+                        page.wait_for_function("hash=>[...document.querySelectorAll('select option')].some(o=>o.value===hash || o.value==='refs/heads/feature' || ['feature','refs/heads/feature'].includes(o.textContent))", arg=featurehash, timeout=2000)
                         options = page.locator("#branch-filter, select").filter(has=page.locator("option", has_text="All branches")).locator("option").evaluate_all(
                             "nodes => nodes.map(node => ({value:node.value, text:node.textContent}))"
                         )

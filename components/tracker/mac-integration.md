@@ -73,3 +73,13 @@ then include its repo_id in every heartbeat. Heartbeats include the spawned chil
 PID, actual physical hostname and checked-out branch, and finish with stopped state.
 A record with a host and PID but no repository association does not fulfill the
 repo-centric session view.
+
+
+Translate unavailable upstream responses consistently: HTTP 500, 502, 503, 504,
+connection failure and timeout during a MAC task mutation return tracker HTTP 503
+with a useful unavailable error. Do not map every non-404 upstream response to
+502/mac_rejected. Preserve genuine upstream 4xx lifecycle rejection details and a
+non-success client response separately. Test an existing discovered MAC task edit
+when the upstream deliberately returns HTTP 503: tracker must return 503, retain
+the cached task unchanged, and create no local task. Test a successful in_progress
+transition and a rejected completed transition independently of this outage case.

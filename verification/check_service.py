@@ -406,6 +406,12 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                 git('merge', '--no-ff', 'feature', '-m', 'Merge feature')
                 merge_hash = git('rev-parse', 'HEAD')
                 graph = request('GET', f"/api/repos/{git_repo['id']}/graph")
+                def real_branch_refs():
+                    refs = graph.get('refs', [])
+                    for expected_name, expected_hash in [('main', merge_hash), ('feature', feature_hash)]:
+                        assert any(ref.get('name') in (expected_name, f'refs/heads/{expected_name}')
+                                   and ref.get('hash') == expected_hash for ref in refs), refs
+                run_phase('real_branch_refs', real_branch_refs)
                 commits = {commit['hash']: commit for commit in graph['commits']}
                 assert set(commits[merge_hash]['parents']) == {feature_hash, main_hash}, graph
                 assert commits[feature_hash]['parents'] == [base_hash], graph

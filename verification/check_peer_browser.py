@@ -40,18 +40,21 @@ with tempfile.TemporaryDirectory() as root:
       page.goto(a)
       page.get_by_role('heading',name='Project overview').wait_for()
       page.get_by_role('button',name=re.compile(r'^(?:Register (?:a )?|Add )repository$')).first.click()
-      page.get_by_label(re.compile(r'^(?:Repository )?Name',re.I)).fill('Local only')
+      page.get_by_label(re.compile(r'^(?:(?:Repository |Display )?Name)',re.I)).fill('Local only')
       page.get_by_label(re.compile(r'^Remote URL',re.I)).fill('https://example.test/local/only.git')
-      page.get_by_role('button', name=re.compile(r'^Register(?: repository)?$')).click()
+      page.get_by_role('dialog').get_by_role('button', name=re.compile(r'^Register(?: repository)?$')).click()
       page.get_by_role('dialog').wait_for(state='hidden')
       local=next(repo for repo in request(a,'GET','/api/repos')['items'] if repo['name']=='Local only')
       assert local['remote_url']=='https://example.test/local/only.git' and local['authority']=='local'
       page.get_by_role('button',name='Agents & peers',exact=True).click()
-      if page.get_by_role('button',name='Register a peer',exact=True).count():
-        page.get_by_role('button',name='Register a peer',exact=True).click()
+      if not page.get_by_label(re.compile(r'^Peer (?:base )?URL$')).count():
+        page.get_by_role('button', name=re.compile(r'^Register (?:a )?peer$')).click()
+      display = page.get_by_role('textbox', name='Display name', exact=True)
+      if display.count(): display.fill('Remote verification peer')
       page.get_by_label(re.compile(r'^Peer (?:base )?URL$')).fill(b)
-      page.get_by_label(re.compile(r'^(?:(?:Peer t|T)oken \(stored backend-only\)|Peer access token \(write only\))$')).fill(token)
-      page.get_by_role('button',name=re.compile(r'^Register(?: peer)?$')).click()
+      page.get_by_label(re.compile(r'^(?:(?:Peer t|T)oken \(stored backend-only\)|Peer access token \(write only\)|Bearer credential \(stored on this backend only\))$')).fill(token)
+      scope = page.get_by_role('dialog') if page.get_by_role('dialog').count() else page
+      scope.get_by_role('button',name=re.compile(r'^Register(?: peer)?$')).click()
       page.get_by_role('button',name='Send message',exact=True).click()
       control=page.get_by_role('combobox',name='Remote repository id',exact=True).or_(page.get_by_role('textbox',name='Remote repository id',exact=True))
       page.wait_for_timeout(500)

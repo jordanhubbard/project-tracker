@@ -197,3 +197,26 @@ keyboard-operable controls. Add a list at the end, move it one position earlier,
 then reload: the order must persist and card assignments remain unchanged. Keep
 rename/add/delete with populated-state task migration working. The controls must
 be usable at desktop and 390px, not only via an undocumented API or internal IDs.
+
+
+Contain every absolutely positioned accessibility label, including the list header's
+new Move list left/right controls. Positioning only task card actions is insufficient:
+list buttons also scroll outside the viewport. Give each control a positioned
+containing block, use aria-label instead of an offscreen text node, or provide an
+equivalent accessible implementation. In the observed regression the hidden label
+inside a static .mini-button escapes .board-lists even though .card-actions is fixed;
+document widths become 1657 at 1440 and 1167 at 390. Test after adding and moving a
+list as well as with the initially seeded five columns. Keep controls reachable by
+board scrolling; do not mask escaped content with document overflow clipping.
+Each checklist text input must also have a programmatic accessible name, including
+items added dynamically, so keyboard and assistive-technology users can edit them.
+
+
+Verify real Git refs as well as commit parents. Create main and feature branches in
+a temporary repository, then assert graph.refs includes both names and their actual
+rev-parse hashes, and the browser branch filter can select feature. Git for-each-ref
+format escapes use %1f for a unit separator; git log pretty-format uses %x1f. Using
+%x1f with for-each-ref prints a literal token and silently empties parsed refs when
+splitting on the unit-separator byte. Use the correct command-specific format (or
+another correctly parsed format), and retain refs/heads, remotes and tags. Empty
+refs on a nonempty branched repository is a failure, not an acceptable fallback.
