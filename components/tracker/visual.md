@@ -97,5 +97,11 @@ and the selected full hash and subject remain reachable. Route focus must not sc
 the view heading underneath the sticky top bar. Verify zoom changes the visible
 graph scale, Reset restores it, and both filtered and unfiltered nodes remain
 keyboard-selectable under the actual CSP.
+
+Activity entries use repository and task titles for creation, edits and state moves,
+with IDs available in details. Task-created events and their renderer must agree on
+the payload shape; do not fall back to task UUIDs when the event already contains
+the title. The same second-client task title visible on the board is visible in its
+creation entry in Activity.
 Capture actual rendered views and inspect their coordinates and visible content;
 the presence of an SVG element or a button alone does not prove functionality.

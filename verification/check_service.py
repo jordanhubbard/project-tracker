@@ -19,6 +19,7 @@ import sys
 import tempfile
 import threading
 import time
+import traceback
 import uuid
 import urllib.error
 import urllib.request
@@ -52,6 +53,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     raise
                 diagnostic_failures.append({'phase': name, 'error': str(error)[:2000]})
                 print(f'Diagnostic phase failed: {name}: {error}', file=sys.stderr)
+                traceback.print_exception(error, file=sys.stderr)
 
 
         def request(method, path, body=None, expected=200):

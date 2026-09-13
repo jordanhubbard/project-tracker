@@ -56,3 +56,20 @@ and tests. Fix omissions instead of declaring requested behavior a known limit. 
 modules readable and split by backend store, MAC, Git, sessions, settings, LLM, MCP, A2A,
 peers, HTTP, frontend board, frontend graph and frontend dialogs. Do not trim the product
 to fit a single small file. Tests and smoke modes must call product behavior.
+
+Keep generation output bounded: avoid repeatedly printing the full lockfile, source
+BOM or whole minified modules. Write files and inspect concise summaries or selected
+ranges. The installed source-generation transport has a 16 MiB stderr limit; avoid
+exhausting it with repeated dumps while retaining all required source and metadata.
+
+The portable application entrypoint consumes one JSON array argument. Decode that
+array before dispatching service, mcp and session subcommands; also retain direct
+--litai-serve/--litai-test/--litai-smoke flags. Explicitly exercise
+`["service","mcp"]` through an official stdio client and
+`["service","session","--repo",PATH,"--cli","other","--",COMMAND,...]`.
+Treating the complete JSON string as an unknown argv item and starting the default
+HTTP server is a regression. Standard I/O MCP, HTTP MCP, A2A and REST must all invoke
+the same MAC-aware service mutations; no protocol adapter may call the local store
+directly for a MAC task. Initialize required MAC readiness for stdio as for HTTP.
+Implement MAC field edits and transitions completely; returning 501 for the named
+MAC edit flow is not an acceptable partial implementation.

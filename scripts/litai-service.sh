@@ -15,6 +15,6 @@ case "$tracker_git_version" in
   *) echo 'Git version differs from the observed 2.50.1 build authority; refresh runtime.md before rebuilding.' >&2; exit 1 ;;
 esac
 if [[ $# -eq 0 ]]; then
-  set -- rebuild components/tracker --allow-host-execution --keep-runtime
+  set -- rebuild components/tracker --model gpt-6-astra --allow-host-execution --keep-runtime
 fi
 exec litai "$@"
