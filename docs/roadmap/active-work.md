@@ -245,3 +245,5 @@ queue item or let `docs/roadmap/` become a plan archive.
 - The final retained candidate also passes empty/truncated-history UI at both widths (`_build/polish-git-states/result.json`). Its labelled boundary circle and text are valid alternatives to a separate truncated badge. Backend native/admission and full product completion remain distinct.
 
 - Expanded browser task-dialog coverage against final retained polish source: desktop/mobile edits to assignee, branch, due date, cover, priority, labels, dependency selection and completed checklist item persist through page reload while preserving description/state. Both pass in `_build/polish-attributes.log`; known workflow-reorder and overflow failures remain. Added this scenario to the full board checker.
+
+- Extended the real reporter fixture across a backend outage: stop the service for 22 seconds (crossing its 20-second heartbeat), assert reporter and actual child PID remain alive, restart the service, release the child and verify stopped. The full independent service suite passes against final polish source in `_build/polish-reporter-outage.log`. This is an isolated fixture, not a production outage.

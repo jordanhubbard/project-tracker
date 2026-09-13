@@ -17,7 +17,7 @@ repeat affected tests before final delivery.
 | Trello board | Dark rail/list/card structure, colored covers, readable move controls; create/edit/rapid move/search/desktop drag pass | Document overflow from hidden absolute labels; final visual review |
 | Workflow editing | Rename, add and delete populated states with migration pass | No usable reorder control in generated list-menu UI |
 | Live task activity | Second-client create/edit/detail update and durable SSE replay pass | Final artifact repeat |
-| Physical coding sessions | Real child PID, hostname, CLI, branch, stopped lifecycle and Fleet display pass | Final artifact repeat |
+| Physical coding sessions | Real child PID, hostname, CLI, branch, outage survival, stopped lifecycle and Fleet display pass | Final artifact repeat |
 | Session expiry | Idle browser becomes stale at 90.03 seconds and sidebar count becomes zero | Final artifact repeat |
 | Checkout identity | Real checkout and symlink registration share one identity | Final artifact repeat |
 | Git DAG/timeline | Real fork/merge ancestry, equal/irregular timestamps, selection, zoom/filter, mobile inspector pass | Final artifact repeat |

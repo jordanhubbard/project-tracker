@@ -422,7 +422,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     'import os, pathlib, time; '
                     f'pathlib.Path({str(child_pid_file)!r}).write_text(str(os.getpid())); '
                     f'path = pathlib.Path({str(child_release_file)!r}); '
-                    'deadline = time.monotonic() + 20\n'
+                    'deadline = time.monotonic() + 75\n'
                     'while not path.exists() and time.monotonic() < deadline: time.sleep(0.1)\n'
                 )
                 reporter_env = dict(environment, TRACKER_URL=base,
@@ -450,6 +450,12 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert observed['hostname'] == socket.gethostname(), observed
                     assert observed['repo_id'] == git_repo['id'], observed
                     assert observed['branch'] == 'main', observed
+                    stop()
+                    time.sleep(22)  # Cross a real 20-second reporter heartbeat attempt.
+                    assert reporter.poll() is None, 'Backend outage terminated the reporter'
+                    os.kill(child_pid, 0)  # The actual wrapped coding child must remain alive.
+                    start()
+                    assert reporter.poll() is None
                     child_release_file.touch()
                     assert reporter.wait(timeout=8) == 0
                     ended = next(item for item in request('GET', '/api/sessions')['items']
@@ -684,6 +690,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                 'real Git fork and merge parent edges', 'MAC discovery and task routing',
                 'MAC write routing through official MCP and A2A',
                 'physical-host reporter child PID and stopped lifecycle',
+                'reporter preserves coding child across backend outage',
                 'MAC metadata preservation', 'MAC lifecycle rejection',
                 'confirmed MAC absence permits local work',
                 'MAC outage without local fallback']}))
