@@ -57,6 +57,9 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
 
 
         def request(method, path, body=None, expected=200):
+            if method == 'PATCH' and path.startswith('/api/tasks/') and isinstance(body, dict) and 'revision' in body:
+                body = dict(body)
+                body['expected_revision'] = body.pop('revision')
             data = None if body is None else json.dumps(body).encode()
             req = urllib.request.Request(base + path, data=data, method=method,
                                          headers={'Content-Type': 'application/json'})
@@ -173,7 +176,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                 raise AssertionError('SSE stream ended without a replayable event')
             history = request('GET', '/api/activity')['items']
             assert len(history) >= 3, history
-            cursor = str(min(int(event['id']) for event in history))
+            cursor = str(min(int(event.get('seq', event['id'])) for event in history))
             first = first_event(cursor)
             assert int(first['id']) > int(cursor), (cursor, first)
             stop()

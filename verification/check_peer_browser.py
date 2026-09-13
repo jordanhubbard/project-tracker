@@ -78,7 +78,7 @@ with tempfile.TemporaryDirectory() as root:
         active_dialog.get_by_role('button', name=re.compile(r'^(?:Close|Cancel)$')).click()
       page.once('dialog', lambda d: d.accept())
       page.get_by_role('button',name=re.compile(r'^Remove(?: peer(?: .+)?)?$')).click()
-      confirm = page.get_by_role('button', name='Confirm', exact=True)
+      confirm = page.get_by_role('dialog').get_by_role('button', name=re.compile(r'^(?:Confirm|Remove peer)$'))
       if confirm.count(): confirm.click()
       deadline=time.monotonic()+2
       while request(a,'GET','/api/peers')['items'] and time.monotonic()<deadline:page.wait_for_timeout(100)

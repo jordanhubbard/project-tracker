@@ -284,3 +284,16 @@ hostname is visibly rendered. Repeat in Timeline and verify feature filtering
 excludes a main-only host. Stop the child and observe stopped status. A graph
 projection containing only session_id, branch, cli and status fails this contract;
 the actual hostname must survive that projection and reach the branch view.
+
+
+Exercise the raw framework service invocation with all trailing options:
+`node main.js --litai-serve --host 127.0.0.1 --port PORT`. Select a fresh nondefault
+port and require /health there, with no silent fallback to port8765. Preserve the
+complete raw argv for framework modes as well as decoding complete JSON arrays
+for service, MCP and reporter commands. Include this startup regression in native
+tests while retaining the supported JSON service path.
+
+Browser review includes the entire short list names at desktop1440/mobile390,
+without truncation by action buttons. It also observes a MAC fleet outage and
+recovery in an already-open overview/inspector without reload, with unchanged
+upstream tasks. Status changes must reach the view and cached tasks stay visible.

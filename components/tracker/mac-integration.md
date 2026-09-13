@@ -102,3 +102,19 @@ the upstream status where possible), with its useful rejection detail. HTTP 502
 is not the response for a valid upstream lifecycle denial. Keep that denial distinct
 from 503 unavailability and preserve the cached task's actual state. Test a rejected
 completed transition, including both HTTP status and unchanged local/upstream state.
+
+
+## Live fleet synchronization status
+
+When a configured fleet changes from reachable to unavailable, persist sync_error
+on matched repositories and publish the repository status change through the same
+SSE refresh path used by the browser. An already-open overview and inspector show
+that failure without reload within one polling interval plus transport delay.
+Cached tasks and counts remain visible, and attempted mutations remain upstream
+operations that fail during the outage; no local shadow task is created.
+
+When the fleet recovers, clear the error and publish that change even if every
+upstream task is identical to its pre-outage contents. A healthy-to-failed or
+failed-to-healthy status transition is observable repository data. Avoid duplicate
+events on repeated polls with unchanged failure state. Verify healthy -> HTTP503
+-> healthy using the isolated fleet fixture, without browser reload or task edits.

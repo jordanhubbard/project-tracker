@@ -42,7 +42,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
         [
             args.node,
             str(args.entrypoint.resolve()),
-            "--litai-serve",
+            '--litai-serve',
             "--host",
             "127.0.0.1",
             "--port",
@@ -312,7 +312,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 if expected_hash:
                                     expect_selected_hash(page, expected_hash)
                                 elif short_hash:
-                                    expect(page.locator("#commit-inspector, .commit-inspector, .inspector").first).to_contain_text(re.compile(re.escape(short_hash.group())), timeout=2000)
+                                    matching_hashes = [h for h in commits if h.startswith(short_hash.group())]
+                                    assert len(matching_hashes) == 1, (label, matching_hashes)
+                                    expect_selected_hash(page, matching_hashes[0])
                                 details = page.locator("#commit-inspector, .commit-inspector, .inspector").first.inner_text()
                                 match = re.search(r"\b([a-f0-9]{40,64})\b", details)
                                 center = commit_circle(node).evaluate(

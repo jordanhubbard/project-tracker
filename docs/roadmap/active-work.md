@@ -453,3 +453,43 @@ queue item or let `docs/roadmap/` become a plan archive.
 - Next action: retain actual hostnames through the graph session projection and
   rendered selected-branch association, regenerate and require all final checks
   plus the supported public build/run path. Preserve the current passing behavior.
+
+
+### Hostview final-source verification and list heading review
+
+- Hostview generation at 5a236ef completed native admission with 57 tests. Preserve
+  `_build/hostview-native-result.json` and the 35-file final source hashes in
+  `_build/hostview-final-provenance.json`.
+- Early snapshots discarded raw startup options; final generation corrected that
+  before native completion. The final independent suite now runs the required
+  raw --litai-serve command, with no JSON launch workaround. Its current evidence
+  is `_build/hostview-final-independent` and `_build/hostview-final-verify.log`.
+- Early JSON-launch diagnostics pass all seven behavior scopes after adapting
+  observed contracts: expected_revision for conditional task edits, seq for SSE
+  cursors, nested title buttons, Remove peer confirmation, and exact selected
+  Hash-field waits. These adaptations preserve the original assertions.
+- Actual reporter hostname associations now pass in graph/timeline checks. The
+  additional final-source browser stale-editor probe shows an actionable error
+  and preserves the concurrent saved title (`_build/hostview-extra-browser`).
+- Visual inspection of desktop/mobile screenshots still shows short list headings
+  such as in_progress crowded and truncated by four permanent action buttons.
+  This contradicts the existing visual authority despite passing interactions.
+- Next action in progress: finish final-source and additional browser review, then
+  reinforce list-name layout acceptance in the component's visual authority and
+  regenerate if final rendering retains the defect. Supported public build/run,
+  current receipt and complete handoff remain pending.
+
+
+### Additional hostview outage review
+
+- All seven final-source independent phases pass (`_build/hostview-final-independent/summary.json`).
+  Additional missing-checkout navigation and stale-editor conflict browser probes pass.
+- The isolated unavailable-peer UI probe passes and records last_error after failure
+  (`_build/hostview-peer-outage/result.json`). No external service was contacted.
+- MAC outage browser probe rejects the edit and preserves upstream task state, but
+  the already-open overview never shows the recorded backend sync_error. Runtime
+  `_build/hostview-mac-outage/outage-state.json` shows the repository error while the
+  page still has no indicator; sync-failure storage updates do not notify the UI.
+- Include realtime MAC sync-status notification and recovery in the next specification
+  repair, together with fully legible short list headings. Preserve cached tasks and
+  upstream-only mutations throughout outage and recovery.

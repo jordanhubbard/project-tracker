@@ -231,3 +231,14 @@ hostname of an active reporter on main. An always-visible branch-association pan
 may also provide this information. Do not require an undisclosed branch-filter
 choice before any active host becomes visible. Filtering feature excludes hosts
 associated only with main. Keep task annotations scoped to the actual branch.
+
+
+## Short list names at normal board widths
+
+At desktop 1440px and mobile 390px, ordinary columns display the full short names
+open, in_progress, blocked, review, completed and Ready desktop. Do not ellipsize,
+clip or cover these names with list controls. Reserve the name/count row for those
+labels and place secondary actions in the accessible menu or a separate compact
+row. Keep ordinary column widths and horizontal board scrolling. Measure the
+rendered list-name element and require scrollWidth <= clientWidth for these names;
+review screenshots as well as successful rename/reorder/delete behavior.

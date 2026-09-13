@@ -18,7 +18,10 @@ def open_task(page, title):
     button = card.get_by_role('button', name='Open', exact=True)
     if button.count():
         button.click(); return
-    page.get_by_role('button', name=title, exact=True).or_(page.get_by_role('heading', name=title, exact=True)).click()
+    title_button = page.get_by_role('button', name=title, exact=True)
+    if title_button.count():
+        title_button.first.click(); return
+    page.get_by_role('heading', name=title, exact=True).first.click()
 
 def title_control(page, **kwargs):
     return page.get_by_text(kwargs['name'], exact=kwargs.get('exact', False))
@@ -61,7 +64,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
         [
             args.node,
             str(args.entrypoint.resolve()),
-            "--litai-serve",
+            '--litai-serve',
             "--host",
             "127.0.0.1",
             "--port",
