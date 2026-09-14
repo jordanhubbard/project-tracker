@@ -21,7 +21,7 @@ def expect_selected_hash(page, commit_hash):
     if value.count():
         expect(value).to_have_text(commit_hash, timeout=5000)
     else:
-        expect(inspector.get_by_text(re.compile(r'^Hash:\s*' + re.escape(commit_hash) + r'$'))).to_be_visible(timeout=5000)
+        expect(inspector.get_by_text(re.compile(r'^(?:Hash:\s*)?' + re.escape(commit_hash) + r'$'))).to_be_visible(timeout=5000)
 
 def label_overlaps(page):
     return page.locator('svg').first.evaluate("""svg => {

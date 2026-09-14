@@ -68,7 +68,7 @@ with tempfile.TemporaryDirectory(prefix='tracker-expiry-') as data:
             row = page.get_by_role('cell', name='synthetic-expiry-host', exact=True).locator('..')
             row.get_by_text(re.compile(r'^(active|running)$', re.I)).wait_for()
             repo_control = page.get_by_role('navigation').get_by_role('button', name=re.compile('Expiry fixture')).locator('..')
-            assert re.search(r'\b1\b', repo_control.inner_text()), repo_control.inner_text()
+            assert re.search(r'\b1\b', repo_control.locator('.badge').inner_text() if repo_control.locator('.badge').count() else repo_control.inner_text()), repo_control.locator('.badge').inner_text() if repo_control.locator('.badge').count() else repo_control.inner_text()
             page.screenshot(path=str(out / 'active.png'), full_page=True)
             print('Waiting for the specified 90-second heartbeat deadline', flush=True)
             stale = row.get_by_text(re.compile(r'^stale$', re.I))
@@ -76,7 +76,7 @@ with tempfile.TemporaryDirectory(prefix='tracker-expiry-') as data:
                 page.wait_for_timeout(500)
             elapsed = round(time.monotonic() - started, 2)
             result = {'elapsed_seconds': elapsed, 'row': row.inner_text(),
-                      'sidebar': repo_control.inner_text(), 'stale_visible': stale.is_visible()}
+                      'sidebar': repo_control.locator('.badge').inner_text() if repo_control.locator('.badge').count() else repo_control.inner_text(), 'stale_visible': stale.is_visible()}
             result['ok'] = result['stale_visible'] and (bool(re.search(r'\b0\b', result['sidebar'])) or result['sidebar'].strip() == repo['name'])
             (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
             page.screenshot(path=str(out / 'after-deadline.png'), full_page=True)

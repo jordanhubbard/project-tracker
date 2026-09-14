@@ -7,6 +7,22 @@ kind: verification
 
 ## Confirmed regeneration regressions
 
+Native MAC checks must establish fleet-wide identities before dependency projection,
+including the alpha-to-later-beta unresolved reference fixture in mac-integration.md.
+The measured large-response fixture must exceed 83,886,080 bytes; construct sufficient
+padding rather than accepting an undersized fixture or lowering the assertion.
+
+Renaming a populated local workflow state must preserve its stable state ID and every
+occupying task's board membership. If tasks persist state names, atomically update those
+names along with the workflow row; if tasks persist state IDs, keep those IDs unchanged
+and expose the renamed display label consistently. A task may never reference a removed
+state name after a successful rename. Preserve unrelated fields/dependencies, advance
+changed task revisions once and emit committed events with the final projection.
+Native and browser checks must create a task in open, rename open to Ready, verify the
+same state ID, fetch the task, and confirm it appears in Ready after reload and restart.
+Retain task moves, workflow ordering, populated deletion migration and MAC lifecycle
+ownership. Checking only the renamed heading is insufficient.
+
 The MAC complete_reconciliation gate must execute the >=80MiB real authenticated
 HTTP collection-read scenario in mac-integration.md using the production256MiB
 response limit. A previous candidate passed adapter-level import of all captured

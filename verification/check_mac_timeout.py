@@ -150,6 +150,8 @@ def sync_ok(repo):
     if "last_sync_ok" in repo:
         return repo["last_sync_ok"]
     health = api("/health")
+    if "mac_last_sync_ok" in health:
+        return health["mac_last_sync_ok"]
     fleet = health.get("fleet", health)
     if "last_sync_ok" in fleet:
         return fleet["last_sync_ok"]

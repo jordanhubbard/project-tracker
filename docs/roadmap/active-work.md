@@ -125,6 +125,13 @@ under TRACK-004. Earlier scoped evidence is in
     the80,765,554-byte captured collection. Require256MiB production capacity,
     native >=80MiB synthetic transport coverage and final actual-service replay.
     See [candidate-nine evidence](../../verification/track004-candidate9.json).
+  - [ ] Establish task identities across all discovered projects before resolving
+    cross-project references, and preserve populated local workflow membership on
+    rename. Candidate ten passes full captured HTTP replay, default transport cleanup,
+    synthetic writes and backend protocols, but native MAC acceptance rejects a
+    later-project reference initially classified as missing. Its synthetic response
+    fixture also measures below 80 MiB. A populated-state rename leaves tasks in a
+    nonexistent state. See [candidate-ten evidence](../../verification/track004-candidate10.json).
   - [ ] Deliver the accepted repair through the supported committed-source cache;
     verify portable isolated acceptance and cache reuse in a fresh GitHub checkout.
     These runtime-delivery checks remain here after the workspace import lands.

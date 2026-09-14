@@ -298,7 +298,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert settings['llm_model'] == 'fixture-model', settings
                     request('PATCH', '/api/settings', {'llm_key': ''})
                     assert request('GET', '/api/settings')['llm_key_configured'] is True
-                    request('PATCH', '/api/settings', {'llm_key': None, 'clear_llm_key': True})
+                    request('PATCH', '/api/settings', {'llm_key': None, 'clear_llm_key': True, 'clear': ['llm_key']})
                     stop()
                     start()
                     cleared = request('GET', '/api/settings')

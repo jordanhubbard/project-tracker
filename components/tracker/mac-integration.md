@@ -5,6 +5,24 @@ kind: integration
 ---
 # MAC integration behavior
 
+## Resolve relationships after fleet-wide identity discovery
+
+Within one snapshot transaction, discover every repository and establish stable task
+identities for every project before projecting any task relationships. A per-project
+seed-and-project loop is insufficient: when alpha references a beta task and beta sorts
+later, the first poll misclassifies the reference as missing and the next identical poll
+changes the projection. Build a fleet-wide upstream-ID lookup, with repository ownership,
+then distinguish same-project dependencies, known outside-project references and truly
+missing IDs. Keep known foreign Tracker IDs in unresolved details on the first poll.
+
+The native unresolved_preservation gate must create alpha/x referencing alpha/pre,
+beta/f-1 and missing, with alpha processed before beta and all records new. After the
+first snapshot, pre is a normal Tracker-ID dependency, f-1 is outside_project with the
+known beta Tracker ID, and missing is missing. An identical second snapshot must not
+change any revision, raw reference, resolved/unresolved projection or task event count.
+Repeat with reversed discovery and task order and after restart. Existing write/poll
+stability and atomic rollback requirements remain mandatory.
+
 ## Admit full fleet response sizes
 
 Use a 256 MiB aggregate response-body limit for production MAC HTTP transport.
@@ -18,8 +36,11 @@ metadata, truncate collections, or shrink the fixture to pass the limit.
 The native complete_reconciliation gate must also execute a separate authenticated
 HTTP /tasks read with at least80 MiB of synthetic valid JSON under the production
 client's default size limit and ordinary read deadline. Construct the data
-programmatically (for example10,000 short tasks with repeated synthetic metadata
-padding), assert serialized byte count and the complete decoded record count and
+programmatically with a measured margin: for example 10,000 short tasks each with
+9,216 ASCII padding characters exceeds 80 * 1024 * 1024 bytes. Merely using 8,192
+characters per task yields about 79.35 MiB with ordinary fields and fails the threshold.
+Assert Buffer.byteLength of the fully serialized JSON is at least 83,886,080 bytes
+before serving it, then assert the received serialized byte count and the complete decoded record count and
 preserved padding. Exercise the actual client and adapter; do not inject a fake
 transport or an enlarged test-only size limit. This focused transport fixture need
 not insert its padding into SQLite: retain the separate ordinary10,000-task/201-project

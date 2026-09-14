@@ -217,7 +217,7 @@ try:
         assert p.poll() is None, "Tracker exited"
         try:
             health = api("GET", "/health")
-            if health.get("fleet", health).get("last_sync_ok") or api(
+            if health.get("mac_last_sync_ok") or health.get("fleet", health).get("last_sync_ok") or api(
                 "GET", "/api/overview"
             ).get("mac", {}).get("last", {}).get("ok"):
                 break
@@ -488,7 +488,7 @@ try:
                             "Unresolved references are not visible",
                             text[-2000:],
                         )
-                        dialog.get_by_label("Labels", exact=True).fill("browser-edited")
+                        dialog.get_by_label(re.compile(r"^Labels(?: \(comma separated\))?$")).fill("browser-edited")
                         dialog.get_by_role(
                             "listbox", name="Dependencies", exact=True
                         ).select_option([prereq["id"]])

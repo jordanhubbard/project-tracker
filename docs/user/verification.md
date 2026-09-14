@@ -47,7 +47,8 @@ revision regressions. Their sanitized results are retained in
 [candidate six](../../verification/track004-candidate6.json), and
 [candidate seven](../../verification/track004-candidate7.json), and
 [candidate eight](../../verification/track004-candidate8.json), and
-[candidate nine](../../verification/track004-candidate9.json).
+[candidate nine](../../verification/track004-candidate9.json), and
+[candidate ten](../../verification/track004-candidate10.json).
 
 Candidate seven's focused dependency-only and combined-change probes pass, but its
 response-body cleanup produces an unhandled rejection. Its native run also exceeded the
@@ -58,6 +59,12 @@ stopped before acceptance. The next repair explicitly owns and destroys transpor
 request/response handles. Candidate nine fixes the deadline and connection cleanup,
 and passes the focused event and adapter snapshot checks, but its48MiB response cap
 rejects the real77MiB task collection. Full response-volume coverage is now required.
+
+Candidate ten accepts the real full HTTP snapshot and passes focused transport,
+mutation, event and rollback checks. Its native MAC check rejects a cross-project
+forward-reference misclassification and an undersized synthetic response fixture.
+Independent inspection also finds populated-state rename losing board membership.
+These failures remain open; no accepted candidate-ten export was produced.
 
 `verification/current.json` is framework-owned and must match current authority.
 [final-result.json](../../verification/final-result.json) records the artifact it was

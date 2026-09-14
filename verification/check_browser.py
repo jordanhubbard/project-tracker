@@ -35,7 +35,7 @@ def list_control(page, action, name):
         direct.click()
         return
     page.get_by_role('button', name=re.compile(r'^(?:List menu for ' + re.escape(name) + r'|Open ' + re.escape(name) + r' list menu|List ' + re.escape(name) + r' menu|Open the list menu for ' + re.escape(name) + r'|' + re.escape(name) + r' list menu)$')).click()
-    menu_scope = page.get_by_role('dialog').or_(page.get_by_role('group', name=f'{name} list menu', exact=True)).or_(page.get_by_role('menu'))
+    menu_scope = page.get_by_role('dialog').or_(page.get_by_role('group', name=f'{name} list menu', exact=True)).or_(page.get_by_role('menu')).or_(page.locator('.menu:visible'))
     menu_action = menu_scope.get_by_role('button', name=f'{action} list', exact=True)
     inline_name = page.get_by_role('dialog').get_by_role('textbox', name=re.compile(r'^(?:List name|Rename this list)$'))
     inline_destination = page.get_by_role('dialog').get_by_role('combobox', name=re.compile('Destination|Move.*to',re.I))
@@ -344,7 +344,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             dialog = page.get_by_role('dialog')
                             dialog.get_by_label(re.compile(r'^Assignee$', re.I)).fill('QA operator')
                             dialog.get_by_label(re.compile(r'^Branch$', re.I)).fill('feature/browser-verification')
-                            dialog.get_by_label(re.compile(r'^Due date$', re.I)).fill('2026-10-02')
+                            dialog.get_by_label(re.compile(r'^Due date(?: \(YYYY-MM-DD\))?$', re.I)).fill('2026-10-02')
                             dialog.get_by_role('combobox', name=re.compile(r'^Cover(?: colou?r)?$', re.I)).select_option('purple')
                             priority = dialog.get_by_label(re.compile(r'^Priority'))
                             if priority.evaluate('e=>e.tagName') == 'SELECT': priority.select_option('2')
@@ -432,10 +432,15 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             heading = title_control(page, name=re.compile(
                                 r"^" + re.escape(destination.get('display_name', destination['name'])) + r"(?:\s|$)", re.I))
                             column = page.locator(f'[data-state-id="{destination["id"]}"]')
+                            if not column.count():
+                                column = page.get_by_role('region', name=f"{destination['name']} list", exact=True)
                             if not column.count(): column = page.locator('.board-list, section.list').filter(has=page.get_by_role('heading', name=destination['name'], exact=True))
                             lists = column.get_by_role("list")
                             target = lists.first if lists.count() else column
-                            card.drag_to(target)
+                            try:
+                                card.drag_to(target)
+                            finally:
+                                page.mouse.up()
                             deadline = time.monotonic() + 2
                             while time.monotonic() < deadline:
                                 if api("GET", f"/api/tasks/{task['id']}")["state"] == task_state(destination):
@@ -463,6 +468,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         def workflow():
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
                             old = current[0]
+                            occupants = [t for t in api('GET', f"/api/repos/{repo['id']}/tasks")['items']
+                                         if t['state'] == task_state(old)]
+                            assert occupants, 'The rename fixture must contain tasks'
                             new_name = f'Ready {name}'
                             list_control(page, 'Rename', old['name'])
                             dialog = page.get_by_role('dialog')
@@ -472,6 +480,16 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.locator('.list-name').filter(has_text=re.compile('^'+re.escape(new_name)+'$')).wait_for()
                             saved = next(x for x in api('GET', f"/api/repos/{repo['id']}/states")['items'] if x['id'] == old['id'])
                             assert saved['name'] == new_name, saved
+                            for occupant in occupants:
+                                after = api('GET', f"/api/tasks/{occupant['id']}")
+                                assert after['state'] == task_state(saved), after
+                            page.reload(wait_until='domcontentloaded')
+                            renamed = page.get_by_role('region', name=f'{new_name} list', exact=True)
+                            if not renamed.count():
+                                renamed = page.locator('.board-list, section.list').filter(
+                                    has=page.locator('.list-name').filter(has_text=re.compile('^'+re.escape(new_name)+'$')))
+                            for occupant in occupants:
+                                renamed.get_by_text(occupant['title'], exact=True).first.wait_for()
 
                         check("rename workflow state", workflow)
                         check("legible renamed list heading", heading_geometry)
@@ -493,7 +511,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 dialog.get_by_role('button',name=re.compile(r'^(?:Save|Rename(?: list)?)$')).click()
                             else:
                                 dialog.get_by_label('List name',exact=True).fill(added_name)
-                                dialog.get_by_role('button',name='Add list',exact=True).click()
+                                dialog.get_by_role('button',name=re.compile(r'^(?:Add list|Save)$')).click()
                             dialog.wait_for(state='hidden')
                             page.locator('.list-name').filter(has_text=re.compile('^'+re.escape(added_name)+'$')).wait_for()
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
