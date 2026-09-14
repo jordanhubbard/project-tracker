@@ -92,3 +92,11 @@ native npm archive passed exact file verification, installation, native/service
 checks and byte-for-byte download verification from an unpublished GitHub draft.
 Two browser defects remain: a stale render reopens the registration dialog and a
 status toast intercepts mobile Settings clicks. Stable release acceptance is pending.
+
+Candidate16 was rejected by native session-expiry acceptance. An unmodified private
+snapshot passed registration draft preservation, peer operations and all 30 desktop/mobile
+board interactions after retaining an explicit failure for its unnamed checklist checkbox.
+It also omitted upstream IDs from task responses and used stale discovery to permit a
+new local registration during a MAC outage. These are recorded in
+[candidate16 evidence](../../verification/track004-candidate16.json) and remain release
+blockers. Candidate15's verified npm draft has not been replaced or published.

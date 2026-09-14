@@ -38,12 +38,37 @@ with tempfile.TemporaryDirectory() as root:
       page=browser.new_page(viewport={'width':1440,'height':1000});page.set_default_timeout(5000)
       errors=[]
       page.on('pageerror', lambda e: (errors.append(str(e)), (out/'page-errors.json').write_text(json.dumps(errors))))
+      page.add_init_script("""
+        window.__trackerVerificationRepoEvents = 0;
+        const NativeEventSource = window.EventSource;
+        window.EventSource = class extends NativeEventSource {
+          constructor(...args) {
+            super(...args);
+            for (const name of ['repo.created','repo.changed','repository.created','repository.changed','repository.updated','repository-changed']) {
+              this.addEventListener(name, () => window.__trackerVerificationRepoEvents++);
+            }
+          }
+        };
+      """)
       page.goto(a)
       page.get_by_role('heading',name='Project overview').wait_for()
       register = page.get_by_role('button',name=re.compile(r'^(?:Register (?:a )?|Add )repository$'))
       (register.first if register.count() else page.get_by_role('button', name='Create', exact=True).first).click()
       page.get_by_label(re.compile(r'^(?:(?:Repository |Display )?Name)',re.I)).fill('Local only')
       page.get_by_label(re.compile(r'^Remote URL',re.I)).fill('https://example.test/local/only.git')
+      page.get_by_text('Connected',exact=True).wait_for()
+      event_cursor = page.evaluate('window.__trackerVerificationRepoEvents')
+      request(a,'POST','/api/repos',{'name':'Unrelated live update','remote_url':'https://example.test/local/unrelated.git'})
+      page.wait_for_function('cursor => window.__trackerVerificationRepoEvents > cursor',arg=event_cursor)
+      page.wait_for_timeout(500)
+      name_control = page.get_by_label(re.compile(r'^(?:(?:Repository |Display )?Name)',re.I))
+      remote_control = page.get_by_label(re.compile(r'^Remote URL',re.I))
+      if name_control.input_value() != 'Local only' or remote_control.input_value() != 'https://example.test/local/only.git':
+        errors.append('Live repository event cleared the registration draft')
+        page.screenshot(path=str(out/'registration-draft-cleared.png'),full_page=True)
+        name_control.fill('Local only')
+        remote_control.fill('https://example.test/local/only.git')
+
       page.get_by_role('dialog').get_by_role('button', name=re.compile(r'^(?:Register(?: repository| locally)?|Save)$')).click()
       try: page.get_by_role('dialog').wait_for(state='hidden')
       except Exception:

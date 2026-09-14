@@ -7,6 +7,34 @@ kind: verification
 
 ## Confirmed regeneration regressions
 
+After a previously successful MAC enumeration, a failed poll invalidates that
+snapshot as proof of absence for NEW registrations. Retain last-good repositories
+and tasks for display, but never infer local authority from a stale complete discovery
+index. During the outage, registering an unmatched URL must return unresolved and
+creating a task there must fail with 503 without local task/event creation. Test the
+healthy-to-outage transition, not only startup while unavailable. Recovery requires
+a fresh successful enumeration before absence can again authorize local work.
+
+Session status projection must distinguish active, stale and explicitly stopped
+sessions. Once the expiry scheduler persists `stale`, REST listings, session events,
+repository counts and browser views must retain that stale status. Do not map all
+non-running values to stopped. Expire a running session using the service's clock
+boundary, assert its emitted and persisted projections are stale, assert a repeated
+expiry emits nothing, then verify a fresh heartbeat restores active and an explicit
+exit becomes stopped. The full generated native self-check must pass these assertions.
+
+Every checklist completion checkbox must have a programmatic accessible name such as
+"Checklist item 1 complete", including newly added rows. A named text input beside an
+unnamed checkbox does not label the checkbox. Verify normal browser interaction through
+the checkbox's role and name, then save and reopen to check persisted completion.
+
+Public MAC task list and detail projections must include `mac_id` with the original
+upstream task ID and `owner_agent_id` with the upstream owner, alongside tracker-local
+`id`. Preserve these fields through edits, polling and restart. Storing them only in
+SQLite is insufficient: external reconciliation must read the original identity and
+owner from GET /api/tasks/{id} and GET /api/repos/{id}/tasks. Retain raw
+upstream_dependencies and unresolved_dependencies in those projections as well.
+
 Async UI renders must not commit an obsolete route after navigation or a completed
 mutation. Recheck the active route/render generation after awaited reads, and never
 reopen a modal from an outdated registration route. With an SSE connection active,

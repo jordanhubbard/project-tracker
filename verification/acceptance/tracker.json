@@ -1,6 +1,6 @@
 {
   "schema": "literate-ai/persistent-service-acceptance@1",
-  "specification_set_identity": "sha256:3fa795f9bf2a753c995aa3b9671b7d86693c38fcd97967feb357e57ed36544d6",
+  "specification_set_identity": "sha256:db1a71d8ed3abd7e95273003a50cf18e1891f554ad89e0ddbae0e5e8e632e095",
   "process": {
     "environment": {
       "TRACKER_DATA_DIR": "../acceptance-data-{port}",

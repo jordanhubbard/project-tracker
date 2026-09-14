@@ -1,0 +1,117 @@
+{
+  "candidate": "12501486b724c7d62ece5e14f9a3ed4587b7bee081c40e48c91fc16dc5c07eef",
+  "authority_commit": "a9b7fc5b5e8432e5cb7f7009075c9300b0d69655",
+  "native_accepted": false,
+  "release_ready": false,
+  "lifecycle_failure": "service-selfcheck-gates: session_expiry",
+  "native_snapshot_results": {
+    "schema": "literate-ai/generated-test-results@1",
+    "cases": [
+      {
+        "case_id": "store-smoke-roundtrip",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "canonical-ssh-remote",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "canonical-https-remote",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "canonical-unrecognized-remote",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "identity-ssh-https-converge",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "identity-basename-collision",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "code-point-ordering",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "priority-default-integer",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "priority-explicit-integer",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "session-active-boundary",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "session-stale-boundary",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "session-stopped-explicit",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "workflow-catalog",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "transport-limits",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "a2a-descriptor",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "mcp-descriptor",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "git-selfcheck-gates",
+        "outcome": "passed"
+      },
+      {
+        "case_id": "service-selfcheck-gates",
+        "outcome": "failed"
+      },
+      {
+        "case_id": "mac-selfcheck-gates",
+        "outcome": "passed"
+      }
+    ]
+  },
+  "diagnostic_scope": "Unmodified private source snapshot; not an accepted export. Browser selectors updated for native repository buttons; unnamed checklist checkbox recorded as a failure while diagnostics continue.",
+  "browser": {
+    "registration_draft_and_peer_flow": true,
+    "desktop_interactions_passed": 15,
+    "mobile_interactions_passed": 15,
+    "issues": [
+      {
+        "viewport": "desktop",
+        "issues": [
+          "Checklist completion checkbox lacks an accessible name"
+        ]
+      },
+      {
+        "viewport": "mobile",
+        "issues": [
+          "Checklist completion checkbox lacks an accessible name"
+        ]
+      }
+    ],
+    "mobile_settings_save_with_toast": true,
+    "mobile_screenshot_reviewed": true
+  },
+  "findings": [
+    "Persisted stale session projects as stopped",
+    "Checklist completion checkbox lacks accessible name",
+    "Public task DTO omits stored upstream MAC ID and owner",
+    "New unmatched registration incorrectly becomes local after a healthy-to-unavailable MAC transition"
+  ],
+  "packaging": "Rejected before packaging; candidate15 verified draft retained."
+}

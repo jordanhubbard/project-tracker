@@ -81,6 +81,10 @@ under TRACK-004. Earlier scoped evidence is in
 - **Conclusion:** Live import aborts on valid upstream dependency IDs after three projects; requests also time out. Correct upstream/local identity translation, complete fleet reconciliation and observable synchronization failures. Use isolated read-only live verification; production writes remain deliberate UI actions.
 - **Depends on:** none
 - **Implementation:**
+  - [ ] Reject stale discovery as proof of absence after a healthy-to-unavailable MAC transition; new unmatched registrations remain unresolved and cannot create local shadow tasks.
+  - [ ] Correct candidate16 session expiry: a persisted stale session must project as stale, never stopped, across events, REST and browser views; retain exactly-once expiry and heartbeat reactivation checks.
+  - [ ] Give every checklist completion checkbox an accessible name, including newly added rows.
+  - [ ] Preserve upstream MAC identity and owner fields in public task list/detail projections. Candidate16 stored these fields but omitted them from REST responses, preventing external reconciliation.
   - [ ] Prevent obsolete asynchronous route renders from reopening registration dialogs after successful saves and navigation.
   - [ ] Make status-only toasts non-intercepting; verify immediate mobile Settings saves during visible notifications.
   - [x] Rebind the reviewed persistent-service contract without changing its probes or isolated data directory. Candidate15 then passed the supported build using the retained generation checkpoint (7 native groups); independent UI findings still block final acceptance.

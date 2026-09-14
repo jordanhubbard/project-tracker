@@ -213,7 +213,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                     try:
                         page.get_by_role("button", name=re.compile(r"^Open board(?: for .+)?$", re.I)).or_(
                             page.get_by_role("link", name=re.compile(r"^Open board(?: for .+)?$", re.I))
-                        ).or_(page.locator('.repo-card[role="button"]')).first.click()
+                        ).or_(page.locator('.repo-card[role="button"], button.repo-card')).first.click()
                     except Exception:
                         page.screenshot(
                             path=str(out / f"{name}-startup.png"), full_page=True

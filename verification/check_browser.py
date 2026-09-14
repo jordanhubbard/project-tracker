@@ -164,7 +164,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                     try:
                         page.get_by_role("button", name=re.compile(r"^Open board(?: for .+)?$", re.I)).or_(
                             page.get_by_role("link", name=re.compile(r"^Open board(?: for .+)?$", re.I))
-                        ).or_(page.locator('.repo-card[role="button"]')).first.click()
+                        ).or_(page.locator('.repo-card[role="button"], button.repo-card')).first.click()
                     except Exception:
                         page.screenshot(
                             path=str(out / f"{name}-startup.png"), full_page=True
@@ -361,7 +361,11 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             if not check_text.count():
                                 check_text = dialog.locator('.checklist-editor li').last.get_by_role('textbox')
                             check_text.last.fill('Review browser attributes')
-                            dialog.get_by_role('checkbox', name=re.compile(r'^(?:Mark checklist item \d+ complete|Done|Completed:|Checklist item completed?|Checklist item \d+ (?:done|complete))', re.I)).last.check()
+                            check_done = dialog.get_by_role('checkbox', name=re.compile(r'^(?:Mark checklist item \d+ complete|Done|Completed:|Checklist item completed?|Checklist item \d+ (?:done|complete))', re.I))
+                            if not check_done.count():
+                                issues.append('Checklist completion checkbox lacks an accessible name')
+                                check_done = dialog.locator('.checklist-row input[type="checkbox"]')
+                            check_done.last.check()
                             dialog.get_by_role('button', name=re.compile(r'^Save(?: task)?$')).click()
                             dialog.wait_for(state='hidden')
                             saved = api('GET', f"/api/tasks/{task['id']}")

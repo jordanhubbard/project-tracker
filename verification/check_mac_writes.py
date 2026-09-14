@@ -460,9 +460,10 @@ try:
                                 "heading", name=repo["name"], exact=True
                             )
                         )
-                        card.get_by_role(
-                            "button", name="Open board", exact=True
-                        ).click()
+                        if card.get_attribute("role") == "button" or card.evaluate('(e) => e.tagName') == 'BUTTON':
+                            card.click()
+                        else:
+                            card.get_by_role("button", name="Open board", exact=True).click()
 
                         def open_editor():
                             task_card = page.locator(
@@ -473,7 +474,7 @@ try:
                                 "button",
                                 name="Open the task " + original_title,
                                 exact=True,
-                            )
+                            ).or_(task_card.get_by_role("button", name="Edit " + original_title, exact=True))
                             if opener.count():
                                 opener.click()
                             else:
@@ -514,12 +515,11 @@ try:
                         if remove.count():
                             remove.check()
                         else:
-                            dialog.get_by_role(
-                                "button",
-                                name=re.compile(
-                                    r"Remove.*missing|missing.*Remove", re.I
-                                ),
-                            ).click()
+                            named_remove = dialog.get_by_role("button", name=re.compile(r"Remove.*missing|missing.*Remove", re.I))
+                            if named_remove.count():
+                                named_remove.click()
+                            else:
+                                dialog.get_by_role("listitem").filter(has_text=re.compile(r"^missing\s")).get_by_role("button", name="Remove reference", exact=True).click()
                         assert "missing" in tasks["dependent"]["dependencies"], (
                             "Removal committed before Save"
                         )
