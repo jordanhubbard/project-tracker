@@ -48,7 +48,8 @@ revision regressions. Their sanitized results are retained in
 [candidate seven](../../verification/track004-candidate7.json), and
 [candidate eight](../../verification/track004-candidate8.json), and
 [candidate nine](../../verification/track004-candidate9.json), and
-[candidate ten](../../verification/track004-candidate10.json).
+[candidate ten](../../verification/track004-candidate10.json), and
+[candidate eleven](../../verification/track004-candidate11.json).
 
 Candidate seven's focused dependency-only and combined-change probes pass, but its
 response-body cleanup produces an unhandled rejection. Its native run also exceeded the
@@ -65,6 +66,13 @@ mutation, event and rollback checks. Its native MAC check rejects a cross-projec
 forward-reference misclassification and an undersized synthetic response fixture.
 Independent inspection also finds populated-state rename losing board membership.
 These failures remain open; no accepted candidate-ten export was produced.
+
+Candidate eleven fixes first-poll foreign references and populated-state rename in
+focused checks, and its HTTP MAC write and documentation examples pass. It is stopped
+because successful snapshots retain tasks from projects removed from discovery. Its
+native rollback check also compares all historical events to zero instead of comparing
+against the baseline. The next repair preserves event history and sweeps disappeared
+MAC task IDs across every cached MAC repository.
 
 `verification/current.json` is framework-owned and must match current authority.
 [final-result.json](../../verification/final-result.json) records the artifact it was

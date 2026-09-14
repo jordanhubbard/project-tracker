@@ -132,6 +132,14 @@ under TRACK-004. Earlier scoped evidence is in
     later-project reference initially classified as missing. Its synthetic response
     fixture also measures below 80 MiB. A populated-state rename leaves tasks in a
     nonexistent state. See [candidate-ten evidence](../../verification/track004-candidate10.json).
+  - [ ] Reconcile disappeared upstream task IDs across every cached MAC repository,
+    including projects absent from the latest successful discovery snapshot, while
+    preserving local tasks and repository metadata. Candidate eleven fixes first-poll
+    foreign references and populated-state rename, but leaves tasks from disappeared
+    projects in the read store. Its native rollback assertion also incorrectly expects
+    zero historical task events instead of zero new task events. Retain existing
+    events and assert against the pre-failure cursor/count. See
+    [candidate-eleven evidence](../../verification/track004-candidate11.json).
   - [ ] Deliver the accepted repair through the supported committed-source cache;
     verify portable isolated acceptance and cache reuse in a fresh GitHub checkout.
     These runtime-delivery checks remain here after the workspace import lands.

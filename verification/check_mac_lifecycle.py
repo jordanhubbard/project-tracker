@@ -7,6 +7,7 @@ data; use a fresh --output directory for each run.
 
 import argparse, copy, http.server, json, os, signal, socket, subprocess, threading, time, urllib.request
 from pathlib import Path
+from service_response import entity_response
 
 STATES = [
     "open",
@@ -52,6 +53,7 @@ tasks.append(
         metadata={},
     )
 )
+projects = ["alpha", "beta", "gamma"]
 requests = []
 lock = threading.Lock()
 
@@ -68,7 +70,7 @@ class Fixture(http.server.BaseHTTPRequestHandler):
         with lock:
             requests.append(route)
             if route == "/projects":
-                result = [{"project": name} for name in ["alpha", "beta", "gamma"]]
+                result = [{"project": name} for name in projects]
             elif route == "/tasks":
                 result = copy.deepcopy(tasks)
             elif route.startswith("/tasks/"):
@@ -113,9 +115,15 @@ child = None
 result = {"ok": False, "source": str(source), "checks": {}}
 
 
-def api(route):
-    with urllib.request.urlopen(base + route, timeout=15) as response:
-        return json.load(response)
+def api(route, method="GET", body=None):
+    request = urllib.request.Request(
+        base + route,
+        data=json.dumps(body).encode() if body is not None else None,
+        method=method,
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(request, timeout=15) as response:
+        return entity_response(json.load(response))
 
 
 def launch():
@@ -232,6 +240,40 @@ try:
         assert restarted[key]["revision"] == previous["revision"]
         assert state_of(restarted[key]) == state_of(previous)
     result["checks"]["restart"] = True
+    # A complete successful snapshot may remove an entire discovered project.
+    # Preserve a separate local task while sweeping every cached MAC repository.
+    repo_ids = {r["mac_project"]: r["id"] for r in api("/api/repos")["items"]}
+    local_repo = api("/api/repos", "POST", {
+        "name": "Local retention fixture", "remote_url": "https://example.test/local/retained.git"
+    })
+    assert local_repo["authority"] == "local", local_repo
+    local_task = api("/api/repos/" + local_repo["id"] + "/tasks", "POST", {
+        "title": "Keep local work", "description": "Preserve through fleet removal", "priority": 1
+    })
+    beta = restarted["only-open"]
+    with lock:
+        projects[:] = ["beta"]
+        tasks[:] = [t for t in tasks if t["project"] == "beta"]
+    def mac_tasks():
+        return {k: t for k, t in all_tasks().items() if t.get("authority") == "mac"}
+    remaining = eventually(lambda: (d if set(d := mac_tasks()) == {"only-open"} else None))
+    assert remaining["only-open"]["id"] == beta["id"]
+    assert remaining["only-open"]["revision"] == beta["revision"]
+    for project, repo_id in repo_ids.items():
+        assert api("/api/repos/" + repo_id)["id"] == repo_id
+    result["checks"]["removed_project_tasks_reconciled"] = True
+    with lock:
+        projects.clear()
+        tasks.clear()
+    eventually(lambda: not mac_tasks())
+    time.sleep(6)
+    assert not mac_tasks()
+    kept = api("/api/tasks/" + local_task["id"])
+    assert kept["revision"] == local_task["revision"]
+    assert kept["title"] == local_task["title"]
+    assert kept["description"] == local_task["description"]
+    assert api("/api/repos/" + local_repo["id"])["authority"] == "local"
+    result["checks"]["empty_success_preserves_local_work"] = True
     result["ok"] = True
 finally:
     stop()

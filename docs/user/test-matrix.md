@@ -36,3 +36,7 @@ and returned evidence through the supported lifecycle.
 
 This derived project uses installed `litai` commands. Examples requiring the framework's
 own Makefile or sample-suite checkout do not apply here.
+
+The lifecycle fixture also removes a whole MAC project, then returns a successful empty
+fleet snapshot. It requires disappeared MAC tasks to leave the cache while preserving
+local work and repository records.

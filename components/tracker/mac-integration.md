@@ -5,6 +5,32 @@ kind: integration
 ---
 # MAC integration behavior
 
+## Reconcile disappeared task records across cached MAC repositories
+
+After projects, registry and the complete task collection all succeed, sweep MAC-owned
+cached tasks across every previously known MAC repository, not only repositories still
+present in the current discovery map. Remove a cached MAC task exactly when its upstream
+ID is absent from the complete successful incoming task collection. Preserve local-owned
+tasks, repository registrations/descriptions/paths, and existing workflow identities.
+A missing project record alone is not proof that a task vanished: use the complete task
+ID set. Any failed or incomplete enumeration keeps the prior snapshot intact.
+
+Native complete_reconciliation must first import alpha and beta, then successfully return
+only beta from discovery and only beta's task from /tasks. Alpha's MAC task disappears
+from reads and emits one committed deletion; beta and any local task remain unchanged.
+Repeat an identical snapshot without duplicate deletion events, then return successful
+empty projects/registry/tasks and verify all cached MAC tasks are removed while local
+work and repository metadata remain. Retain the existing lifecycle-then-201-project,
+10,000-task fixture in one database: tasks from its removed first projects must not inflate
+the new snapshot's count. Keep the separate measured >=80 MiB transport fixture.
+
+For native snapshot_rollback, capture the durable task-event count or last event cursor
+after establishing the baseline snapshot. That initial import legitimately creates task
+events. Inject the later beta storage failure, require task rows/revisions and the task-event
+count to remain equal to their baseline, and require zero newly published task events.
+Do not compare the entire historical task-event table to zero or discard earlier events.
+After recovery, require exactly one new durable/live task event per changed task.
+
 ## Resolve relationships after fleet-wide identity discovery
 
 Within one snapshot transaction, discover every repository and establish stable task

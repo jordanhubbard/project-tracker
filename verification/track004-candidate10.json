@@ -210,7 +210,33 @@
       "mobile": 15,
       "document_overflow": false,
       "note": "Semantic destination-region/menu/label adapters preserve all prior assertions. Newly added populated-rename membership assertion intentionally detects candidate10 defect and remains required for next export."
+    },
+    "service_default_timeout": {
+      "default_body_timeout_closes_connection": true,
+      "failure_preserves_cached_task": true,
+      "later_synchronization_recovers_without_task_churn": true
+    },
+    "lifecycle_service": {
+      "all_native_and_observed_imported_states": true,
+      "supported_empty_columns": true,
+      "later_observed_state_and_stable_workflow_ids": true,
+      "unchanged_poll": true,
+      "restart": true
+    },
+    "live_readonly": {
+      "projects": 28,
+      "tasks": 9085,
+      "missing_ids": 0,
+      "extra_ids": 0,
+      "sync_errors": 0,
+      "stable_snapshot": true,
+      "owned_service_stopped": true
     }
   },
-  "scope": "Unmodified provisional source snapshots. Private harness adapters match actual health, settings-clear and accessible labels; no assertions removed. Not final export or delivery acceptance; browser diagnostics still pending."
+  "scope": "Unmodified provisional source snapshots. Private harness adapters match actual health, settings-clear and accessible labels; no assertions removed. Not final export or delivery acceptance; browser diagnostics still pending.",
+  "negative_browser_control": {
+    "desktop": "only populated rename membership fails",
+    "mobile": "only populated rename membership fails",
+    "all_other_checks_each_viewport": 14
+  }
 }

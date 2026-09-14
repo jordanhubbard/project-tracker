@@ -7,6 +7,18 @@ kind: verification
 
 ## Confirmed regeneration regressions
 
+A successful complete fleet snapshot must reconcile disappeared task IDs across all
+cached MAC repositories, including repositories no longer in current project discovery.
+Use the complete upstream task-ID set, preserve local tasks and repository metadata,
+and retain cache on any incomplete/failed read. Execute the removed-project and
+successful-empty-snapshot cases in mac-integration.md. Do not reset the database between
+lifecycle and scale phases to hide stale tasks left by incomplete reconciliation.
+
+The native rollback fixture must retain its initial import events and compare against
+the captured pre-failure task-event count/cursor. Zero new task events is required;
+zero total historical events is incorrect. Verify recovery adds exactly two task events
+for the two changed projects, without weakening the row/revision rollback assertions.
+
 Native MAC checks must establish fleet-wide identities before dependency projection,
 including the alpha-to-later-beta unresolved reference fixture in mac-integration.md.
 The measured large-response fixture must exceed 83,886,080 bytes; construct sufficient
