@@ -10,11 +10,11 @@ and LLM credentials.
 - [Active work and verification](docs/roadmap/active-work.md)
 - [Project guide](docs/README.md)
 
-MAC synchronization repair is in progress under TRACK-004. The latest provisional
-backend preserves the captured fleet's task states and passes focused dependency
-and Git checks. A stalled response-body timeout and post-edit dependency-projection
-consistency remain open. See the active work record for evidence and acceptance
-status.
+The workspace is persisted on GitHub main. MAC synchronization repair remains in
+progress under TRACK-004: the latest provisional backend preserves the captured
+fleet and correctly bounds a stalled response, but dependency-only upstream changes
+do not yet advance revisions or notify live clients. See the active work record
+for evidence and final acceptance status.
 
 ## Run
 

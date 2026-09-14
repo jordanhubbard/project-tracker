@@ -104,27 +104,38 @@ under TRACK-004. Earlier scoped evidence is in
     unchanged poll. Candidate five temporarily drops a cross-project link from
     that projection, then restores it with an extra revision. Raw upstream
     references remain intact. See [candidate-five evidence](../../verification/track004-candidate5.json).
+  - [ ] Advance revisions and publish one committed event for genuine dependency-only
+    upstream changes. Candidate six fixes the default body deadline and connection
+    cleanup, but suppresses revisions/events while applying changed relationships.
+    Verify both dependency-only and combined field/dependency changes. See
+    [candidate-six evidence](../../verification/track004-candidate6.json).
+  - [ ] Deliver the accepted repair through the supported committed-source cache;
+    verify portable isolated acceptance and cache reuse in a fresh GitHub checkout.
+    These runtime-delivery checks remain here after the workspace import lands.
 - **Evidence:**
   - [ ] Native authenticated fixtures cover reverse-order dependencies, missing and cross-project references, unchanged polls, deletion beyond 200 tasks, failure recovery and nonoverlapping slow synchronization.
   - [ ] Replay the real hub snapshot and verify complete project/task counts and dependency preservation.
   - [ ] Verify an isolated exported tracker completes live read-only synchronization and renders MAC tasks.
 
-### [ ] TRACK-005 — Persist the Project Tracker workspace on GitHub
+### [x] TRACK-005 — Persist the Project Tracker workspace on GitHub
 
 - **Priority:** P0
 - **Owner:** repository
 - **Direction:** Use git@github.com:jordanhubbard/project-tracker.git to persist this project.
-- **Conclusion:** Origin is reachable and contains an unrelated starter commit. Preserve its ancestry and BSD license while retaining the established LitAI project authority; publish through the repository review workflow without force-pushing.
+- **Conclusion:** The development workspace is persisted on main through
+  [PR #1](https://github.com/jordanhubbard/project-tracker/pull/1), merge
+  f455508a85b487d9290375993fec16420a93763f. Starter ancestry and the BSD license are
+  preserved. A fresh main clone passes integrity checks and matches the imported
+  tree. Runtime repair and accepted-cache delivery remain open under TRACK-004;
+  the import makes no final application-acceptance claim.
 - **Depends on:** none
 - **Implementation:**
   - [x] Configure origin and back up the previously verified workspace history.
-  - [ ] Integrate starter ancestry and land the verified repaired workspace through a GitHub pull request.
-  - [ ] Make acceptance storage portable and isolated across repeated checkout runs.
-  - [ ] Publish the accepted source through the supported project cache and verify
-    a fresh GitHub checkout can reuse it and pass current acceptance.
+  - [x] Integrate starter ancestry and land the validated workspace through a GitHub pull request.
 - **Evidence:**
   - [x] Verify workspace-import exists on GitHub at 6ef7b8b4f39be4c23aec55d47414029c190aca4b.
-  - [ ] Verify the merged GitHub main and local main agree after landing.
+  - [x] Verify merged GitHub main and local main both equal f455508a85b487d9290375993fec16420a93763f before follow-up repair work.
+  - [x] Verify a fresh main clone with git fsck, starter/workspace ancestry, and an identical imported tree.
 
 ## Scope and retained history
 

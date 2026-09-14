@@ -7,6 +7,14 @@ kind: verification
 
 ## Confirmed regeneration regressions
 
+The native dependency_identity gate must distinguish unchanged polling from
+genuine dependency-only upstream changes. Execute the concrete a/p fixture in
+mac-integration.md: dependency-only and combined title/dependency changes each
+advance one revision and publish one committed task event, while the following
+identical poll does neither. Do not use revision suppression on existing tasks
+to make a no-churn assertion pass. Any emitted full task payload must match the
+final committed projection. Retain atomic rollback and post-edit stability.
+
 Execute the stalled HTTP200 body scenario from mac-integration.md in the native
 serialized_reads check using the actual default60-second read budget. An8500ms
 successful read plus a true flag is insufficient: a prior candidate emitted its

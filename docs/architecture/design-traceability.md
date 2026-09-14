@@ -1,6 +1,6 @@
 # Design traceability
 
-<!-- literate-ai:authority-reviewed sha256:6808a1c7a0977d8f5195387d3034708f65ce7ed42553f21ac8bde39f4833912c -->
+<!-- literate-ai:authority-reviewed sha256:da08e3a1fd9925988f22631c6aa1be775459dd0e8df5609eeed725bd3404d6d7 -->
 
 [Project guide](../README.md) → design traceability
 
@@ -34,3 +34,5 @@ The MAC response deadline bounds body consumption independently of abort-signal
 delivery and closes the stalled response connection. Native fixtures exercise the
 default read budget. Mutation responses and complete polls share the same
 dependency projection, preventing transient link changes and duplicate revisions.
+Existing tasks compare their complete projected state before one update, so a
+genuine dependency-only change still advances its revision and notifies clients.

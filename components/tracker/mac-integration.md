@@ -5,6 +5,35 @@ kind: integration
 ---
 # MAC integration behavior
 
+## Genuine relationship changes advance revisions and notify clients
+
+Avoid duplicate post-edit events by comparing complete task projections, never
+by suppressing revisions on changed relationships. A prior candidate imported
+an upstream dependency-only change but kept revision1 and emitted zero durable
+or live task events. Existing tasks must advance once when their fields or their
+dependency/reference projection changes. Construct the complete desired task,
+including resolved and unresolved references, before comparing and updating it.
+Apply at most one revision increment and one task-change event per changed task
+per successful snapshot. If an event includes a task object, that object must
+reflect the final committed relationship projection.
+
+Identity seeding for a newly discovered task may establish its initial revision
+before relationships are resolved. That does not authorize keepRevision-style
+suppression when an existing task's relationships change. Preserve the atomic
+fleet transaction and publish only after the complete snapshot commits.
+
+The native mac-selfcheck dependency_identity gate must exercise an upstream-only
+change through the real authenticated HTTP fixture, synchronization and store:
+start with existing alpha tasks a and p, with a having no dependencies. Change
+only a's upstream dependencies to `[p]`, then synchronize. The new tracker-ID
+relationship must be present, a's revision must advance by exactly one, and its
+durable event rows and connected listeners must each contain exactly one committed
+task change. Repeat the identical poll and require no further revision or event.
+Then change a's title and remove the dependency in one upstream snapshot: require
+exactly one revision/event again, and any emitted full task object must contain
+the new title and empty relationship list. Inspect results for a, not merely
+global event totals. Retain the mutation-response/unchanged-poll checks below.
+
 ## Enforce the response-body deadline
 
 A read timeout must bound the entire client operation, including consuming a

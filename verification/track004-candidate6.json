@@ -1,0 +1,35 @@
+{
+  "status": "interrupted_before_acceptance",
+  "component_revision": "6fa1694b8399e338025165e8918053324c91c5409463070fc7b41c0d1d97d012",
+  "scope": "Unmodified provisional generated backend; no final artifact or native acceptance.",
+  "body_timeout": {
+    "ok": true,
+    "provisional": true,
+    "settled_seconds": 60.009401375,
+    "error_kind": "timeout",
+    "socket_closed_before_cleanup": true,
+    "socket_closed_seconds": 60.015863708
+  },
+  "saved_snapshot": {
+    "provisional": true,
+    "ok": true,
+    "rollback": true,
+    "recovery_events": 2,
+    "field_mismatches": {},
+    "projects": 28,
+    "project_tasks": 9077,
+    "same_project_dependencies": 8210,
+    "unchanged_poll": true
+  },
+  "dependency_only_upstream_change": {
+    "ok": false,
+    "provisional": true,
+    "relationship_updated": true,
+    "before_revision": 1,
+    "after_revision": 1,
+    "durable_task_events": 0,
+    "live_task_events": 0
+  },
+  "finding": "Snapshot projection uses keepRevision on existing tasks. A dependency-only upstream change is stored but does not advance the task revision or notify durable/live subscribers.",
+  "privacy": "Only aggregate and synthetic-fixture evidence is committed."
+}
