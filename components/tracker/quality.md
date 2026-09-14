@@ -15,12 +15,16 @@ identical poll does neither. Do not use revision suppression on existing tasks
 to make a no-churn assertion pass. Any emitted full task payload must match the
 final committed projection. Retain atomic rollback and post-edit stability.
 
-Execute the stalled HTTP200 body scenario from mac-integration.md in the native
-serialized_reads check using the actual default60-second read budget. An8500ms
-successful read plus a true flag is insufficient: a prior candidate emitted its
-abort signal at60 seconds but settled only when a watchdog closed the socket at70.
-The timeout must reject the client operation independently of body settlement and
-the native check must fail if fixture cleanup is what releases that operation.
+Execute the stalled HTTP200 body scenario from mac-integration.md in two scopes:
+the native serialized_reads check uses a short configurable deadline so the full
+suite fits the installed runner's 60-second process limit; independent delivery
+acceptance uses the actual exported service's default 60-second deadline. Both
+must observe caller failure, original connection cleanup before fixture cleanup,
+process survival and healthy follow-up. The independent default-budget check must
+also preserve cached task revisions and show failed then recovered synchronization.
+Never equate a short test, an abort signal, or a watchdog-closed socket with the
+full default-budget result. Handle rejected cancellation/cleanup promises locally;
+a locked response stream must not cause an unhandled rejection or process crash.
 
 The native dependency_identity check also verifies that an editor mutation and
 the next unchanged snapshot expose identical dependency/reference projections,

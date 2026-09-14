@@ -1,0 +1,54 @@
+{
+  "status": "rejected",
+  "component_revision": "687a423c956da91bed35ca384dd604a8777c2fcbab65bf01c483711e521e00bb",
+  "native_failure": "Packaged native test exceeded installed 60-second process limit; required stalled default-body scenario alone takes 60 seconds. No accepted artifact.",
+  "timeout_probe": {
+    "caller_rejected_seconds": 60.011185041999994,
+    "process_exit": 1,
+    "error": "ERR_INVALID_STATE: ReadableStream is locked",
+    "finding": "Asynchronous response.body.cancel rejection escapes synchronous try/catch; process crashes."
+  },
+  "dependency_events": {
+    "ok": true,
+    "provisional": true,
+    "cases": [
+      {
+        "name": "dependency_only",
+        "ok": true,
+        "revision": 2,
+        "durable_events": 1,
+        "live_events": 1
+      },
+      {
+        "name": "unchanged",
+        "ok": true,
+        "revision": 2,
+        "durable_events": 0,
+        "live_events": 0
+      },
+      {
+        "name": "combined",
+        "ok": true,
+        "revision": 3,
+        "durable_events": 1,
+        "live_events": 1
+      },
+      {
+        "name": "unchanged_again",
+        "ok": true,
+        "revision": 3,
+        "durable_events": 0,
+        "live_events": 0
+      }
+    ]
+  },
+  "git": {
+    "ok": true,
+    "provisional": true,
+    "branch_filename_collision": true,
+    "feature_commits": 2,
+    "main_commits": 4,
+    "unknown_branch_is_error": true
+  },
+  "next": "Handle asynchronous cleanup; native short deadline plus independent exported-service default60 acceptance, preserving every other regression gate."
+}

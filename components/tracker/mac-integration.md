@@ -47,16 +47,29 @@ resources, clear its timer, and permit later requests and synchronization attemp
 Enforce the deadline independently of whether fetch or its body promise settles.
 Keep successful reads delayed beyond eight seconds valid within that budget.
 
-The native mac-selfcheck serialized_reads gate must execute the actual default
-read path against an authenticated disposable HTTP fixture with that incomplete
-HTTP200 body. Do not shorten the client timeout, substitute a fetch mock, or count
-an emitted abort signal as successful timeout behavior. Observe settlement of the
-client promise, its timeout/unavailability classification, closure of the stalled
-HTTP1 connection by the same deadline margin, and a healthy follow-up read. A
-fixture watchdog at70 seconds exists only to clean up a failed test; if it
-must close the socket to settle the client, the check is false. Assert elapsed
-time below65 seconds for the default60-second request and close all owned fixture
-connections even on failure. Retain the manual/timer overlap and slow-read tests.
+Timeout cleanup must not crash the service. A response body may be locked by its
+active reader; calling body.cancel() in a synchronous try/catch can still produce
+an unhandled rejected promise. Own and settle all asynchronous cleanup operations,
+including cancellation failures and losing deadline-race promises. Release the
+original HTTP connection, not just the caller promise, and keep the service alive
+for a healthy follow-up request. Do not suppress global unhandled rejections.
+
+The packaged native test runner has a fixed 60-second total process budget. Its
+mac-selfcheck serialized_reads gate therefore uses a short configurable read deadline
+against the same authenticated incomplete-body fixture, asserts caller rejection,
+connection closure before fixture cleanup, process survival and healthy follow-up.
+Retain the successful 8500ms read and overlap tests; bound and close every fixture.
+Keep the entire native suite and each diagnostic under the runner's budget.
+
+Separately, delivery acceptance MUST execute the actual default 60-second read path
+through the exported service against an authenticated disposable HTTP fixture:
+HTTP200, Content-Length100, single byte `[`, then no body completion. Do not shorten
+that independent check's deadline or substitute a fetch mock. Require caller failure
+and original HTTP1 connection closure before65 seconds, cached tasks/revisions
+preserved, truthful failed health, continued process survival, and healthy later
+synchronization. A watchdog at70 seconds is only failed-test cleanup; it must never
+supply a passing result. A native short-deadline pass alone does not prove this
+separate default-budget acceptance. Neither test contacts the real fleet.
 
 ## Stable dependency projection after writes
 

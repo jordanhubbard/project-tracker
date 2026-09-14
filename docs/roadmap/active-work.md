@@ -109,6 +109,11 @@ under TRACK-004. Earlier scoped evidence is in
     cleanup, but suppresses revisions/events while applying changed relationships.
     Verify both dependency-only and combined field/dependency changes. See
     [candidate-six evidence](../../verification/track004-candidate6.json).
+  - [ ] Handle rejected asynchronous timeout cleanup without crashing. Candidate seven
+    passes focused dependency/event and Git collision checks, but its timeout
+    cleanup crashes and its native suite exceeds the fixed 60-second runner limit.
+    Use short native timeout coverage plus full default-budget exported-service
+    acceptance. See [candidate-seven evidence](../../verification/track004-candidate7.json).
   - [ ] Deliver the accepted repair through the supported committed-source cache;
     verify portable isolated acceptance and cache reuse in a fresh GitHub checkout.
     These runtime-delivery checks remain here after the workspace import lands.
@@ -145,3 +150,17 @@ TRACK-005 adds the requested GitHub persistence; origin now points to the user-s
 repository. Production fleet writes, background-service registration and fleet-wide
 installation remain outside this work. Historical candidates and results remain in
 Git history and ignored diagnostics; current repair status is recorded above.
+
+### [ ] TRACK-006 — Complete Project Tracker documentation
+
+- **Priority:** P1
+- **Owner:** documentation
+- **Direction:** Write all project documentation alongside the MAC integration repair.
+- **Conclusion:** Provide a coherent product and contributor manual grounded in authored contracts and verified behavior; distinguish supported setup from pending runtime acceptance.
+- **Depends on:** TRACK-004
+- **Implementation:**
+  - [ ] Write setup, configuration, project/task workflows, Git and fleet guides, API examples, architecture, development, backup and troubleshooting documentation.
+  - [ ] Replace stale completion claims and connect every guide from the documentation index and README.
+- **Evidence:**
+  - [ ] Validate documentation links and project authority; check commands and examples against the accepted artifact and supported CLI.
+  - [ ] Persist reviewed documentation on GitHub with the repair and record the final verification scope.
