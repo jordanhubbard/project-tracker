@@ -53,6 +53,16 @@ Verify bounding rectangles of each label against every other commit hit target;
 none may intersect. Drawing a later circle on top of an earlier label still fails
 readability even if that circle receives clicks.
 
+The label budget applies to the complete visible string after composing the
+abbreviated hash, subject and every ref suffix, including separators and padding.
+Truncating only the subject before appending refs does not establish a bound.
+Either measure that complete rendered label and allocate disjoint rectangles,
+or constrain the complete label to the reserved width with accessible full text.
+For equal-timestamp commits, the hash-prefixed `Merge feature [main]` label must
+not touch or cross the neighboring `Main` commit target. Verify complete labels
+at initial scale, after zoom and after Reset in desktop and mobile layouts.
+Preserve proportional timestamp positioning and related-task editing.
+
 Both modes provide visible Zoom in, Zoom out, Reset and branch-filter controls.
 Zoom changes the actual graph scale; Reset restores fit. Scroll/pan allows every
 node to be reached. The very first Zoom in on the four-commit fork/merge fixture

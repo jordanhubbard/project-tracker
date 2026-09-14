@@ -540,3 +540,21 @@ queue item or let `docs/roadmap/` become a plan archive.
   editor from Graph and Timeline, and associate the dependency selector with a
   real accessible label. Preserve the verified MAC recovery and all existing
   behavior, regenerate, then complete public build/run and handoff verification.
+
+### Delivery verification and complete timeline label bounds
+
+- The c49ded4 delivery completed native acceptance (26 tests) and exported a
+  runnable artifact. The final independent backend suite passes, including MAC
+  recovery, official SDK clients and reporter survival across backend outage.
+- Desktop and mobile board interactions, dependency naming, actionable related
+  tasks, peer UI, session expiry and bounded Git history pass. The equal-time
+  timeline still has a merge label crossing its neighboring commit target at
+  both widths; the irregular-time fixture passes. Full source provenance and
+  evidence are retained under `_build/delivery-final-provenance.json` and
+  `_build/delivery-independent`.
+- The public default `litai run` launcher returned ready from `/health`, loaded
+  the application and opened Settings in Chrome. This proves the launch path;
+  the timeline defect still prevents complete acceptance.
+- Next action in progress: clarify that collision bounds include the complete
+  composed hash, subject and ref suffix, regenerate with receipt creation in
+  the same lifecycle, then repeat full acceptance and public launch verification.

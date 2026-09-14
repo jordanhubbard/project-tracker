@@ -1,9 +1,9 @@
 {
   "schema": "literate-ai/persistent-service-acceptance@1",
-  "specification_set_identity": "sha256:0d26b59f36da39de8618b708d7adaf52375afcfc91a6a71bf4e3360270b2b0b6",
+  "specification_set_identity": "sha256:0dab3f381998bac8c10f245c69c0ac660252d2ce3c3ad21cffdd884d7976006f",
   "process": {
     "environment": {
-      "TRACKER_DATA_DIR": "/Users/jkh/Src/project-tracker/_build/acceptance-data-5ad61b4f68cc",
+      "TRACKER_DATA_DIR": "/Users/jkh/Src/project-tracker/_build/acceptance-data-e0d474bf1e09",
       "TRACKER_MAC_URL": "",
       "TRACKER_MAC_TOKEN": "",
       "TRACKER_LLM_KEY": ""
