@@ -1,18 +1,28 @@
 # Models and generation
 
-[Project guide](../README.md) → models and generation
+[Documentation](../README.md)
 
-Run `litai plan COMPONENT --flavor=+NAME` before generation. When two Component
-slots share an axis, bind each role explicitly with `--flavor=+SLOT:NAME` instead.
-Project defaults run first; explicit selectors run afterward, so an explicit
-build-system Flavor replaces the scaffold's `+bazel` preference and `--flavor=-bazel`
-removes it without replacement.
-`CODING_CLI` may select `codex`, `claude`, `cursor-agent`, or `opencode`;
-otherwise Literate AI chooses the first command on `PATH` in that order. A model
-declared by an exact specification or Flavor is passed to the selected CLI using
-that CLI's supported model-selection argument. Before an OpenCode model call, LitAI
-requires its bounded `--pure run --help` capability surface and reports
-`coding_cli.incompatible` with upgrade guidance rather than weakening pure mode.
-Generation collects canonical source, then continues through guarded
-validation/build/test. Continue through the
-[framework flow](framework-flow.md).
+Two separate model connections exist:
+
+| Connection | Purpose | Configuration |
+| --- | --- | --- |
+| Coding provider | Generates an application from the locked specification | Installed LitAI/operator configuration and lifecycle CLI |
+| Product assistant gateway | Answers a user's repository/task question while the app runs | Backend Settings and `TRACKER_LLM_*` variables |
+
+The lifecycle wrapper defaults `CODING_CLI` to `claude` and examples select
+`claude-fable-5-1`. The frontend executable and requested model are observable; a router's
+underlying resolved model should only be reported when separate evidence establishes it.
+Selecting a coding provider does not configure the product assistant.
+
+Generation inputs include the Component's specification set, selected Flavors, pinned
+conversion skills and exact dependency authority. `lock` and `plan` resolve those inputs.
+A matching accepted-source cache can supply source, but current admission and acceptance
+are still required. Keep private credentials and operator endpoints out of authored inputs.
+
+The wrapper defaults `LITERATE_AI_CODING_CLI_TIMEOUT_SECONDS` to 3600 unless already set.
+Long full-stack runs may use an explicit larger budget. A generation timeout does not
+justify editing an accepted cache or bypassing tests. Inspect the failure evidence and
+change the narrowest owning specification when product intent needs correction.
+
+Use [development](development.md) for commands and [configuration](configuration.md#assistant-gateway)
+for the running product's assistant.

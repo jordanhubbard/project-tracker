@@ -1,23 +1,29 @@
 # Framework flow
 
-[Project guide](../README.md) → framework flow
+[Documentation](../README.md)
 
-Specifications define behavior; selected Flavors add target requirements; exact skills
-guide conversion; workflows and routing constrain model work. Generated source is
-disposable and lives outside the project. The scaffold's `+bazel` selection is only a
-removable prompt preference: explicit specification requirements and selected Flavors
-take precedence, and `-bazel` removes it before prompt assembly.
+Specifications define behavior. Selected Flavors add target requirements; exact skills
+guide conversion; workflows and routing constrain generation. This project selects
+JavaScript, npm and macOS. It does not require an inherited framework Makefile or Bazel
+build to operate the application.
 
 ```mermaid
-flowchart TD
-    Read[Read specifications] --> Plan[litai plan]
-    Plan --> Generate[litai generate]
-    Generate --> Validate[Validate and classify]
-    Validate --> Authorize{Authorized?}
-    Authorize -- yes --> Build[Build]
-    Build --> Test[Test known behavior]
-    Authorize -- no --> Stop[Stop safely]
+flowchart LR
+    Authority[Specifications and target authority] --> Lock[Lock and plan]
+    Lock --> Generate[Generate candidate or exact cache hit]
+    Generate --> Admit[Validate source and dependencies]
+    Admit --> Build[Authorized build]
+    Build --> Test[Native tests and service acceptance]
+    Test --> Export[Accepted export and receipt]
+    Export --> Independent[Independent runtime and browser checks]
 ```
 
-Use the [project map](project-layout.md) to change the owning artifact, and read
-[security](security.md) before compiling or running generated code.
+Use `scripts/litai-service.sh` to select the installed toolchain and supported lifecycle.
+Follow [development](development.md) for exact commands. Source generation alone is not
+acceptance; a cache hit and a listening service are not proof of full product behavior.
+
+[`literate.project.json`](../../literate.project.json) pins the Standard lifecycle
+identity. Upgrading installed tooling does not authorize manually advancing that pin.
+Use the framework's reviewed rebind flow when intentionally changing it. `litai update`
+reconciles inherited files, while `litai reparent` changes repository ancestry; neither
+is an ordinary application data upgrade.

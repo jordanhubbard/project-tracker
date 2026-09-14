@@ -1,6 +1,6 @@
 # Design traceability
 
-<!-- literate-ai:authority-reviewed sha256:43455fd90ca4d573d418e2d7f935cae4653f5ed76c438c2cff2e2d66df56f38b -->
+<!-- literate-ai:authority-reviewed sha256:a9b213a15715e8dbb824749821fccda918eec016a927d66adcbbd194595f097c -->
 
 [Project guide](../README.md) → design traceability
 
@@ -31,8 +31,8 @@ restart. The portable acceptance contract keeps disposable storage outside the
 packaged source using the framework's assigned port.
 
 The MAC response deadline bounds body consumption independently of abort-signal
-delivery and closes the stalled response connection. Native fixtures exercise the
-default read budget. Mutation responses and complete polls share the same
+delivery and closes the stalled response connection. Native fixtures exercise a short deadline within the packaged runner limit;
+independent exported-service acceptance exercises the actual default read budget. Mutation responses and complete polls share the same
 dependency projection, preventing transient link changes and duplicate revisions.
 Existing tasks compare their complete projected state before one update, so a
 genuine dependency-only change still advances its revision and notifies clients.

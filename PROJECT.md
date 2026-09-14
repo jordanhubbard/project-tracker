@@ -18,3 +18,10 @@ Project Tracker owns equivalent internal tasks. Absence and upstream failure dif
 Execution of the application and its tests is part of this requested implementation.
 No release, remote repository creation or fleet-wide installation is needed to prove
 this application. Live fleet writes must be deliberate operator actions in the UI.
+
+## Publication and documentation
+
+Persist this workspace at `git@github.com:jordanhubbard/project-tracker.git`. Maintain
+a complete user, operator, integrator and contributor manual under `docs/`, linked
+from the root README. Document actual accepted behavior and outstanding integration
+gates separately; GitHub persistence is not proof of runtime acceptance.

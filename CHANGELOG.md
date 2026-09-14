@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Documentation: provide complete setup, configuration, project/task, MAC, Git,
+  session/peer, API, operations, security, troubleshooting and contributor guides.
+  Replace stale blanket completion claims with artifact-specific acceptance status.
+
 - Repository: persist the Project Tracker workspace on GitHub main through PR #1,
   preserving the starter history and BSD license. Remaining MAC runtime repairs
   are tracked separately from the completed workspace import.

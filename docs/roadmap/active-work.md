@@ -142,6 +142,10 @@ under TRACK-004. Earlier scoped evidence is in
   - [x] Verify merged GitHub main and local main both equal f455508a85b487d9290375993fec16420a93763f before follow-up repair work.
   - [x] Verify a fresh main clone with git fsck, starter/workspace ancestry, and an identical imported tree.
 
+Documentation draft review passes `project validate`, including local links, anchors,
+reachability and authority review. Python and shell examples pass syntax checks.
+Runtime example checks and final acceptance claims remain pending with TRACK-004.
+
 ## Scope and retained history
 
 TRACK-001 through TRACK-003 used isolated databases, authenticated MAC/LLM fixtures
@@ -159,8 +163,8 @@ Git history and ignored diagnostics; current repair status is recorded above.
 - **Conclusion:** Provide a coherent product and contributor manual grounded in authored contracts and verified behavior; distinguish supported setup from pending runtime acceptance.
 - **Depends on:** TRACK-004
 - **Implementation:**
-  - [ ] Write setup, configuration, project/task workflows, Git and fleet guides, API examples, architecture, development, backup and troubleshooting documentation.
-  - [ ] Replace stale completion claims and connect every guide from the documentation index and README.
+  - [x] Write setup, configuration, project/task workflows, Git and fleet guides, API examples, architecture, development, backup and troubleshooting documentation.
+  - [x] Replace stale completion claims and connect every guide from the documentation index and README.
 - **Evidence:**
   - [ ] Validate documentation links and project authority; check commands and examples against the accepted artifact and supported CLI.
   - [ ] Persist reviewed documentation on GitHub with the repair and record the final verification scope.
