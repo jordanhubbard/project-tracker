@@ -5,6 +5,34 @@ kind: integration
 ---
 # MAC integration behavior
 
+## Admit full fleet response sizes
+
+Use a 256 MiB aggregate response-body limit for production MAC HTTP transport.
+The captured fleet has 9,717 records in an 80,765,554-byte JSON task response;
+a 48 MiB limit rejected that valid response even though adapter-level snapshot
+checks passed. Task count alone does not establish transport capacity. Keep byte
+accounting bounded and destroy owned handles on overflow, while accepting valid
+collections of at least80 MiB through the default production client. Do not drop
+metadata, truncate collections, or shrink the fixture to pass the limit.
+
+The native complete_reconciliation gate must also execute a separate authenticated
+HTTP /tasks read with at least80 MiB of synthetic valid JSON under the production
+client's default size limit and ordinary read deadline. Construct the data
+programmatically (for example10,000 short tasks with repeated synthetic metadata
+padding), assert serialized byte count and the complete decoded record count and
+preserved padding. Exercise the actual client and adapter; do not inject a fake
+transport or an enlarged test-only size limit. This focused transport fixture need
+not insert its padding into SQLite: retain the separate ordinary10,000-task/201-project
+snapshot, lifecycle, rollback and stability checks. Release large fixture data
+and connections promptly so the entire native suite stays within its runner budget.
+
+Independent final service acceptance replays the captured80,765,554-byte snapshot
+through actual HTTP and verifies every project-scoped task and relationship in the
+read store. Raw captures remain private; only aggregate sizes/counts are public.
+The largest captured record is120,931 bytes (title719 characters, description up
+to106,757 characters), so retain the existing720/110,000-character unchanged-text
+mutation fixture and do not reduce the outbound body budget below that scenario.
+
 ## Own the transport until the response completes
 
 Use Node's built-in HTTP/HTTPS request and response handles for production MAC

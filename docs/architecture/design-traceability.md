@@ -1,6 +1,6 @@
 # Design traceability
 
-<!-- literate-ai:authority-reviewed sha256:8155414d35f902cd2e2613ce108eb06a4ab17e2e4c0d28f40f9f1ec3fae8f515 -->
+<!-- literate-ai:authority-reviewed sha256:c7cd835b28983381a79a67cc195655f243a6392b16561d87bb42d83da9509988 -->
 
 [Project guide](../README.md) → design traceability
 
@@ -40,3 +40,8 @@ genuine dependency-only change still advances its revision and notifies clients.
 Production MAC transport retains native HTTP/HTTPS request and response handles
 until completion and explicitly destroys them on an absolute deadline. Cleanup
 must prove connection release and process survival, not only caller rejection.
+
+Transport acceptance covers byte volume as well as record count. The production
+MAC response budget is256MiB, with a native >=80MiB authenticated collection read
+and a final full-service captured replay. Adapter-only enumeration cannot prove
+that the actual HTTP client accepts a production-sized snapshot.

@@ -119,6 +119,12 @@ under TRACK-004. Earlier scoped evidence is in
     original connection remains open past65seconds. Use the built-in HTTP/HTTPS
     transport with explicit handle destruction and retain both timeout test scopes.
     See [candidate-eight evidence](../../verification/track004-candidate8.json).
+  - [ ] Accept the full byte volume of a fleet response through the actual HTTP
+    transport. Candidate nine passes default deadline/socket/follow-up, Git,
+    dependency events and adapter-level snapshot checks, but its48MiB cap rejects
+    the80,765,554-byte captured collection. Require256MiB production capacity,
+    native >=80MiB synthetic transport coverage and final actual-service replay.
+    See [candidate-nine evidence](../../verification/track004-candidate9.json).
   - [ ] Deliver the accepted repair through the supported committed-source cache;
     verify portable isolated acceptance and cache reuse in a fresh GitHub checkout.
     These runtime-delivery checks remain here after the workspace import lands.

@@ -7,6 +7,13 @@ kind: verification
 
 ## Confirmed regeneration regressions
 
+The MAC complete_reconciliation gate must execute the >=80MiB real authenticated
+HTTP collection-read scenario in mac-integration.md using the production256MiB
+response limit. A previous candidate passed adapter-level import of all captured
+tasks but its48MiB transport cap rejected the actual80,765,554-byte JSON response.
+Keep byte-volume coverage distinct from task-count coverage; retain all ordinary
+store/snapshot scenarios and the separate final exported-service captured replay.
+
 Production MAC requests retain Node HTTP/HTTPS request and response ownership through
 body completion; absolute-deadline failure destroys both handles. Execute the real
 transport in short native and independent default60-second acceptance. A prior
