@@ -1,0 +1,241 @@
+{
+  "candidate": "d0f9cbbc75f7c287936e2676677dde43ad402fb44c501b71cda8a74022e8f7c1",
+  "authority_commit": "57b4a329719600b3288b90aed5700daa6450e3ad",
+  "accepted": false,
+  "build": "Stopped before final generation and packaged acceptance after an unchanged generated native MAC selfcheck failed. No final export.",
+  "native_mac_failure": {
+    "check": "explicit_removal",
+    "assertion": "A full save must include dependencies in the outgoing PUT body.",
+    "observed": "The dependency selection was unchanged, so validation omitted that field. The upstream task retained every edge.",
+    "scope": "The generated diagnostic throws at this assertion; subsequent native MAC groups were not reached."
+  },
+  "confirmed_findings": [
+    "Real authenticated HTTP writes preserve dependencies when unchanged fields are omitted from a full save. Explicit removal deletes only the selected unresolved reference, and a newly selected prerequisite is translated and retained on the next poll.",
+    "The native preservation assertion must inspect actual upstream and Tracker state, while still checking any dependency IDs actually transmitted.",
+    "Removed-project and empty-fleet reconciliation now pass focused and actual-service checks, including local task and repository retention."
+  ],
+  "provisional_passes": {
+    "client_timeout": {
+      "ok": true,
+      "provisional": true,
+      "settled_seconds": 60.002294209,
+      "unavailable": true,
+      "socket_closed_before_cleanup": true,
+      "socket_closed_seconds": 60.0029675,
+      "healthy_followup": true
+    },
+    "client_response_volume": {
+      "provisional": true,
+      "ok": true,
+      "bytes": 80765554,
+      "records": 9717
+    },
+    "full_http_snapshot": {
+      "ok": true,
+      "provisional": true,
+      "taskResponseBytes": 80765554,
+      "projects": 28,
+      "tasks": 9077,
+      "edges": 8210,
+      "unchanged_poll": true,
+      "first": {
+        "ok": true,
+        "skipped": false,
+        "repositories": 28,
+        "tasks": 9077,
+        "changed": 9077,
+        "deleted": 0
+      },
+      "second": {
+        "ok": true,
+        "skipped": false,
+        "repositories": 28,
+        "tasks": 9077,
+        "changed": 0,
+        "deleted": 0
+      },
+      "requests": [
+        "/projects",
+        "/bridge/repositories",
+        "/tasks",
+        "/projects",
+        "/bridge/repositories",
+        "/tasks"
+      ]
+    },
+    "dependency_events_and_order": {
+      "ok": true,
+      "provisional": true,
+      "authenticated_real_http": true,
+      "cases": [
+        {
+          "name": "dependency_only",
+          "revision": 2,
+          "durable_events": 1,
+          "live_events": 1
+        },
+        {
+          "name": "unchanged",
+          "revision": 2,
+          "durable_events": 0,
+          "live_events": 0
+        },
+        {
+          "name": "combined",
+          "revision": 3,
+          "durable_events": 1,
+          "live_events": 1
+        },
+        {
+          "name": "unchanged_again",
+          "revision": 3,
+          "durable_events": 0,
+          "live_events": 0
+        }
+      ],
+      "first_poll_foreign_link": true,
+      "reversed_order_stable": true,
+      "restart_stable": true
+    },
+    "removal_and_rollback": {
+      "ok": true,
+      "provisional": true,
+      "authenticated_real_http": true,
+      "cases": [],
+      "rollback": true,
+      "baseline_task_events": 4,
+      "task_events_after_failure": 4,
+      "recovery_events": 2,
+      "expected_remaining_tasks": 1,
+      "actual_remaining_tasks": 1,
+      "deleted_task_events": 3,
+      "present_unmapped_task_retained": true,
+      "empty_fleet_preserves_local_and_repositories": true,
+      "restart_retention": true
+    },
+    "populated_workflow_rename": {
+      "provisional": true,
+      "ok": true,
+      "stable_state_id": true,
+      "task_membership": true,
+      "unchanged_title_and_dependencies": true,
+      "restart": true
+    },
+    "native_git": {
+      "ok": true,
+      "checks": {
+        "refs": true,
+        "parents": true,
+        "unborn": true,
+        "detached": true,
+        "boundary": true
+      }
+    },
+    "direct_write_preservation": {
+      "ok": true,
+      "provisional": true,
+      "full_save_omits_unchanged_dependencies": true,
+      "full_save_preserves_all_edges": true,
+      "explicit_removal_preserves_foreign": true,
+      "new_same_project_edge": true
+    },
+    "actual_service_lifecycle": {
+      "ok": true,
+      "checks": {
+        "all_native_and_observed_imported_states": true,
+        "supported_empty_columns": true,
+        "later_observed_state_and_stable_workflow_ids": true,
+        "unchanged_poll": true,
+        "restart": true,
+        "removed_project_tasks_reconciled": true,
+        "empty_success_preserves_local_work": true
+      }
+    },
+    "actual_service_timeout": {
+      "ok": true,
+      "checks": {
+        "default_body_timeout_closes_connection": true,
+        "failure_preserves_cached_task": true,
+        "later_synchronization_recovers_without_task_churn": true
+      },
+      "body_timeout_seconds": 60.002
+    },
+    "actual_http_writes": {
+      "ok": true,
+      "checks": [
+        {
+          "name": "create translates tracker dependency IDs to MAC IDs",
+          "ok": true
+        },
+        {
+          "name": "dependency-only and combined upstream changes advance exactly one revision, then remain stable",
+          "ok": true
+        },
+        {
+          "name": "title-only edit retains raw dependencies and foreign metadata",
+          "ok": true
+        },
+        {
+          "name": "full editor dependency submission retains unresolved references",
+          "ok": true
+        },
+        {
+          "name": "transition uses upstream lifecycle endpoint",
+          "ok": true
+        },
+        {
+          "name": "explicit removal removes only the selected unresolved reference",
+          "ok": true
+        },
+        {
+          "name": "adding a new dependency to an existing task translates its ID",
+          "ok": true
+        },
+        {
+          "name": "json outage rejects mutation with 503 and preserves cache",
+          "ok": true
+        },
+        {
+          "name": "html outage rejects mutation with 503 and preserves cache",
+          "ok": true
+        },
+        {
+          "name": "empty outage rejects mutation with 503 and preserves cache",
+          "ok": true
+        },
+        {
+          "name": "malformed_json outage rejects mutation with 503 and preserves cache",
+          "ok": true
+        }
+      ]
+    },
+    "documentation_examples": {
+      "ok": true,
+      "checks": {
+        "documented_json_service_startup": true,
+        "python_create_edit_example": true,
+        "official_mcp_example": true
+      }
+    },
+    "native_protocols": {
+      "ok": true,
+      "checks": {
+        "mcp_http": true,
+        "mcp_stdio": true,
+        "a2a": true,
+        "peers": true
+      }
+    }
+  },
+  "probe_adapters": [
+    "Normalize equivalent REST collection envelopes using service_response.entity_response.",
+    "Read MAC health from health.mac.last_sync_ok as well as prior equivalent locations.",
+    "Private module probes use the generated module names and DTO fields, including parsed arrays, mac_id, event.name/data and workflow operations. Assertions retain their behavioral requirements."
+  ],
+  "scope_limits": [
+    "All copied generated source was unmodified and its hashes retained privately.",
+    "Actual entrypoint checks use an isolated private snapshot and the exact matching dependency manifest; they are provisional, not final lifecycle acceptance.",
+    "No final browser, packaged-native, live-fleet, committed-cache or portable checkout acceptance is claimed for candidate twelve.",
+    "All writes used synthetic authenticated fixtures. No production MAC mutation."
+  ]
+}

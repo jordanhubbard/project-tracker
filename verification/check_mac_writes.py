@@ -7,6 +7,7 @@ data; use a fresh --output directory for each run.
 
 import argparse, http.server, json, os, socket, subprocess, threading, time, urllib.request, urllib.error
 from pathlib import Path
+from service_response import entity_response
 
 
 def upstream_ids(task):
@@ -176,7 +177,7 @@ def api(method, path, data=None):
         headers={"Content-Type": "application/json"},
     )
     with urllib.request.urlopen(req, timeout=15) as r:
-        return json.load(r)
+        return entity_response(json.load(r))
 
 
 def unchanged_poll_after_edit(edited):
@@ -217,7 +218,7 @@ try:
         assert p.poll() is None, "Tracker exited"
         try:
             health = api("GET", "/health")
-            if health.get("mac_last_sync_ok") or health.get("fleet", health).get("last_sync_ok") or api(
+            if health.get("mac", {}).get("last_sync_ok") or health.get("mac_last_sync_ok") or health.get("fleet", health).get("last_sync_ok") or api(
                 "GET", "/api/overview"
             ).get("mac", {}).get("last", {}).get("ok"):
                 break

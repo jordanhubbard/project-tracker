@@ -140,6 +140,14 @@ under TRACK-004. Earlier scoped evidence is in
     zero historical task events instead of zero new task events. Retain existing
     events and assert against the pre-failure cursor/count. See
     [candidate-eleven evidence](../../verification/track004-candidate11.json).
+  - [ ] Verify dependency preservation from actual upstream and cached task state,
+    allowing unchanged fields to be omitted from an update request. Candidate twelve
+    passes removed-project cleanup, empty-fleet local retention, default timeout,
+    all eleven independent HTTP write checks and native protocol checks, but its
+    native explicit-removal test requires an unchanged dependency field in the PUT
+    payload. Correct that assertion without weakening preserved-edge, explicit
+    removal, new-edge translation or unchanged-poll checks. See
+    [candidate-twelve evidence](../../verification/track004-candidate12.json).
   - [ ] Deliver the accepted repair through the supported committed-source cache;
     verify portable isolated acceptance and cache reuse in a fresh GitHub checkout.
     These runtime-delivery checks remain here after the workspace import lands.

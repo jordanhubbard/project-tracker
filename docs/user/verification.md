@@ -22,7 +22,7 @@ from the presence of an older export or a healthy HTTP listener.
 | Browser | Desktop 1440px and mobile 390px, task/workflow interactions, login, live status, Git and no overflow |
 | Fleet reconciliation | Complete saved snapshot IDs, fields, states and dependencies; atomic rollback and unchanged polls |
 | Mutations | Synthetic authenticated MAC create/edit/transition, unresolved references, long text and outage handling |
-| Default deadline | Real exported service, stalled HTTP200 body, rejection and socket cleanup before65 seconds, process survival and recovery |
+| Default deadline | Real exported service, stalled HTTP 200 body, rejection and socket cleanup before 65 seconds, process survival and recovery |
 | Live MAC | Isolated GET-only synchronization, stable upstream/task comparison and rendered tasks |
 | Portable delivery | Supported committed-source publication and fresh GitHub checkout cache reuse/current acceptance |
 
@@ -37,42 +37,29 @@ The earlier `artifact-6119bda93ad771d2ed03` passed 28 native tests and nine inde
 phases against isolated fixtures. A later live audit exposed incomplete fleet import.
 Those historical passes establish their original scope, not current complete MAC readiness.
 
-Candidate `7a1f3cd0aa4d08717013` passed 46 native tests and substantial fleet checks, but
-independent checks found dependency-edit and branch/filename-collision failures. Later
-candidates exposed state preservation, timeout cleanup, projection stability and event
-revision regressions. Their sanitized results are retained in
-[candidate three](../../verification/track004-candidate3.json),
-[candidate four](../../verification/track004-candidate4.json),
-[candidate five](../../verification/track004-candidate5.json),
-[candidate six](../../verification/track004-candidate6.json), and
-[candidate seven](../../verification/track004-candidate7.json), and
-[candidate eight](../../verification/track004-candidate8.json), and
-[candidate nine](../../verification/track004-candidate9.json), and
-[candidate ten](../../verification/track004-candidate10.json), and
-[candidate eleven](../../verification/track004-candidate11.json).
+Later candidates exposed additional defects. Each result applies only to the source
+and checks identified in its evidence file; none establishes current final acceptance.
 
-Candidate seven's focused dependency-only and combined-change probes pass, but its
-response-body cleanup produces an unhandled rejection. Its native run also exceeded the
-framework's 60-second limit. Neither a provisional pass nor an interrupted generation
-constitutes final artifact acceptance. Candidate eight prevents the cleanup crash
-but leaves the original response socket open beyond the allowed deadline; it was
-stopped before acceptance. The next repair explicitly owns and destroys transport
-request/response handles. Candidate nine fixes the deadline and connection cleanup,
-and passes the focused event and adapter snapshot checks, but its48MiB response cap
-rejects the real77MiB task collection. Full response-volume coverage is now required.
+| Candidate evidence | Main finding |
+| --- | --- |
+| [3](../../verification/track004-candidate3.json) | 46 native tests passed; independent checks found dependency-edit and Git branch/filename-collision failures. |
+| [4](../../verification/track004-candidate4.json) | MAC lifecycle states were not preserved completely. |
+| [5](../../verification/track004-candidate5.json) | Timeout cleanup and write/poll projection stability failed. |
+| [6](../../verification/track004-candidate6.json) | Dependency-only changes did not advance the revision or publish task events. |
+| [7](../../verification/track004-candidate7.json) | Focused event checks passed; response cleanup crashed and the native run exceeded its process budget. |
+| [8](../../verification/track004-candidate8.json) | The timeout rejected the caller but left the response socket open. |
+| [9](../../verification/track004-candidate9.json) | Deadline cleanup passed; a 48 MiB response limit rejected the real 77 MiB task collection. |
+| [10](../../verification/track004-candidate10.json) | Full HTTP import and several service/browser checks passed; first-poll foreign references, response-volume fixture sizing, and populated-state rename failed. |
+| [11](../../verification/track004-candidate11.json) | Foreign references, state rename, HTTP writes, and documentation examples passed focused checks; removed-project tasks remained cached and the native rollback assertion used an incorrect event baseline. |
 
-Candidate ten accepts the real full HTTP snapshot and passes focused transport,
-mutation, event and rollback checks. Its native MAC check rejects a cross-project
-forward-reference misclassification and an undersized synthetic response fixture.
-Independent inspection also finds populated-state rename losing board membership.
-These failures remain open; no accepted candidate-ten export was produced.
-
-Candidate eleven fixes first-poll foreign references and populated-state rename in
-focused checks, and its HTTP MAC write and documentation examples pass. It is stopped
-because successful snapshots retain tasks from projects removed from discovery. Its
-native rollback check also compares all historical events to zero instead of comparing
-against the baseline. The next repair preserves event history and sweeps disappeared
-MAC task IDs across every cached MAC repository.
+Candidate [12](../../verification/track004-candidate12.json) passes focused removal,
+rollback, full-response import, dependency/event and workflow checks. Its actual service
+also passes lifecycle, default-timeout, HTTP-write, protocol and documentation-example
+checks. The native MAC diagnostic still fails because it requires an unchanged
+`dependencies` field in an outgoing update, although the upstream and cached edges
+remain intact. The next generation clarifies that preservation is verified from the
+resulting task state while checking every dependency ID that is actually transmitted.
+Final exported-artifact acceptance remains pending.
 
 `verification/current.json` is framework-owned and must match current authority.
 [final-result.json](../../verification/final-result.json) records the artifact it was

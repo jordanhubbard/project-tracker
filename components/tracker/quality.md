@@ -129,6 +129,20 @@ polls and late dependency resolution. Serialized-read coverage overlaps manual/t
 polls, delays a response beyond eight seconds and verifies a bounded body-read timeout.
 Restart the store and verify relationships survive. Keep native fixtures synthetic.
 
+Dependency-preservation assertions observe the actual upstream task after the write,
+the returned Tracker task, and a subsequent complete synchronization. A full editor
+save may omit unchanged fields from its outgoing update: absence of `dependencies`
+in that request is valid when the upstream edges remain intact. Do not require an
+unchanged field to be retransmitted merely to satisfy a fixture-body assertion.
+For the explicit_removal gate, first save labels with the original resolved selection
+and require prerequisite, missing and foreign references to survive upstream and in
+the Tracker projection. Then remove only missing and require prerequisite and foreign
+to remain. Also select a genuinely new same-project prerequisite, inspect its translated
+MAC ID in the actual outgoing write, and require stable projections and revisions on
+the following unchanged polls. If an update does send dependencies, verify the sent
+IDs and preserved unresolved references as well. No assertion may be replaced by a
+constant, a mocked success, or a synthesized fixture request field.
+
 The unresolved_preservation check also covers one synthetic imported task with a
 720-character title and 110,000-character description. Submit the full editor payload
 with only labels changed: it must succeed and preserve both text fields byte for byte.

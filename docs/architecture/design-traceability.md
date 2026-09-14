@@ -1,6 +1,6 @@
 # Design traceability
 
-<!-- literate-ai:authority-reviewed sha256:895756613e2b2f7233124e04df56302afa9f1105f03282e9c6696b76654b0928 -->
+<!-- literate-ai:authority-reviewed sha256:5bc2531185b8a6b8dca7ee1720864b7fa6c75b2afe984db1cde6421df743eee2 -->
 
 [Project guide](../README.md) → design traceability
 
@@ -8,10 +8,8 @@ Behavior belongs in Component specifications; target variance belongs in Flavors
 conversion technique belongs in exact skills; execution order belongs in workflows;
 model eligibility belongs in routing; validation and authorization remain framework
 policy. The manifest selects the source-intelligence provider, while its local database
-remains
-derived evidence outside source authority. Changes should update the owning artifact,
-its nearby explanation or diagram,
-and an end-to-end test. Illustrations aid understanding; prose requirements and
+remains derived evidence outside source authority. Changes should update the owning artifact,
+its nearby explanation or diagram, and an end-to-end test. Illustrations aid understanding; prose requirements and
 acceptance scenarios remain normative. See the [project map](../user/project-layout.md).
 
 MAC snapshot import preserves upstream dependency identity independently of local
@@ -42,6 +40,11 @@ until completion and explicitly destroys them on an absolute deadline. Cleanup
 must prove connection release and process survival, not only caller rejection.
 
 Transport acceptance covers byte volume as well as record count. The production
-MAC response budget is256MiB, with a native >=80MiB authenticated collection read
+MAC response budget is 256 MiB, with a native response of at least 80 MiB authenticated collection read
 and a final full-service captured replay. Adapter-only enumeration cannot prove
 that the actual HTTP client accepts a production-sized snapshot.
+
+Dependency-preservation tests inspect the upstream and cached task after an update
+and again after synchronization. Unchanged fields may be omitted from an outgoing
+update; that omission must not be mistaken for deletion. Explicit removals and newly
+selected prerequisites still require checks of the actual transmitted MAC IDs.

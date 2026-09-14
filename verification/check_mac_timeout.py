@@ -7,6 +7,7 @@ data; use a fresh --output directory for each run.
 
 import argparse, http.server, json, os, select, signal, socket, subprocess, threading, time, urllib.request
 from pathlib import Path
+from service_response import entity_response
 
 parser = argparse.ArgumentParser()
 parser.add_argument("entrypoint", type=Path)
@@ -119,7 +120,7 @@ result = {"ok": False, "entrypoint": str(entrypoint), "checks": {}}
 
 def api(route):
     with urllib.request.urlopen(base + route, timeout=5) as response:
-        return json.load(response)
+        return entity_response(json.load(response))
 
 
 def eventually(fn, timeout=30):
@@ -152,6 +153,8 @@ def sync_ok(repo):
     health = api("/health")
     if "mac_last_sync_ok" in health:
         return health["mac_last_sync_ok"]
+    if "last_sync_ok" in health.get("mac", {}):
+        return health["mac"]["last_sync_ok"]
     fleet = health.get("fleet", health)
     if "last_sync_ok" in fleet:
         return fleet["last_sync_ok"]
