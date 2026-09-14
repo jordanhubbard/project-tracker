@@ -112,11 +112,11 @@ with tempfile.TemporaryDirectory(prefix='tracker-git-states-') as temporary:
                                 raise
                     expect(marker.first).to_be_visible()
                     page.screenshot(path=str(out / f'{width}-boundary.png'), full_page=True)
-                    page.get_by_role('button', name='Timeline', exact=True).or_(page.get_by_role('tab', name='Timeline', exact=True)).or_(page.get_by_role('link', name='Timeline', exact=True)).first.click()
+                    page.get_by_role('button', name=re.compile(r'^(?:Switch to )?Timeline$')).or_(page.get_by_role('tab', name='Timeline', exact=True)).or_(page.get_by_role('link', name='Timeline', exact=True)).first.click()
                     page.wait_for_timeout(400)
                     page.screenshot(path=str(out / f'{width}-bounded-timeline.png'), full_page=True)
                     (out / f'{width}-bounded-timeline.aria.txt').write_text(page.locator('body').aria_snapshot())
-                    rendered = page.locator('svg [role=button]').evaluate_all("nodes => nodes.map(n => n.getAttribute('aria-label').match(/^(?:Commit )?([a-f0-9]{7,64})/)[1])")
+                    rendered = page.locator('svg [role=button]').evaluate_all("nodes => nodes.map(n => (n.getAttribute('aria-label') || n.querySelector('title')?.textContent || '').match(/^(?:Commit )?([a-f0-9]{7,64})/)[1])")
                     assert {h[:8] for h in known} <= set(rendered) <= {h[:8] for h in known | boundary}, (set(rendered), known, boundary)
                     assert len(rendered) == len(set(rendered))
 

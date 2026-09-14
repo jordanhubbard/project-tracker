@@ -118,7 +118,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
             in_progress = next(state[state_field] for state in workflow
                                if state.get('name', '').lower().replace(' ', '_') == 'in_progress')
             changed = request('PATCH', f'/api/tasks/{task_id}', {
-                'expected_revision': task['revision'], 'title': 'Edited title',
+                'revision': task['revision'], 'title': 'Edited title',
                 'state': in_progress, 'labels': ['integration'],
                 'assignee': 'fixture-owner', 'branch': 'feature/verification',
                 'cover_color': 'purple', 'due_date': '2026-10-01',
@@ -133,9 +133,9 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                                     'checklist': [{'text': 'Restart proof', 'done': True}]}.items():
                 assert changed[field] == expected, (field, changed)
             request('PATCH', f"/api/tasks/{prerequisite['id']}", {
-                'expected_revision': prerequisite['revision'], 'dependencies': [task_id]}, (400, 409, 422))
+                'revision': prerequisite['revision'], 'dependencies': [task_id]}, (400, 409, 422))
             request('PATCH', f'/api/tasks/{task_id}', {
-                'expected_revision': task['revision'], 'title': 'Stale writer'}, 409)
+                'revision': task['revision'], 'title': 'Stale writer'}, 409)
             stop()
             start()
             restored = request('GET', f'/api/tasks/{task_id}')
@@ -293,9 +293,9 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert settings['llm_key_configured'] is True, settings
                     assert settings['llm_url'] == environment['TRACKER_LLM_URL'], settings
                     assert settings['llm_model'] == 'fixture-model', settings
-                    request('PUT', '/api/settings', {'llm_key': ''})
+                    request('PATCH', '/api/settings', {'llm_key': ''})
                     assert request('GET', '/api/settings')['llm_key_configured'] is True
-                    request('PUT', '/api/settings', {'llm_key': None})
+                    request('PATCH', '/api/settings', {'llm_key': None})
                     stop()
                     start()
                     cleared = request('GET', '/api/settings')
@@ -360,7 +360,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     card = peer_request('GET', '/.well-known/agent-card.json')
                     assert card['url'].startswith(peer_base + '/'), card
                     registered = request('POST', '/api/peers', {
-                        'url': card['url'], 'name': 'Isolated peer', 'token': peer_token}, 201)
+                        'url': peer_base, 'name': 'Isolated peer', 'token': peer_token}, 201)
                     def peer_response_redaction():
                         assert peer_token not in json.dumps(registered), registered
                         assert peer_token not in json.dumps(request('GET', '/api/peers'))
@@ -688,7 +688,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                                for method, path, body in fleet.writes), fleet.writes
                     existing = request('GET', f"/api/tasks/{existing['id']}")
                     request('PATCH', f"/api/tasks/{existing['id']}", {
-                        'expected_revision': existing['revision'], 'labels': ['updated']})
+                        'revision': existing['revision'], 'labels': ['updated']})
                     preserved = next(item for item in fleet.tasks if item['id'] == 'task_fixture_1')
                     assert preserved['metadata']['foreign_key'] == 'preserve', preserved
                     assert preserved['metadata']['project_tracker']['labels'] == ['updated'], preserved
@@ -699,7 +699,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                         assert 'in_progress' in state_by_name, ('MAC workflow omits unoccupied in_progress state', fleet_states)
                         refreshed = request('GET', f"/api/tasks/{created['id']}")
                         moved = request('PATCH', f"/api/tasks/{created['id']}", {
-                            'expected_revision': refreshed['revision'], 'state': state_by_name['in_progress']})
+                            'revision': refreshed['revision'], 'state': state_by_name['in_progress']})
                         assert moved['state'] == state_by_name['in_progress'], moved
                         upstream = next(t for t in fleet.tasks if t['title'] == 'Route to fleet')
                         assert upstream['state'] == 'in_progress', upstream
@@ -711,7 +711,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                         assert 'completed' in state_by_name, ('MAC workflow omits unoccupied completed state', fleet_states)
                         refreshed = request('GET', f"/api/tasks/{created['id']}")
                         request('PATCH', f"/api/tasks/{created['id']}", {
-                            'expected_revision': refreshed['revision'], 'state': state_by_name['completed']},
+                            'revision': refreshed['revision'], 'state': state_by_name['completed']},
                             (400, 403, 409, 422))
                         unchanged = request('GET', f"/api/tasks/{created['id']}")
                         assert unchanged['state'] != state_by_name['completed'], unchanged

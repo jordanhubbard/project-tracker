@@ -85,6 +85,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
             headers={"Content-Type": "application/json"},
         )
         with urllib.request.urlopen(r, timeout=5) as response:
+            if response.status == 204:
+                assert method == 'DELETE', (method, path)
+                return None
             return entity_response(json.load(response))
 
     try:
@@ -267,7 +270,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.wait_for_timeout(400)
                             commit_circle(commit_node(page, mergehash)).click()
                             expect_selected_hash(page, mergehash)
-                            if socket.gethostname() not in page.locator('main').inner_text():
+                            if socket.gethostname() not in page.locator('main:visible').inner_text():
                                 issues.append('Graph omits the active coding-session host association')
                             page.screenshot(path=str(out / 'desktop-active-session-graph.png'), full_page=True)
                             page.get_by_role('button', name=re.compile(r'^(?:Back to board|Board)$')).or_(page.get_by_role('tab', name='Board', exact=True)).or_(page.get_by_role('link', name='Board', exact=True)).first.click()
@@ -339,9 +342,10 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 far = timeline_positions[mainhash] - timeline_positions[basehash]
                                 if far <= 0 or abs(near / far - 0.1) > 0.03:
                                     issues.append(f"Timeline: 0/10/100-second spacing is not proportional: {timeline_positions}")
-                        layout_metrics = page.locator('.graph-scroller').evaluate_all("nodes => nodes.map(n => ({bounds:n.getBoundingClientRect().toJSON(),clientHeight:n.clientHeight,scrollHeight:n.scrollHeight,gridRows:getComputedStyle(n.parentElement).gridTemplateRows,svg:n.querySelector('svg')?.getBoundingClientRect().toJSON()}))")
+                        layout_metrics = page.locator('.graph-scroller, .chart-scroller').evaluate_all("nodes => nodes.map(n => ({bounds:n.getBoundingClientRect().toJSON(),clientHeight:n.clientHeight,scrollHeight:n.scrollHeight,gridRows:getComputedStyle(n.parentElement).gridTemplateRows,svg:n.querySelector('svg')?.getBoundingClientRect().toJSON()}))")
                         (out / f'{name}-{mode.lower()}-layout.json').write_text(json.dumps(layout_metrics, indent=2))
-                        if name == 'mobile' and layout_metrics:
+                        if name == 'mobile':
+                            assert layout_metrics, 'Missing measured chart viewport'
                             assert all(item['clientHeight'] >= 180 for item in layout_metrics), layout_metrics
 
                         commit_circle(commit_node(page, mergehash)).click()

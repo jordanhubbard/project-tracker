@@ -1,0 +1,138 @@
+{
+  "schema": "project-tracker/product-verification@1",
+  "ok": true,
+  "authority_commit": "e09a08c",
+  "artifact": "generated/artifacts/tracker/artifact-6119bda93ad771d2ed03",
+  "native_tests": {
+    "failed": 0,
+    "passed": 28,
+    "skipped": 0,
+    "total": 28
+  },
+  "independent_phases": [
+    {
+      "phase": "service",
+      "ok": true,
+      "evidence": "_build/mobile-canvas-independent/service.log"
+    },
+    {
+      "phase": "browser-login",
+      "ok": true,
+      "evidence": "_build/mobile-canvas-independent/browser-login.log"
+    },
+    {
+      "phase": "mac-status-ui",
+      "ok": true,
+      "evidence": "_build/mobile-canvas-independent/mac-status-ui.log"
+    },
+    {
+      "phase": "board",
+      "ok": true,
+      "evidence": "_build/mobile-canvas-independent/board.log"
+    },
+    {
+      "phase": "peer-ui",
+      "ok": true,
+      "evidence": "_build/mobile-canvas-independent/peer-ui.log"
+    },
+    {
+      "phase": "session-expiry",
+      "ok": true,
+      "evidence": "_build/mobile-canvas-independent/session-expiry.log"
+    },
+    {
+      "phase": "git-states",
+      "ok": true,
+      "evidence": "_build/mobile-canvas-git3/result.json"
+    },
+    {
+      "phase": "equal-time-graph",
+      "ok": true,
+      "evidence": "_build/mobile-canvas-independent/equal-time-graph.log"
+    },
+    {
+      "phase": "irregular-time-graph",
+      "ok": true,
+      "evidence": "_build/mobile-canvas-independent/irregular-time-graph.log"
+    }
+  ],
+  "probe_corrections": "The bounded-history rerun uses the visible Switch to Timeline control and the SVG title accessible name. All known-commit, boundary and uniqueness assertions remain. Original failing logs retained.",
+  "additional_checks": {
+    "conflict": {
+      "ok": true,
+      "evidence": "_build/mobile-canvas-conflict/result.json",
+      "sha256": "9601c00cbb72b851030557464bd0567926d3fe1e102833a7e6f0a3f1c36f7b65"
+    },
+    "missing-path": {
+      "ok": true,
+      "evidence": "_build/mobile-canvas-missing-path/result.json",
+      "sha256": "a25c0a8f3b4e9cbe98a3adf959655daf8a5db449a4d2ec16fe065cea9ca49fb9"
+    },
+    "peer-outage": {
+      "ok": true,
+      "evidence": "_build/mobile-canvas-peer-outage/result.json",
+      "sha256": "4201cd8f62b20ff8f1f53adbbc2a694762ec257f5fe93a7ff30b57b0613a122a"
+    },
+    "status2": {
+      "ok": true,
+      "evidence": "_build/mobile-canvas-status2/result.json",
+      "sha256": "804f29545d4b3dd577e79ed77b3b3ebf8cd317044ae766191f7041a08e310fb3"
+    },
+    "public": {
+      "ok": true,
+      "evidence": "_build/mobile-canvas-public/result.json",
+      "sha256": "70d05506420bddce24ed1da90548b5b37902477a522333fa809ab23385326f87"
+    }
+  },
+  "source_files": {
+    ".literate/sbom.cdx.json": "75790769e2f140624a142002fc96125916a4152f065c8915d204c21c16039a35",
+    "README.md": "2f632274286a25616a5de0265cca957f07035517dd5129b962e0e1e6ff7028ec",
+    "main.js": "296b18eaf9fa342bdcc673c795d2e0aa991f946bb7fe666c83f4437201a3216b",
+    "package-lock.json": "3757ab4ba521e7a93a036c1bd923b87c29cf3a5b8bd45803de2b5ffaf12e9572",
+    "package.json": "d34deb10714e7f3b6a79e8ad3426987b6dd235944c939e15986f0c59dcb0bb05",
+    "server/a2a.js": "84e385cb017ca9060ec66c46a979f5ab4dbae7e70018f6ea3fca06cfb757336d",
+    "server/app.js": "39c637ec448321a91ecb9b7fe19664da1c42aed2270bf02b00ae570dc8cf7fe7",
+    "server/auth.js": "1949aa4f6145ffbaa0dbd324632cf55e8d26cf097a5df00a450bf90f5efe4fe1",
+    "server/config.js": "84b8d5cafb805d45128f8c8c78fd264f811b5b8cfecb3b65db4e465836308211",
+    "server/db.js": "c8388c9f5f0027c05029aea5f15452035216a6317451bc73e206cc981107a8c2",
+    "server/events.js": "06eaf63152e834e8c178d5e4a8b14e498d7e3294407a181db0bf0305d7613d11",
+    "server/git.js": "cfc3f16a322e2caa4b169fb008a96c674a6dc5bd4a24dfdf22dc2bb963f8be2b",
+    "server/http.js": "bbe4c26f659527cf70773f2e6b89efd44d33bb33b3c379918211a7bb648b861e",
+    "server/inspect.js": "59d518d5be9de8b7bf71c52083b5061da4f3629883f5417c50bc8e9c2dfe5242",
+    "server/llm.js": "904da49b1518b95028c1b0e5233f7f3ddbe6abdf81aa66284c13c5550fc0febd",
+    "server/mac.js": "c7cbb4e1770b35cba4877d374465f079b1cdb28983c2d8840fde5701dd7ee8e6",
+    "server/mcp.js": "374917117ab32e6a1c9a75e5c2c3ddef2b2d00803e9bd0e0704683bfa5060a1f",
+    "server/openapi.js": "cd2040568d4da8553722e6d598c6e98caf88aa8035d2615240a21c1d08a48d68",
+    "server/peers.js": "632c84b135f5e74694a34e6138edd2023886bc089eeaaa7d1ae8d39ed4bd8614",
+    "server/reporter.js": "806d5e83dd17d04ef201fd7e0b515a9b319090e6109dc960b39af078c2214e80",
+    "server/service.js": "2a9ecb681b99befdd621227e631543fb19139a37c0019de1358057e61d81d7a4",
+    "server/settings.js": "cccc12d91bb3c9996a70d5ab7abc13f2e4cebaeef6e6e67392f4bfe860d10e50",
+    "server/store.js": "cac4754b16d85e3df39657c5a1b8291bb5ad90656ce57323d4ea6b3d67cc69cc",
+    "server/util.js": "fac89398f652b55c4a01edd344982fae8633fe597a658484ba58aa77ca1efd9e",
+    "tests/behavior_test.js": "d702f59b0260c5c61baa9be4b30048ae725cfef20f71c6b3c2b1bdeaf414cca4",
+    "tests/litai_test.js": "58b105d8de8a21befa7cd6cf1c7fe1239634978132ca08230ce10240097f1bed",
+    "tests/manifest.json": "c2b6c6d0ce3b468fb85592663fa3c7d3de953207a575578b67f5b884ddf0f79e",
+    "web/api.js": "bc1253bfbd480c259341e20a9de716b337b0d0257c2651923e1aa23267533ca3",
+    "web/app.js": "69a5da5cdeae306407b9d429a90246682f4f5c91312ed6bc790d8db4c1eac915",
+    "web/board.js": "f2ea1fb019215c8129d60d512e88ef2d4f25c2bd65a6a349a2d54a0b4b0fe237",
+    "web/dialogs.js": "252fbe8dc190bd73f35bed443936e397c7fd9e4309030cb3f5e5fa567c3e4baa",
+    "web/dom.js": "c7eb69598a5a187ae4f852400bd4ac940e8fed138d3e6b23629da6436e48a0e4",
+    "web/favicon.svg": "9cd6b9d88ccba1a8f25f9989c6341389262f706285212d3b4087f9774e251fd9",
+    "web/graph.js": "c4b090c0c96312571196ad2d057fb4a66ea1b977dc12db869e1085b034fa9a6d",
+    "web/index.html": "98d741bd3ce94f066fcacb87486f46235376198944d9cf21ce53be8ba2afd4af",
+    "web/login.js": "7e39bb6435be3909d26a4d141a28686f177c740c24be2a66ad30793e9f40ed63",
+    "web/styles.css": "41d85006b5429825517974b6846db5b27ff7a7dee5f5d7a31406de20e8b83075",
+    "web/views.js": "c0e45f5a2da57fd95faa8ffd19b4bdc8e3e61f65acd2509f60db21ba49023c5d"
+  },
+  "scope": {
+    "platform": "macOS",
+    "viewports": [
+      1440,
+      390
+    ],
+    "mac": "authenticated disposable contract fixture; no production fleet mutations",
+    "llm": "disposable gateway fixture",
+    "reporter": "real child processes and physical-host reporting",
+    "public_launch": "LitAI exported artifact, isolated data, visible browser login"
+  }
+}

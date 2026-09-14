@@ -52,7 +52,7 @@ with tempfile.TemporaryDirectory() as root:
         page.get_by_role('button', name=re.compile(r'^Register (?:a )?peer$')).click()
       display = page.get_by_role('textbox', name=re.compile(r'^(?:Name|Display name|Peer name)$'))
       if display.count(): display.fill('Remote verification peer')
-      page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL|Peer A2A endpoint URL)$')).fill(request(b,'GET','/.well-known/agent-card.json')['url'])
+      page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL|Peer A2A endpoint URL)$')).fill(b)
       page.get_by_label(re.compile(r'^(?:(?:Peer bearer t|Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\)|Bearer token \(stored backend-only\)|Peer token \(write only\)|Access token \(stored backend-only\)|Outbound token \(write-only\)|Peer access token|Peer bearer token)$')).fill(token)
       scope = page.get_by_role('dialog') if page.get_by_role('dialog').count() else page
       scope.get_by_role('button',name=re.compile(r'^(?:Register(?: peer)?|Save)$')).click()

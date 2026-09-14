@@ -4,7 +4,8 @@ Project Tracker is a repository and task workspace with a Trello-style live boar
 physical coding-session visibility and Git branch visualizations. Its backend owns
 the database, MAC integration, MCP and A2A peer protocols, and LLM credentials.
 The product objective in `PROJECT.md` and application specification in `components/tracker/component.md`
-define the complete outcome; the application is currently under construction.
+define the complete outcome. The local build is verified; see the
+[completion evidence](user/verification.md) for its scope.
 
 Start with [getting started](user/getting-started.md) for installation and usage.
 See [active work](roadmap/active-work.md) for current development status.

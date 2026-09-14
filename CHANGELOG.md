@@ -2,5 +2,12 @@
 
 ## Unreleased
 
+- Project Tracker: deliver the verified local frontend/backend workspace with live
+  Trello-style task boards, editable workflows, repository inspection, physical
+  coding-session reporting, Git graph/timeline exploration, MAC authority routing,
+  official MCP, durable A2A peering, backend LLM settings and protected browser login.
+  Validated with 28 native tests, nine independent phases, desktop/mobile Chrome
+  interactions and the public LitAI launcher.
+
 - Initialized the project with Literate AI's specification-led lifecycle and durable
   user-directed work queue.

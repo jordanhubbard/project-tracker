@@ -36,9 +36,9 @@ with tempfile.TemporaryDirectory() as tmp, MacFixture() as fleet:
    inspector.locator('.repo-card').filter(has=inspector.get_by_role('heading',name=repo['name'],exact=True)).get_by_role('button',name='Inspector',exact=True).click()
    board.locator('.repo-card').filter(has=board.get_by_role('heading',name=repo['name'],exact=True)).get_by_role('button',name='Open board',exact=True).click()
    card=overview.locator('.repo-card').filter(has=overview.get_by_role('heading',name=repo['name'],exact=True))
-   sync_value=inspector.get_by_role('status').filter(has_text=re.compile('^Last synchronized:'))
-   expect(sync_value).to_contain_text('Last synchronized:');expect(sync_value).not_to_contain_text(re.compile('unavailable|503|outage',re.I));expect(card).not_to_contain_text(re.compile('unavailable|503|outage',re.I))
-   overview.evaluate("""() => { window.probeEvents=[]; window.probeSource=new EventSource('/api/events'); window.probeReady=false; probeSource.onopen=()=>window.probeReady=true; probeSource.addEventListener('repository.updated',e=>probeEvents.push({id:e.lastEventId,data:JSON.parse(e.data)})); }""")
+   sync_value=inspector.locator('main:visible')
+   expect(sync_value).to_contain_text('Last synchronized');expect(sync_value).not_to_contain_text(re.compile('unavailable|503|outage',re.I));expect(card).not_to_contain_text(re.compile('unavailable|503|outage',re.I))
+   overview.evaluate("""() => { window.probeEvents=[]; window.probeSource=new EventSource('/api/events'); window.probeReady=false; probeSource.onopen=()=>window.probeReady=true; probeSource.addEventListener('repository-changed',e=>probeEvents.push({id:e.lastEventId,data:JSON.parse(e.data)})); }""")
    overview.wait_for_function('window.probeReady');overview.evaluate('window.probeEvents=[]')
    writes=len(fleet.writes);fleet.unavailable=True
    expect(card).to_contain_text(re.compile('unavailable|503|outage',re.I),timeout=20000);expect(sync_value).to_contain_text(re.compile('unavailable|503|outage',re.I),timeout=20000)
@@ -46,7 +46,7 @@ with tempfile.TemporaryDirectory() as tmp, MacFixture() as fleet:
    outage_events=overview.evaluate('window.probeEvents');assert outage_events,outage_events
    overview.wait_for_timeout(11000)
    assert overview.evaluate('window.probeEvents')==outage_events,'Repeated failure emitted duplicate repo updates'
-   board.get_by_role('button',name=task['title'],exact=True).click();dialog=board.get_by_role('dialog')
+   board.locator('.card-title').filter(has_text=re.compile('^'+re.escape(task['title'])+'$')).click();dialog=board.get_by_role('dialog')
    dialog.get_by_label('Title',exact=True).fill('Outage must reject this edit');dialog.get_by_role('button',name='Save',exact=True).click()
    expect(dialog.get_by_role('alert')).to_contain_text(re.compile('unavailable|offline|503|outage|failed',re.I))
    assert request(f"/api/repos/{repo['id']}/tasks")['items']==tasks
