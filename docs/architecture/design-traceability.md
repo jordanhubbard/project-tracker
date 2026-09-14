@@ -1,6 +1,6 @@
 # Design traceability
 
-<!-- literate-ai:authority-reviewed sha256:c30161cc3357e1fd8f46b9eaafbe331ff99d4d57bfb8a439c80fdfa740f8dfed -->
+<!-- literate-ai:authority-reviewed sha256:8155414d35f902cd2e2613ce108eb06a4ab17e2e4c0d28f40f9f1ec3fae8f515 -->
 
 [Project guide](../README.md) → design traceability
 
@@ -36,3 +36,7 @@ independent exported-service acceptance exercises the actual default read budget
 dependency projection, preventing transient link changes and duplicate revisions.
 Existing tasks compare their complete projected state before one update, so a
 genuine dependency-only change still advances its revision and notifies clients.
+
+Production MAC transport retains native HTTP/HTTPS request and response handles
+until completion and explicitly destroys them on an absolute deadline. Cleanup
+must prove connection release and process survival, not only caller rejection.

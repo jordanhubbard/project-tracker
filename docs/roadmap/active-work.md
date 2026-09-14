@@ -114,6 +114,11 @@ under TRACK-004. Earlier scoped evidence is in
     cleanup crashes and its native suite exceeds the fixed 60-second runner limit.
     Use short native timeout coverage plus full default-budget exported-service
     acceptance. See [candidate-seven evidence](../../verification/track004-candidate7.json).
+  - [ ] Own MAC request/response handles through an absolute deadline. Candidate
+    eight rejects at60seconds without an asynchronous cancellation crash, but the
+    original connection remains open past65seconds. Use the built-in HTTP/HTTPS
+    transport with explicit handle destruction and retain both timeout test scopes.
+    See [candidate-eight evidence](../../verification/track004-candidate8.json).
   - [ ] Deliver the accepted repair through the supported committed-source cache;
     verify portable isolated acceptance and cache reuse in a fresh GitHub checkout.
     These runtime-delivery checks remain here after the workspace import lands.

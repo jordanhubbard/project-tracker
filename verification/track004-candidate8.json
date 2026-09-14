@@ -1,0 +1,24 @@
+{
+  "status": "interrupted_before_acceptance",
+  "component_revision": "768a69cea3a33909acc6f8f50b3e65897f55f9d35e777f30c4fd268c4dcabc7e",
+  "scope": "Unmodified provisional modules; no final native acceptance or export.",
+  "timeout": {
+    "ok": false,
+    "provisional": true,
+    "settled_seconds": 60.002416375,
+    "error_kind": "timeout",
+    "socket_closed_before_cleanup": false,
+    "socket_closed_seconds": null,
+    "error": "Stalled body connection stays open after caller timed out"
+  },
+  "git": {
+    "ok": true,
+    "provisional": true,
+    "branch_filename_collision": true,
+    "feature_commits": 2,
+    "main_commits": 4,
+    "unknown_branch_is_error": true
+  },
+  "finding": "Caller rejects on deadline, but abort plus caught locked-stream cancellation leaves original HTTP1 socket open beyond65 seconds.",
+  "next": "Retain native HTTP/HTTPS request and response handles and explicitly destroy on absolute deadline; same real transport in both native short and independent default-budget tests."
+}

@@ -7,6 +7,12 @@ kind: verification
 
 ## Confirmed regeneration regressions
 
+Production MAC requests retain Node HTTP/HTTPS request and response ownership through
+body completion; absolute-deadline failure destroys both handles. Execute the real
+transport in short native and independent default60-second acceptance. A prior
+fetch candidate avoided its cancellation crash but left the socket open after65
+seconds. Catching stream.cancel rejection is not sufficient cleanup evidence.
+
 The native dependency_identity gate must distinguish unchanged polling from
 genuine dependency-only upstream changes. Execute the concrete a/p fixture in
 mac-integration.md: dependency-only and combined title/dependency changes each

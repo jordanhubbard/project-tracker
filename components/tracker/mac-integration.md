@@ -5,6 +5,31 @@ kind: integration
 ---
 # MAC integration behavior
 
+## Own the transport until the response completes
+
+Use Node's built-in HTTP/HTTPS request and response handles for production MAC
+transport. A verified Node22 fetch candidate rejected at its default60-second
+deadline but left the original HTTP1 socket open after65 seconds; catching a
+locked ReadableStream.cancel rejection merely prevented a crash. Abort delivery
+and body-stream cancellation do not prove resource release.
+
+Retain the actual ClientRequest and IncomingMessage until completion. One absolute
+wall-clock deadline must cover connection establishment, headers and the entire body.
+On expiry, reject the caller and explicitly destroy both owned request and response
+handles (and their connection) before releasing ownership. Observe error events on
+both so destruction cannot cause an uncaught exception. Clear the deadline exactly
+once on terminal success/failure, bound accumulated response bytes, and ensure late
+callbacks cannot resolve twice or persist partial data. Disable authenticated redirects.
+An inactivity timeout alone is insufficient: a trickling body must still meet the
+absolute deadline. Preserve authenticated HTTP and HTTPS, JSON/non-JSON error handling,
+60-second reads and the specified bounded writes. This transport change does not
+alter any task, synchronization, protocol or browser semantics.
+
+Both the short native timeout regression and independent actual default60 service
+acceptance must use this same production transport against real loopback HTTP,
+including healthy follow-up requests. Test seams must not replace the production
+transport in these checks. Retain all prior regression scenarios below.
+
 ## Genuine relationship changes advance revisions and notify clients
 
 Avoid duplicate post-edit events by comparing complete task projections, never

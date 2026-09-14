@@ -45,12 +45,16 @@ revision regressions. Their sanitized results are retained in
 [candidate four](../../verification/track004-candidate4.json),
 [candidate five](../../verification/track004-candidate5.json),
 [candidate six](../../verification/track004-candidate6.json), and
-[candidate seven](../../verification/track004-candidate7.json).
+[candidate seven](../../verification/track004-candidate7.json), and
+[candidate eight](../../verification/track004-candidate8.json).
 
 Candidate seven's focused dependency-only and combined-change probes pass, but its
 response-body cleanup produces an unhandled rejection. Its native run also exceeded the
 framework's 60-second limit. Neither a provisional pass nor an interrupted generation
-constitutes final artifact acceptance.
+constitutes final artifact acceptance. Candidate eight prevents the cleanup crash
+but leaves the original response socket open beyond the allowed deadline; it was
+stopped before acceptance. The next repair explicitly owns and destroys transport
+request/response handles.
 
 `verification/current.json` is framework-owned and must match current authority.
 [final-result.json](../../verification/final-result.json) records the artifact it was
