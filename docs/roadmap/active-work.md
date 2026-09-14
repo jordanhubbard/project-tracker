@@ -90,6 +90,12 @@ under TRACK-004. Earlier scoped evidence is in
     regression must inspect actual upstream writes, including the first edge.
   - [ ] Preserve Git filtering during regeneration when a branch and filename collide;
     verify exact reachable hashes and both timestamp browser fixtures.
+  - [ ] Preserve every upstream lifecycle state during import and install MAC's full
+    supported workflow. The next generation was interrupted after its provisional
+    snapshot mapped 7,622 tasks to open; its dependency/Git fixes passed focused
+    checks. Correct the MAC-only fixture's unsupported in_progress assumption,
+    retain local defaults, and add native state-preservation coverage. See
+    [candidate-four evidence](../../verification/track004-candidate4.json).
 - **Evidence:**
   - [ ] Native authenticated fixtures cover reverse-order dependencies, missing and cross-project references, unchanged polls, deletion beyond 200 tasks, failure recovery and nonoverlapping slow synchronization.
   - [ ] Replay the real hub snapshot and verify complete project/task counts and dependency preservation.
@@ -105,6 +111,9 @@ under TRACK-004. Earlier scoped evidence is in
 - **Implementation:**
   - [x] Configure origin and back up the previously verified workspace history.
   - [ ] Integrate starter ancestry and land the verified repaired workspace through a GitHub pull request.
+  - [ ] Make acceptance storage portable and isolated across repeated checkout runs.
+  - [ ] Publish the accepted source through the supported project cache and verify
+    a fresh GitHub checkout can reuse it and pass current acceptance.
 - **Evidence:**
   - [x] Verify workspace-import exists on GitHub at 6ef7b8b4f39be4c23aec55d47414029c190aca4b.
   - [ ] Verify the merged GitHub main and local main agree after landing.

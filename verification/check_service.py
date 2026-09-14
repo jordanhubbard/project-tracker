@@ -699,15 +699,15 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     fleet_state_field = next(key for key in ('key', 'name', 'id') if any(st.get(key) == existing['state'] for st in fleet_states))
                     state_by_name = {item['name'].lower().replace(' ', '_'): item[fleet_state_field] for item in fleet_states}
                     def mac_lifecycle_success():
-                        assert 'in_progress' in state_by_name, ('MAC workflow omits unoccupied in_progress state', fleet_states)
+                        assert 'waiting' in state_by_name, ('MAC workflow omits unoccupied waiting state', fleet_states)
                         refreshed = request('GET', f"/api/tasks/{created['id']}")
                         moved = request('PATCH', f"/api/tasks/{created['id']}", {
-                            'revision': refreshed['revision'], 'state': state_by_name['in_progress']})
-                        assert moved['state'] == state_by_name['in_progress'], moved
+                            'revision': refreshed['revision'], 'state': state_by_name['waiting']})
+                        assert moved['state'] == state_by_name['waiting'], moved
                         upstream = next(t for t in fleet.tasks if t['title'] == 'Route to fleet')
-                        assert upstream['state'] == 'in_progress', upstream
+                        assert upstream['state'] == 'waiting', upstream
                         assert any(method == 'POST' and path == f"/tasks/{upstream['id']}/transition"
-                                   and body.get('target_state') == 'in_progress'
+                                   and body.get('target_state') == 'waiting'
                                    for method, path, body in fleet.writes), fleet.writes
                     run_phase('mac_lifecycle_success', mac_lifecycle_success)
                     def mac_lifecycle_rejection():

@@ -7,6 +7,14 @@ kind: verification
 
 ## Confirmed regeneration regressions
 
+The native MAC complete_reconciliation check must preserve all twelve native MAC
+states and additional observed states through import, update, task detail and
+restart, including empty workflow columns and stable unchanged polls. Execute the
+concrete lifecycle scenarios in mac-integration.md. An all-open scale fixture
+cannot establish lifecycle preservation: an earlier candidate imported all tasks
+but incorrectly mapped most states to open. The successful MAC transition fixture
+uses open -> waiting, a native MAC transition; keep local in_progress tests local.
+
 The native MAC dependency_identity check must add a newly selected prerequisite
 to an existing task, including the first edge on an empty dependency array.
 An identity map containing only existing edges silently drops these selections.

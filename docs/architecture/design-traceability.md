@@ -1,6 +1,6 @@
 # Design traceability
 
-<!-- literate-ai:authority-reviewed sha256:e983fbe76baa81828e02ebe6000c1bb5db58fba48fb5a652b7d9969fa271f782 -->
+<!-- literate-ai:authority-reviewed sha256:dff3c2c0df7073b400aba439d40022d26b89ad3904fb4b7dbe490dd2f2858da9 -->
 
 [Project guide](../README.md) → design traceability
 
@@ -23,3 +23,9 @@ The MAC native gate runs a disposable integration self-check. Fleet snapshot
 transactions include every project and publish events only after commit. Explicit
 upstream-reference removal is separate from the resolved dependency selection, and
 HTTP failure classification survives non-JSON proxy responses.
+
+MAC workflows use all twelve native upstream lifecycle values and merge additional
+observed states before task projection. Local workflow defaults remain separate.
+Native fixtures check state preservation, empty columns, later state discovery and
+restart. The portable acceptance contract keeps disposable storage outside the
+packaged source using the framework's assigned port.

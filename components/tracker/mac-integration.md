@@ -5,6 +5,34 @@ kind: integration
 ---
 # MAC integration behavior
 
+## Preserve the real MAC lifecycle
+
+The supported MAC states are `open`, `waiting`, `blocked`, `claimed`, `running`,
+`needs_review`, `needs_input`, `stopped`, `reviewing`, `completed`, `failed`, and
+`cancelled`. Install all twelve for every discovered MAC project, even when its
+snapshot is empty or contains only open tasks. These are upstream wire values.
+The local Tracker defaults remain open/in_progress/blocked/review/completed;
+in_progress and review are not native MAC lifecycle values. Do not impose the
+local workflow on MAC projects or translate running to in_progress.
+
+Before projecting any task in a successful snapshot, merge every additional
+observed nonempty upstream state into its project's workflow inside the same
+transaction. Pass the actual snapshot states through the synchronization path;
+an unused helper accepting observedStates is insufficient. Preserve each task's
+exact upstream state in storage and API detail. Never silently fall back to open
+or the first workflow state when a state is missing. Keep IDs stable and retain
+empty lists across unchanged polls, task moves, deletions, and process restart.
+
+The native mac-selfcheck complete_reconciliation gate must verify these behaviors
+through the authenticated fixture and actual synchronization/service/store. Give
+synthetic tasks all twelve states plus `provider_extra`, discover an open-only
+project and an empty project, and assert every imported state and all supported
+empty columns. Change an existing task to a newly observed `provider_later` on a
+later poll; verify its exact state, one revision change, stable workflow IDs, no
+churn on the following unchanged poll, and preservation after restart. Check task
+detail as well as rows, so a projector fallback cannot hide corruption. Retain
+the existing scale, dependency, rollback and mutation scenarios.
+
 ## Newly selected dependency regression
 
 For an existing MAC task whose raw dependencies are `[prerequisite, foreign]`,
@@ -141,18 +169,18 @@ with a useful unavailable error. Do not map every non-404 upstream response to
 502/mac_rejected. Preserve genuine upstream 4xx lifecycle rejection details and a
 non-success client response separately. Test an existing discovered MAC task edit
 when the upstream deliberately returns HTTP 503: tracker must return 503, retain
-the cached task unchanged, and create no local task. Test a successful in_progress
+the cached task unchanged, and create no local task. Test a successful waiting
 transition and a rejected completed transition independently of this outage case.
 
 
 Install the full supported MAC lifecycle, including states with no tasks currently
 occupying them. Do not replace the workflow with distinct states from the imported
 task snapshot. In particular, discovering a project with only open tasks must still
-advertise in_progress and completed so the operator can request those transitions.
+advertise waiting and completed so the operator can request those transitions.
 Use the authoritative lifecycle definitions (or the known supported lifecycle when
 no discovery endpoint exists), merging additional observed states. Keep the workflow
 stable as lists become empty. Let MAC enforce whether a transition is allowed.
-Test an open-only upstream project: in_progress succeeds through the actual transition
+Test an open-only upstream project: waiting succeeds through the actual transition
 endpoint, while a completed request reaches that endpoint and returns its deliberate
 lifecycle rejection. Rejecting both locally as unknown_state is incomplete integration.
 
