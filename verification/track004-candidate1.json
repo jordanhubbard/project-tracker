@@ -31,7 +31,8 @@
   "remaining_failures": [
     "Later-project storage failure leaves an earlier project committed and emits a task event.",
     "Full dependency selection drops missing and outside-project MAC references.",
-    "HTML HTTP503 is translated to tracker502."
+    "HTML HTTP503 is translated to tracker502.",
+    "A full editor payload with unchanged imported long text is rejected by local title limits."
   ],
   "scope": "Independent checks used immutable provisional copies. Final product file comparison found only a lazy MCP import change in lib/http.js; the failing MAC/store/sync code is byte-identical. Live reads were isolated and no fleet writes occurred."
 }

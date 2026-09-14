@@ -85,7 +85,8 @@ under TRACK-004. Earlier scoped evidence is in
   - [ ] Regenerate the exported application through the supported lifecycle. Candidate
     b37824adbd2ff5093391 passes full live import but fails three repair gates; see
     [candidate evidence](../../verification/track004-candidate1.json). Next action:
-    close atomic snapshot, unresolved-reference edit and non-JSON outage regressions.
+    close atomic snapshot, unresolved-reference/unchanged-long-text edit preservation
+    and non-JSON outage regressions.
     Native acceptance must execute the new MAC self-check, not only pure vectors.
 - **Evidence:**
   - [ ] Native authenticated fixtures cover reverse-order dependencies, missing and cross-project references, unchanged polls, deletion beyond 200 tasks, failure recovery and nonoverlapping slow synchronization.

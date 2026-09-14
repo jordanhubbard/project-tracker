@@ -23,6 +23,15 @@ used. A full editor Save with no removal must preserve missing and foreign edges
 The normal same-project dependency selector remains named Dependencies. Preserve
 unrelated metadata and references on title-only edits and full editor saves.
 
+Imported MAC text may exceed the tracker limits for newly authored local text.
+Do not reject a full editor Save merely because an unchanged imported title or
+description exceeds those local limits. Preserve unchanged upstream fields byte
+for byte and validate the fields actually changed. The editor must not silently
+truncate prefilled values. In particular, editing labels on a task with a 720-character
+title and a 110,000-character description must succeed and retain both strings.
+Keep bounded request sizes and validation of genuinely new/changed input. This
+distinction also applies to unchanged imported attributes with stricter local rules.
+
 Snapshot commit is fleet-wide. Start from alpha/task-a titled Old alpha and
 beta/task-b titled Old beta. The next snapshot changes both titles. Inject a storage
 failure while applying beta, after alpha's update has executed. The failed sync must

@@ -37,6 +37,12 @@ polls and late dependency resolution. Serialized-read coverage overlaps manual/t
 polls, delays a response beyond eight seconds and verifies a bounded body-read timeout.
 Restart the store and verify relationships survive. Keep native fixtures synthetic.
 
+The unresolved_preservation check also covers one synthetic imported task with a
+720-character title and 110,000-character description. Submit the full editor payload
+with only labels changed: it must succeed and preserve both text fields byte for byte.
+Do not use large text for all 10,000 scale-fixture tasks. Verify the same unchanged-text
+save in the browser alongside unresolved-reference display and explicit removal.
+
 ## Fleet dependency and scale regression acceptance
 
 Use authenticated disposable MAC HTTP fixtures through the actual service. Return
