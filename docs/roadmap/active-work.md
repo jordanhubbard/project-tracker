@@ -580,3 +580,24 @@ queue item or let `docs/roadmap/` become a plan archive.
   behavior. Use the supported receipt-updating `build` command for the next
   generation so it also creates the public run export; `rebuild` produced a
   receipt and retained artifact but did not update that export.
+
+
+### Protected login result and mobile graph canvas
+
+- Generation at daf6c37 completed with 30 native tests and a current public run
+  export. The public launcher passes health, visible protected login, authenticated
+  overview, live events and Settings. Final source provenance is retained in
+  `_build/browser-login-final-provenance.json`.
+- Seven of nine independent final-source phases pass: service protocols and MAC
+  authority, protected login, live MAC status, board editing, peer UI, session
+  expiry and bounded Git states. Desktop and mobile board screenshots were reviewed.
+- Both graph fixtures expose the same mobile defect: switching from Graph to
+  Timeline with the Feature inspector selected collapses the chart to a 2px border
+  with zero client height. The SVG still exists but real node clicks are intercepted.
+  `_build/browser-login-independent` retains screenshots and measured grid rows.
+- Next action in progress: require a usable non-collapsing chart viewport alongside
+  a tall selected inspector at 390px, preserve vertical access through scrolling,
+  regenerate through receipt-updating build, then repeat all final-source checks.
+- Extra final-source probes pass stale-editor conflict preservation, missing-checkout
+  feedback with board navigation, and visible unavailable-peer feedback. Their
+  evidence is retained under the browser-login diagnostic prefix.

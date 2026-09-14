@@ -85,6 +85,24 @@ inspector with hash, subject, author, timestamp, parents and related task links.
 An alert box or a hover-only title is insufficient. Keep the selected node visibly
 distinguished and allow Enter/Space activation without scrolling the page.
 
+### Chart and inspector sizing on mobile
+
+At 390px width, opening a selected commit inspector must not collapse the Graph
+or Timeline canvas. Keep a usable chart viewport with at least 180px of client
+height in the 390x844 acceptance viewport, including after switching modes with
+the Feature commit already selected. A tall inspector may extend the vertically
+scrollable view; it must not consume the chart's grid or flex allocation. Give
+the chart row a non-collapsing minimum or equivalent intrinsic sizing, and let the
+containing view scroll to reach the inspector. A zero-height scroller surrounding
+a nonzero SVG is not a visible chart. Do not cover node targets with the inspector
+or clip document overflow to conceal a broken layout.
+
+Verify the four-commit equal-time and irregular-time fixtures with the selected
+Feature inspector, branch filter applied and cleared, then Graph to Timeline and
+back. Real pointer clicks on reachable commit circles must update the inspector
+without force clicks or injected CSS. Retain Zoom/Reset, proportional timestamps,
+label collision avoidance and related-task editing at both desktop and mobile.
+
 ### Fork and merge scenario
 
 A real repository contains base A, children B and C, and merge D with parents B

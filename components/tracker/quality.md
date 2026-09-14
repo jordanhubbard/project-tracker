@@ -336,3 +336,11 @@ reload retains the session, and clearing the session cookie followed by reload
 returns to the usable login form. No token may appear in the URL, localStorage,
 sessionStorage or rendered page text. A direct API login request or manually
 injecting a browser cookie does not prove this browser interaction contract.
+
+
+At mobile390x844, measure the chart scroller after selecting Feature and switching
+Graph/Timeline with the inspector retained. Its client height must be at least
+180px and real circle clicks must succeed. Repeat for equal and irregular commit
+timestamps, after applying/clearing the branch filter and after Zoom/Reset. The
+inspector remains reachable through normal vertical scrolling without shrinking
+or overlaying the chart. Record both viewport and SVG geometry on failures.

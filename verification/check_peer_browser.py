@@ -48,12 +48,12 @@ with tempfile.TemporaryDirectory() as root:
       local=next(repo for repo in request(a,'GET','/api/repos')['items'] if repo['name']=='Local only')
       assert local['remote_url']=='https://example.test/local/only.git' and local['authority']=='local'
       page.get_by_role('button',name='Agents & peers',exact=True).click()
-      if not page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL)$')).count():
+      if not page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL|Peer A2A endpoint URL)$')).count():
         page.get_by_role('button', name=re.compile(r'^Register (?:a )?peer$')).click()
       display = page.get_by_role('textbox', name=re.compile(r'^(?:Name|Display name|Peer name)$'))
       if display.count(): display.fill('Remote verification peer')
-      page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL)$')).fill(b)
-      page.get_by_label(re.compile(r'^(?:(?:Peer bearer t|Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\)|Bearer token \(stored backend-only\)|Peer token \(write only\)|Access token \(stored backend-only\)|Outbound token \(write-only\)|Peer access token)$')).fill(token)
+      page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL|Peer A2A endpoint URL)$')).fill(request(b,'GET','/.well-known/agent-card.json')['url'])
+      page.get_by_label(re.compile(r'^(?:(?:Peer bearer t|Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\)|Bearer token \(stored backend-only\)|Peer token \(write only\)|Access token \(stored backend-only\)|Outbound token \(write-only\)|Peer access token|Peer bearer token)$')).fill(token)
       scope = page.get_by_role('dialog') if page.get_by_role('dialog').count() else page
       scope.get_by_role('button',name=re.compile(r'^(?:Register(?: peer)?|Save)$')).click()
       page.get_by_role('button',name=re.compile(r'^Send (?:a )?message(?: to .+)?$')).click()

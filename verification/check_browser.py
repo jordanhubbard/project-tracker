@@ -225,7 +225,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 if page.url != board_url: page.goto(board_url)
 
                         def heading_geometry():
-                            rows = page.locator('.board-list .list-name, .list .list-title').evaluate_all(r"""nodes => nodes.map(e => {
+                            rows = page.locator('.board-list .list-name, .list .list-title, .list .list-name').evaluate_all(r"""nodes => nodes.map(e => {
                                 const r=e.getBoundingClientRect();
                                 const range=document.createRange(); range.selectNodeContents(e);
                                 const text=range.getBoundingClientRect();
@@ -425,7 +425,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             heading = title_control(page, name=re.compile(
                                 r"^" + re.escape(destination.get('display_name', destination['name'])) + r"(?:\s|$)", re.I))
                             column = page.locator(f'[data-state-id="{destination["id"]}"]')
-                            if not column.count(): column = page.locator('.board-list').filter(has=page.get_by_role('heading', name=destination['name'], exact=True))
+                            if not column.count(): column = page.get_by_role('region', name=f'List {destination["name"]}', exact=True)
                             lists = column.get_by_role("list")
                             target = lists.first if lists.count() else column
                             card.drag_to(target)
@@ -462,7 +462,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             dialog.get_by_role('textbox', name=re.compile(r'^(?:List name|Rename list)$')).fill(new_name)
                             dialog.get_by_role('button', name='Rename', exact=True).click()
                             dialog.wait_for(state='hidden')
-                            page.get_by_role('heading', name=new_name, exact=True).wait_for()
+                            page.locator('.list-name').filter(has_text=re.compile('^'+re.escape(new_name)+'$')).wait_for()
                             saved = next(x for x in api('GET', f"/api/repos/{repo['id']}/states")['items'] if x['id'] == old['id'])
                             assert saved['name'] == new_name, saved
 
@@ -471,12 +471,10 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
 
                         def workflow_lifecycle():
                             added_name = f'Browser column {name}'
+                            page.once('dialog', lambda prompt: prompt.accept(added_name))
                             page.get_by_role('button', name='Add list', exact=True).click()
                             dialog = page.get_by_role('dialog')
-                            dialog.get_by_role('textbox', name='List name', exact=True).fill(added_name)
-                            dialog.get_by_role('button', name=re.compile(r'^(?:Save|Add list|Add)$')).click()
-                            dialog.wait_for(state='hidden')
-                            page.get_by_role('heading', name=added_name, exact=True).wait_for()
+                            page.locator('.list-name').filter(has_text=re.compile('^'+re.escape(added_name)+'$')).wait_for()
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
                             added = next(x for x in current if x['name'] == added_name)
                             page.get_by_role('button', name=f'Move list {added_name} left', exact=True).click()

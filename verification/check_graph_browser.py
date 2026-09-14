@@ -17,7 +17,10 @@ def commit_circle(node):
 def expect_selected_hash(page, commit_hash):
     inspector = page.locator("#commit-inspector, .commit-inspector, .inspector").first
     value = inspector.locator('dt').filter(has_text=re.compile(r'^Hash$')).locator('xpath=following-sibling::dd[1]')
-    expect(value).to_have_text(commit_hash, timeout=5000)
+    if value.count():
+        expect(value).to_have_text(commit_hash, timeout=5000)
+    else:
+        expect(inspector.get_by_text(re.compile(r'^Hash:\s*' + re.escape(commit_hash) + r'$'))).to_be_visible(timeout=5000)
 
 def label_overlaps(page):
     return page.locator('svg').first.evaluate("""svg => {
@@ -336,6 +339,11 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 far = timeline_positions[mainhash] - timeline_positions[basehash]
                                 if far <= 0 or abs(near / far - 0.1) > 0.03:
                                     issues.append(f"Timeline: 0/10/100-second spacing is not proportional: {timeline_positions}")
+                        layout_metrics = page.locator('.graph-scroller').evaluate_all("nodes => nodes.map(n => ({bounds:n.getBoundingClientRect().toJSON(),clientHeight:n.clientHeight,scrollHeight:n.scrollHeight,gridRows:getComputedStyle(n.parentElement).gridTemplateRows,svg:n.querySelector('svg')?.getBoundingClientRect().toJSON()}))")
+                        (out / f'{name}-{mode.lower()}-layout.json').write_text(json.dumps(layout_metrics, indent=2))
+                        if name == 'mobile' and layout_metrics:
+                            assert all(item['clientHeight'] >= 180 for item in layout_metrics), layout_metrics
+
                         commit_circle(commit_node(page, mergehash)).click()
                         expect_selected_hash(page, mergehash)
                         selected = page.locator("#commit-inspector, .commit-inspector, .inspector").first.inner_text()

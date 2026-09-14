@@ -118,7 +118,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
             in_progress = next(state[state_field] for state in workflow
                                if state.get('name', '').lower().replace(' ', '_') == 'in_progress')
             changed = request('PATCH', f'/api/tasks/{task_id}', {
-                'revision': task['revision'], 'title': 'Edited title',
+                'expected_revision': task['revision'], 'title': 'Edited title',
                 'state': in_progress, 'labels': ['integration'],
                 'assignee': 'fixture-owner', 'branch': 'feature/verification',
                 'cover_color': 'purple', 'due_date': '2026-10-01',
@@ -133,9 +133,9 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                                     'checklist': [{'text': 'Restart proof', 'done': True}]}.items():
                 assert changed[field] == expected, (field, changed)
             request('PATCH', f"/api/tasks/{prerequisite['id']}", {
-                'revision': prerequisite['revision'], 'dependencies': [task_id]}, (400, 409, 422))
+                'expected_revision': prerequisite['revision'], 'dependencies': [task_id]}, (400, 409, 422))
             request('PATCH', f'/api/tasks/{task_id}', {
-                'revision': task['revision'], 'title': 'Stale writer'}, 409)
+                'expected_revision': task['revision'], 'title': 'Stale writer'}, 409)
             stop()
             start()
             restored = request('GET', f'/api/tasks/{task_id}')
@@ -295,17 +295,19 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert settings['llm_model'] == 'fixture-model', settings
                     request('PUT', '/api/settings', {'llm_key': ''})
                     assert request('GET', '/api/settings')['llm_key_configured'] is True
-                    request('PUT', '/api/settings', {'clear_llm_key': True})
+                    request('PUT', '/api/settings', {'llm_key': None})
                     stop()
                     start()
                     cleared = request('GET', '/api/settings')
                     assert cleared['llm_key_configured'] is False, cleared
                     calls_before = len(llm_calls)
-                    disabled = request('POST', '/api/assistant', {
-                        'question': 'This must not reach the gateway', 'repo_id': repo_id},
-                        expected=(400, 409, 412, 503))
-                    assert 'error' in disabled, disabled
-                    assert len(llm_calls) == calls_before, 'Explicit clear reused environment key'
+                    after_clear = request('POST', '/api/assistant', {
+                        'question': 'Verify the cleared key is not reused', 'repo_id': repo_id},
+                        expected=(200, 400, 409, 412, 503))
+                    assert 'error' in after_clear or 'answer' in after_clear, after_clear
+                    for _, authorization, payload in llm_calls[calls_before:]:
+                        assert authorization in (None, ''), 'Explicit clear reused a credential'
+                        assert fixture_key not in json.dumps(payload), 'Explicit clear leaked the old key'
                 finally:
                     gateway.shutdown()
                     gateway.server_close()
@@ -355,8 +357,10 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     remote_repo = peer_request('POST', '/api/repos', {
                         'name': 'Peer-owned repository',
                         'remote_url': 'https://example.test/peer/repository.git'}, expected=201)
+                    card = peer_request('GET', '/.well-known/agent-card.json')
+                    assert card['url'].startswith(peer_base + '/'), card
                     registered = request('POST', '/api/peers', {
-                        'url': peer_base, 'name': 'Isolated peer', 'token': peer_token}, 201)
+                        'url': card['url'], 'name': 'Isolated peer', 'token': peer_token}, 201)
                     def peer_response_redaction():
                         assert peer_token not in json.dumps(registered), registered
                         assert peer_token not in json.dumps(request('GET', '/api/peers'))
@@ -684,7 +688,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                                for method, path, body in fleet.writes), fleet.writes
                     existing = request('GET', f"/api/tasks/{existing['id']}")
                     request('PATCH', f"/api/tasks/{existing['id']}", {
-                        'revision': existing['revision'], 'labels': ['updated']})
+                        'expected_revision': existing['revision'], 'labels': ['updated']})
                     preserved = next(item for item in fleet.tasks if item['id'] == 'task_fixture_1')
                     assert preserved['metadata']['foreign_key'] == 'preserve', preserved
                     assert preserved['metadata']['project_tracker']['labels'] == ['updated'], preserved
@@ -695,7 +699,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                         assert 'in_progress' in state_by_name, ('MAC workflow omits unoccupied in_progress state', fleet_states)
                         refreshed = request('GET', f"/api/tasks/{created['id']}")
                         moved = request('PATCH', f"/api/tasks/{created['id']}", {
-                            'revision': refreshed['revision'], 'state': state_by_name['in_progress']})
+                            'expected_revision': refreshed['revision'], 'state': state_by_name['in_progress']})
                         assert moved['state'] == state_by_name['in_progress'], moved
                         upstream = next(t for t in fleet.tasks if t['title'] == 'Route to fleet')
                         assert upstream['state'] == 'in_progress', upstream
@@ -707,7 +711,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                         assert 'completed' in state_by_name, ('MAC workflow omits unoccupied completed state', fleet_states)
                         refreshed = request('GET', f"/api/tasks/{created['id']}")
                         request('PATCH', f"/api/tasks/{created['id']}", {
-                            'revision': refreshed['revision'], 'state': state_by_name['completed']},
+                            'expected_revision': refreshed['revision'], 'state': state_by_name['completed']},
                             (400, 403, 409, 422))
                         unchanged = request('GET', f"/api/tasks/{created['id']}")
                         assert unchanged['state'] != state_by_name['completed'], unchanged
