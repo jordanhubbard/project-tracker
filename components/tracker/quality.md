@@ -5,6 +5,25 @@ kind: verification
 ---
 # Product verification and completeness
 
+## Confirmed regeneration regressions
+
+The native MAC dependency_identity check must add a newly selected prerequisite
+to an existing task, including the first edge on an empty dependency array.
+An identity map containing only existing edges silently drops these selections.
+Use the concrete scenarios in mac-integration.md through the real authenticated
+HTTP client and shared mutation service, checking actual writes and reimport.
+
+Git Graph and Timeline filtering must work when a checkout has both a branch
+named `feature` and a file named `feature` (likewise `main`). A bare
+`git rev-list feature` is ambiguous in that checkout. Resolve the selected branch
+to a qualified ref or commit and terminate revision arguments with `--` where
+required. A Git command failure must not masquerade as successful empty history.
+The native `["git-selfcheck"]` must create this branch/filename collision and
+verify the service's filtered graph contains exactly the reachable commits.
+Fold this assertion into its refs check or an equivalent executed native case.
+Retain the equal-time and irregular-time browser fixtures, selection, branch
+task/session associations, zoom, keyboard navigation and task editing.
+
 ## Native MAC regression gate
 
 The native test suite must execute the MAC integration scenarios below, not merely

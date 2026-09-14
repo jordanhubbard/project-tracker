@@ -10,8 +10,9 @@ and LLM credentials.
 - [Active work and verification](docs/roadmap/active-work.md)
 - [Project guide](docs/README.md)
 
-MAC synchronization repair is in progress under TRACK-004. Live read-only import
-passes on the first repair candidate; edit-preservation and failure-atomicity gates
+MAC synchronization repair is in progress under TRACK-004. Live import, atomic
+failure recovery and unresolved-reference/long-text edit preservation pass on the
+latest candidate. New dependency selection and a Git branch-filter regression
 remain open. See the active work record for current acceptance status.
 
 ## Run

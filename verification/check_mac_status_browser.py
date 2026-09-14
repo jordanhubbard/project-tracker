@@ -46,7 +46,7 @@ with tempfile.TemporaryDirectory() as tmp, MacFixture() as fleet:
    outage_events=overview.evaluate('window.probeEvents');assert outage_events,outage_events
    overview.wait_for_timeout(11000)
    assert overview.evaluate('window.probeEvents')==outage_events,'Repeated failure emitted duplicate repo updates'
-   board.locator('.card-title').filter(has_text=re.compile('^'+re.escape(task['title'])+'$')).click();dialog=board.get_by_role('dialog')
+   board.locator('.card-title').filter(has_text=re.compile('^'+re.escape(task['title'])+'$')).or_(board.get_by_role('button',name='Open the task '+task['title'],exact=True)).click();dialog=board.get_by_role('dialog')
    dialog.get_by_label('Title',exact=True).fill('Outage must reject this edit');dialog.get_by_role('button',name='Save',exact=True).click()
    expect(dialog.get_by_role('alert')).to_contain_text(re.compile('unavailable|offline|503|outage|failed',re.I))
    assert request(f"/api/repos/{repo['id']}/tasks")['items']==tasks

@@ -11,7 +11,7 @@ from playwright.sync_api import sync_playwright, expect
 from service_response import entity_response
 
 def open_task(page, title):
-    control = page.get_by_role('button', name=f'Edit task {title}', exact=True).or_(page.get_by_role('button', name=f'Open task {title}', exact=True)).or_(page.get_by_role('button', name=f'Edit {title}', exact=True))
+    control = page.get_by_role('button', name=f'Edit task {title}', exact=True).or_(page.get_by_role('button', name=f'Open task {title}', exact=True)).or_(page.get_by_role('button', name=f'Edit {title}', exact=True)).or_(page.get_by_role('button', name=f'Open the task {title}', exact=True))
     if control.count():
         control.first.click(); return
     card = page.locator('[draggable="true"]').filter(has=page.get_by_text(title, exact=True))
@@ -37,7 +37,7 @@ def list_control(page, action, name):
     page.get_by_role('button', name=re.compile(r'^(?:List menu for ' + re.escape(name) + r'|Open ' + re.escape(name) + r' list menu|List ' + re.escape(name) + r' menu|Open the list menu for ' + re.escape(name) + r'|' + re.escape(name) + r' list menu)$')).click()
     menu_scope = page.get_by_role('dialog').or_(page.get_by_role('group', name=f'{name} list menu', exact=True)).or_(page.get_by_role('menu'))
     menu_action = menu_scope.get_by_role('button', name=f'{action} list', exact=True)
-    inline_name = page.get_by_role('dialog').get_by_role('textbox', name='List name', exact=True)
+    inline_name = page.get_by_role('dialog').get_by_role('textbox', name=re.compile(r'^(?:List name|Rename this list)$'))
     inline_destination = page.get_by_role('dialog').get_by_role('combobox', name=re.compile('Destination|Move.*to',re.I))
     if action == 'Rename' and inline_name.count(): return
     if action == 'Delete' and inline_destination.count(): return
@@ -466,8 +466,8 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             new_name = f'Ready {name}'
                             list_control(page, 'Rename', old['name'])
                             dialog = page.get_by_role('dialog')
-                            dialog.get_by_role('textbox', name=re.compile(r'^(?:List name|Rename list)$')).fill(new_name)
-                            dialog.get_by_role('button', name=re.compile(r'^(?:Save|Rename list)$')).click()
+                            dialog.get_by_role('textbox', name=re.compile(r'^(?:List name|Rename list|Rename this list)$')).fill(new_name)
+                            dialog.get_by_role('button', name=re.compile(r'^(?:Save|Rename(?: list)?)$')).click()
                             dialog.wait_for(state='hidden')
                             page.locator('.list-name').filter(has_text=re.compile('^'+re.escape(new_name)+'$')).wait_for()
                             saved = next(x for x in api('GET', f"/api/repos/{repo['id']}/states")['items'] if x['id'] == old['id'])
@@ -478,10 +478,22 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
 
                         def workflow_lifecycle():
                             added_name = f'Browser column {name}'
+                            before_ids={x['id'] for x in api('GET', f"/api/repos/{repo['id']}/states")['items']}
                             page.get_by_role('button', name=re.compile(r'^(?:\+ )?Add list$')).click()
                             dialog = page.get_by_role('dialog')
-                            dialog.get_by_label('List name', exact=True).fill(added_name)
-                            dialog.get_by_role('button', name='Add list', exact=True).click()
+                            deadline=time.monotonic()+5
+                            while time.monotonic()<deadline:
+                                created=[x for x in api('GET', f"/api/repos/{repo['id']}/states")['items'] if x['id'] not in before_ids]
+                                if dialog.count() or created:break
+                                page.wait_for_timeout(100)
+                            if created:
+                                assert len(created)==1,created
+                                list_control(page,'Rename',created[0]['name'])
+                                dialog.get_by_role('textbox',name=re.compile(r'^(?:List name|Rename list|Rename this list)$')).fill(added_name)
+                                dialog.get_by_role('button',name=re.compile(r'^(?:Save|Rename(?: list)?)$')).click()
+                            else:
+                                dialog.get_by_label('List name',exact=True).fill(added_name)
+                                dialog.get_by_role('button',name='Add list',exact=True).click()
                             dialog.wait_for(state='hidden')
                             page.locator('.list-name').filter(has_text=re.compile('^'+re.escape(added_name)+'$')).wait_for()
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
@@ -588,7 +600,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             gateway_control(page).fill(
                                 "http://127.0.0.1:9/v1"
                             )
-                            page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?(?:API )?key", re.I)).fill(
+                            page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant|Gateway) )?(?:API )?key", re.I)).fill(
                                 "disposable-browser-secret"
                             )
                             page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?Model$", re.I)).fill(
@@ -608,7 +620,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 open_settings()
                             gateway_control(page).wait_for(state="visible")
                             assert (
-                                page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?(?:API )?key", re.I)).input_value()
+                                page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant|Gateway) )?(?:API )?key", re.I)).input_value()
                                 == ""
                             )
                             page.reload(wait_until="domcontentloaded")
@@ -624,7 +636,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 == "browser-fixture-model"
                             )
                             assert (
-                                page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant) )?(?:API )?key", re.I)).input_value()
+                                page.get_by_label(re.compile(r"^(?:(?:LLM|Assistant|Gateway) )?(?:API )?key", re.I)).input_value()
                                 == ""
                             )
 

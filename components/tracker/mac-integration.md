@@ -5,6 +5,19 @@ kind: integration
 ---
 # MAC integration behavior
 
+## Newly selected dependency regression
+
+For an existing MAC task whose raw dependencies are `[prerequisite, foreign]`,
+select another same-project task that is not already an edge. PATCH
+`dependencies: [trackerPrerequisiteId, trackerNewId]` must write MAC IDs
+`[prerequisite, new, foreign]`. Build the translation map from all selectable
+same-project tasks, not only the task's current upstream dependencies. Never
+silently discard a newly selected valid tracker ID. Also verify adding the first
+dependency to a task whose upstream array is empty, deselecting an existing
+resolved edge, and retaining unresolved/foreign references on each edit. Inspect
+the authenticated fixture's actual PUT body and the reimported task, not just the
+pure merge helper. These checks belong in mac-selfcheck's dependency_identity gate.
+
 ## Observed repair failures that must be closed
 
 An imported task can have dependencies `[prerequisite, missing, foreign]`, where

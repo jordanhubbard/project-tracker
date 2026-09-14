@@ -83,11 +83,13 @@ under TRACK-004. Earlier scoped evidence is in
 - **Implementation:**
   - [x] Specify order-independent upstream dependency import and outbound identity translation with fleet-scale reconciliation.
   - [ ] Regenerate the exported application through the supported lifecycle. Candidate
-    b37824adbd2ff5093391 passes full live import but fails three repair gates; see
-    [candidate evidence](../../verification/track004-candidate1.json). Next action:
-    close atomic snapshot, unresolved-reference/unchanged-long-text edit preservation
-    and non-JSON outage regressions.
-    Native acceptance must execute the new MAC self-check, not only pure vectors.
+    7a1f3cd0aa4d08717013 passes 46 native tests, fleet import, atomic rollback,
+    unresolved-reference/long-text edits and non-JSON outage checks. See
+    [candidate evidence](../../verification/track004-candidate3.json).
+  - [ ] Correct newly selected dependency translation on existing MAC tasks; native
+    regression must inspect actual upstream writes, including the first edge.
+  - [ ] Preserve Git filtering during regeneration when a branch and filename collide;
+    verify exact reachable hashes and both timestamp browser fixtures.
 - **Evidence:**
   - [ ] Native authenticated fixtures cover reverse-order dependencies, missing and cross-project references, unchanged polls, deletion beyond 200 tasks, failure recovery and nonoverlapping slow synchronization.
   - [ ] Replay the real hub snapshot and verify complete project/task counts and dependency preservation.

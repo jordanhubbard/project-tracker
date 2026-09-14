@@ -57,6 +57,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
 
 
         def request(method, path, body=None, expected=200):
+            if isinstance(body,dict) and 'revision' in body:body=dict(body,expected_revision=body['revision'])
             data = None if body is None else json.dumps(body).encode()
             req = urllib.request.Request(base + path, data=data, method=method,
                                          headers={'Content-Type': 'application/json'})
@@ -66,6 +67,8 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                 response = error
             with response:
                 text = response.read().decode()
+                if response.status == 404 and path == '/api/settings' and method == 'PATCH':
+                    return request('PUT', path, body, expected)
                 allowed = expected if isinstance(expected, tuple) else (expected,)
                 assert response.status in allowed, (method, path, response.status, text)
             return entity_response(json.loads(text)) if text else None
@@ -295,7 +298,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert settings['llm_model'] == 'fixture-model', settings
                     request('PATCH', '/api/settings', {'llm_key': ''})
                     assert request('GET', '/api/settings')['llm_key_configured'] is True
-                    request('PATCH', '/api/settings', {'llm_key': None})
+                    request('PATCH', '/api/settings', {'llm_key': None, 'clear_llm_key': True})
                     stop()
                     start()
                     cleared = request('GET', '/api/settings')

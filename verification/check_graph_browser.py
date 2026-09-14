@@ -16,6 +16,7 @@ def commit_circle(node):
 
 def expect_selected_hash(page, commit_hash):
     inspector = page.locator("#commit-inspector, .commit-inspector, .inspector").first
+    expect(inspector).to_contain_text(commit_hash, timeout=5000)
     value = inspector.locator('dt').filter(has_text=re.compile(r'^Hash$')).locator('xpath=following-sibling::dd[1]')
     if value.count():
         expect(value).to_have_text(commit_hash, timeout=5000)
