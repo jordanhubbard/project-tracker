@@ -4,6 +4,7 @@
 Usage: python verification/check_browser.py /path/to/main.js
 This checks board behavior; graph and protocol checks remain separate.
 """
+from test_tools import NODE, CHROME
 
 import argparse, json, os, re, socket, subprocess, tempfile, time, traceback, urllib.request
 from pathlib import Path
@@ -49,7 +50,7 @@ def task_state(st):
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("entrypoint", type=Path)
-parser.add_argument("--node", default="/opt/homebrew/opt/node@22/bin/node")
+parser.add_argument("--node", default=NODE)
 parser.add_argument("--output", type=Path, default=Path("_build/browser-behavior"))
 args = parser.parse_args()
 out = args.output
@@ -142,7 +143,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
         with sync_playwright() as p:
             browser = p.chromium.launch(
                 headless=True,
-                executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+                executable_path=CHROME,
             )
             evidence = []
             try:
@@ -344,7 +345,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             dialog = page.get_by_role('dialog')
                             dialog.get_by_label(re.compile(r'^Assignee$', re.I)).fill('QA operator')
                             dialog.get_by_label(re.compile(r'^Branch$', re.I)).fill('feature/browser-verification')
-                            dialog.get_by_label(re.compile(r'^Due date(?: \(YYYY-MM-DD\))?$', re.I)).fill('2026-10-02')
+                            dialog.get_by_label(re.compile(r'^Due date(?: \(YYYY-MM-DD\))?.*$', re.I)).fill('2026-10-02')
                             dialog.get_by_role('combobox', name=re.compile(r'^Cover(?: colou?r)?$', re.I)).select_option('purple')
                             priority = dialog.get_by_label(re.compile(r'^Priority'))
                             if priority.evaluate('e=>e.tagName') == 'SELECT': priority.select_option('2')
@@ -587,24 +588,20 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             ).wait_for()
                             expect(page.locator('main:visible')).to_contain_text('Remote attribute update visible', timeout=5000)
                             if name == "mobile":
-                                navigation = (
-                                    page.get_by_role(
-                                        "button", name="Activity", exact=True, include_hidden=True
-                                    )
-                                    .or_(
-                                        page.get_by_role(
-                                            "link", name="Activity", exact=True, include_hidden=True
-                                        )
-                                    )
-                                    .bounding_box()
-                                )
-                                if navigation and navigation["x"] >= 0 and page.get_by_role("button", name=re.compile("^menu$|sidebar|(?:Toggle|Show|Hide) repositories", re.I)).count():
-                                    page.get_by_role(
-                                        "button",
-                                        name=re.compile(
-                                            "^menu$|sidebar|(?:Toggle|Show|Hide) repositories", re.I
-                                        ),
-                                    ).click()
+                                menu = page.get_by_role("button", name=re.compile("^menu$|sidebar|(?:Toggle|Show|Hide) repositories", re.I))
+                                expect(menu).to_have_attribute("aria-expanded", "false")
+                                menu.click()
+                                expect(menu).to_have_attribute("aria-expanded", "true")
+                                page.keyboard.press("Escape")
+                                expect(menu).to_have_attribute("aria-expanded", "false")
+                                menu.click()
+                                expect(menu).to_have_attribute("aria-expanded", "true")
+                                close = page.get_by_role("button", name=re.compile(r"^Close (?:menu|navigation|sidebar)$", re.I))
+                                if close.count() and close.first.is_visible():
+                                    close.first.click()
+                                else:
+                                    menu.click()
+                                expect(menu).to_have_attribute("aria-expanded", "false")
 
                         check("activity navigation shows task events", activity)
 

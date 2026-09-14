@@ -7,6 +7,31 @@ kind: verification
 
 ## Confirmed regeneration regressions
 
+Fleet identity indexing must use exactly the same composite key for insertion and
+retrieval, including identical delimiters and encoding. Candidate14 introduced a
+NUL-versus-space key mismatch during a late scale optimization: all seeded tasks
+were skipped during projection. Do not silently skip an established task identity.
+Keep first import, dependency-only and combined changes, unchanged polling and
+large-response assertions in the complete native run after every optimization.
+Use one key constructor or nested maps if indexing composite identities.
+
+Invalid local task dependencies (self-reference, unknown ID, cross-repository ID
+or a cycle) are client input errors. Through actual HTTP create/update endpoints,
+return 400, 409 or 422 with a useful validation message, never generic HTTP500.
+Reject atomically: retain all existing task fields, revisions and durable/live
+change events, and create no task on an invalid create. Native service acceptance
+must exercise these HTTP contracts as well as direct validation. Preserve imported
+MAC dependency semantics; upstream cycles remain readable upstream data.
+
+At mobile390x844, an open navigation drawer must retain a visible, clickable close
+control. Menu toggling, Escape and backdrop dismissal must work and aria-expanded
+must reflect actual visibility. Selecting a navigation destination closes the
+drawer and leaves Activity content and the Settings control usable without pointer
+interception. Test open -> Activity -> Settings, reopen -> Escape, and reopen ->
+close control using normal pointer/keyboard actions, without forced clicks or DOM
+mutation. Keep all existing desktop/mobile task and workflow interactions.
+
+
 A successful complete fleet snapshot must reconcile disappeared task IDs across all
 cached MAC repositories, including repositories no longer in current project discovery.
 Use the complete upstream task-ID set, preserve local tasks and repository metadata,

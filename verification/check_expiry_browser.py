@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Verify live expiry of a disposable heartbeat, without another application request."""
+from test_tools import NODE, CHROME
 import argparse
 import json
 import os
@@ -16,7 +17,7 @@ from service_response import entity_response
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('entrypoint', type=Path)
-parser.add_argument('--node', default='/opt/homebrew/opt/node@22/bin/node')
+parser.add_argument('--node', default=NODE)
 parser.add_argument('--output', type=Path, default=Path('_build/expiry-browser'))
 args = parser.parse_args()
 out = args.output
@@ -56,7 +57,7 @@ with tempfile.TemporaryDirectory(prefix='tracker-expiry-') as data:
         started = time.monotonic()
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(
-                executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
+                executable_path=CHROME)
             page = browser.new_page(viewport={'width': 1440, 'height': 1000})
             page.set_default_timeout(5000)
             page.goto(base)

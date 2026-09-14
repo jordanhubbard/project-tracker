@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Verify real Git ancestry and browser graph interactions in an isolated service."""
+from test_tools import NODE, CHROME
 
 import argparse, json, os, re, socket, subprocess, sys, tempfile, time, urllib.request
 from pathlib import Path
@@ -42,7 +43,7 @@ def label_overlaps(page):
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("entrypoint", type=Path)
-parser.add_argument("--node", default="/opt/homebrew/opt/node@22/bin/node")
+parser.add_argument("--node", default=NODE)
 parser.add_argument(
     "--output", type=Path, default=Path("_build/graph-browser-behavior")
 )
@@ -191,7 +192,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
         with sync_playwright() as p:
             browser = p.chromium.launch(
                 headless=True,
-                executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+                executable_path=CHROME,
             )
             evidence = []
             try:

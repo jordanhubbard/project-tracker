@@ -81,6 +81,10 @@ under TRACK-004. Earlier scoped evidence is in
 - **Conclusion:** Live import aborts on valid upstream dependency IDs after three projects; requests also time out. Correct upstream/local identity translation, complete fleet reconciliation and observable synchronization failures. Use isolated read-only live verification; production writes remain deliberate UI actions.
 - **Depends on:** none
 - **Implementation:**
+  - [ ] Correct candidate14's late fleet identity-index regression: insertion and lookup must use the same composite key; retain real dependency-only update assertions.
+  - [ ] Return a useful client-validation error for invalid local dependencies, preserving rows, revisions and events on rejection.
+  - [ ] Keep the mobile navigation drawer dismissible and close it after navigation; verify Activity and Settings remain reachable.
+  - [ ] Re-run the complete native lifecycle after these corrections. Candidate14 was rejected; provisional earlier-source checks do not establish acceptance.
   - [x] Specify order-independent upstream dependency import and outbound identity translation with fleet-scale reconciliation.
   - [ ] Regenerate the exported application through the supported lifecycle. Candidate
     7a1f3cd0aa4d08717013 passes 46 native tests, fleet import, atomic rollback,
@@ -214,8 +218,9 @@ Git history and ignored diagnostics; current repair status is recorded above.
 
 - **Priority:** P0
 - **Owner:** project
-- **Direction:** Make the first release on GitHub.
+- **Direction:** Make the first release on GitHub. The user explicitly authorizes native npm packaging with archive verification and GitHub upload for this cut.
 - **Conclusion:** Publish v1.0.0 from an accepted application and complete documentation. Replace the inherited sample release gate with tracker acceptance, resolve current native failures, package and verify artifacts, land the repair, and verify remote release publication.
+- **Packaging follow-up:** Literate AI 1.0.1 cannot build npm packages. Filed [upstream issue #411](https://github.com/NVIDIA-dev/literate-ai/issues/411), assigned to milestone 1.1. Use native `npm pack` for this release, bind it to accepted source and verify extraction, installation, runtime and uploaded bytes.
 - **Depends on:** TRACK-004, TRACK-006
 - **Implementation:**
   - [ ] Configure and validate the real tracker release policy and artifact packaging.

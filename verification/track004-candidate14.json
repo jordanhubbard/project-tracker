@@ -1,0 +1,28 @@
+{
+  "candidate": "f765bab157ca4aed7794a9dfa5ba843ef866c6b7f1754f9e0d7b4320e8058c77",
+  "authority_commit": "7f315cb10e62d4b084d58225d562e7aa0214426b",
+  "accepted": false,
+  "native_failure": "dependency_identity: the new tracker-ID relationship must be present",
+  "cause": "Late optimization seeded an identity index using a NUL separator but retrieved using a space separator, skipping every task projection.",
+  "independent_provisional_checks": {
+    "scope": "Earlier immutable unmodified generated snapshot; not the final rejected source.",
+    "passed": [
+      "authenticated complete fleet import and dependencies",
+      "default 60-second stalled-body cleanup and recovery",
+      "MAC write preservation and atomic rollback",
+      "all lifecycle states and persistence",
+      "Git native diagnostics and all graph browser fixtures",
+      "service native diagnostics",
+      "desktop board interactions",
+      "peer registration and remote task creation",
+      "MAC outage recovery across open views",
+      "login and session expiry",
+      "documentation runtime examples"
+    ],
+    "failed": [
+      "HTTP dependency-cycle validation returned 500",
+      "mobile drawer intercepted Menu and Settings after Activity selection"
+    ]
+  },
+  "next_action": "Regenerate with identity-index consistency, typed dependency HTTP errors and dismissible mobile navigation; rerun all final acceptance."
+}

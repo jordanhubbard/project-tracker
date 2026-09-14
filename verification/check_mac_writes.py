@@ -4,6 +4,7 @@
 Never reads production credentials or writes production tasks. Output is private QA
 data; use a fresh --output directory for each run.
 """
+from test_tools import NODE, CHROME
 
 import argparse, http.server, json, os, socket, subprocess, threading, time, urllib.request, urllib.error
 from pathlib import Path
@@ -155,7 +156,7 @@ env.update(
 log = (out / "server.log").open("w")
 p = subprocess.Popen(
     [
-        "/opt/homebrew/opt/node@22/bin/node",
+        NODE,
         str(source / "main.js"),
         "--litai-serve",
         "--host",
@@ -417,7 +418,7 @@ try:
 
         with sync_playwright() as pw:
             browser = pw.chromium.launch(
-                executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+                executable_path=CHROME
             )
             for viewport_name, width, height in [
                 ("desktop", 1440, 1000),

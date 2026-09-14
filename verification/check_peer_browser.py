@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+from test_tools import NODE, CHROME
 import argparse, json, os, re, socket, subprocess, sys, tempfile, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from service_response import entity_response
 parser = argparse.ArgumentParser(description="Verify peer registration and remote task creation through Chrome.")
 parser.add_argument('entrypoint', type=Path)
-parser.add_argument('--node', default='/opt/homebrew/opt/node@22/bin/node')
+parser.add_argument('--node', default=NODE)
 parser.add_argument('--output', type=Path, default=Path('_build/peer-browser'))
 args = parser.parse_args()
 entry = args.entrypoint.resolve(strict=True)
@@ -33,7 +34,7 @@ with tempfile.TemporaryDirectory() as root:
     a=start('a'); token='disposable-ui-peer-token'; b=start('b',token)
     remote=request(b,'POST','/api/repos',{'name':'Remote only','remote_url':'https://example.test/remote/only.git'},token)
     with sync_playwright() as p:
-      browser=p.chromium.launch(executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
+      browser=p.chromium.launch(executable_path=CHROME)
       page=browser.new_page(viewport={'width':1440,'height':1000});page.set_default_timeout(5000)
       errors=[]
       page.on('pageerror', lambda e: (errors.append(str(e)), (out/'page-errors.json').write_text(json.dumps(errors))))
@@ -53,7 +54,7 @@ with tempfile.TemporaryDirectory() as root:
       display = page.get_by_role('textbox', name=re.compile(r'^(?:Name|Display name|Peer name)$'))
       if display.count(): display.fill('Remote verification peer')
       page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL|Peer A2A endpoint URL)$')).fill(b)
-      page.get_by_label(re.compile(r'^(?:(?:Peer bearer t|Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\)|Bearer token \(stored backend-only\)|Peer token \(write only\)|Access token \(stored backend-only\)|Outbound token \(write-only\)|Peer access token|Peer bearer token|Access token)$')).and_(page.locator('input:visible')).fill(token)
+      page.get_by_label(re.compile(r'^(?:(?:Peer bearer t|Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\)|Bearer token \(stored backend-only\)|Peer token \(write only\)|Access token \(stored backend-only\)|Outbound token \(write-only\)|Peer access token|Peer bearer token|Access token).*$')).and_(page.locator('input:visible')).fill(token)
       scope = page.get_by_role('dialog') if page.get_by_role('dialog').count() else page
       scope.get_by_role('button',name=re.compile(r'^(?:Register(?: peer)?|Save)$')).click()
       page.get_by_role('button',name=re.compile(r'^Send (?:a )?message(?: to .+)?$')).click()

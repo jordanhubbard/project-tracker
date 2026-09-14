@@ -40,3 +40,5 @@ actually been verified. Framework design references cover [skill boundaries](arc
 [authority learning](architecture/authority-learning-loop.md),
 [mission composition](architecture/mission-specification-composition.md), and
 [design traceability](architecture/design-traceability.md).
+
+- [Releases](user/releases.md): verified npm archives, installation and release evidence.

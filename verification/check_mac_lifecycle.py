@@ -4,6 +4,7 @@
 Never reads production credentials or writes production tasks. Output is private QA
 data; use a fresh --output directory for each run.
 """
+from test_tools import NODE, CHROME
 
 import argparse, copy, http.server, json, os, signal, socket, subprocess, threading, time, urllib.request
 from pathlib import Path
@@ -129,7 +130,7 @@ def api(route, method="GET", body=None):
 def launch():
     return subprocess.Popen(
         [
-            "/opt/homebrew/opt/node@22/bin/node",
+            NODE,
             str(source / "main.js"),
             "--litai-serve",
             "--host",
@@ -240,6 +241,17 @@ try:
         assert restarted[key]["revision"] == previous["revision"]
         assert state_of(restarted[key]) == state_of(previous)
     result["checks"]["restart"] = True
+    # Cached tasks can be visible before the restarted process completes its first
+    # upstream snapshot. Absence must not be classified from that cache alone.
+    def restarted_sync_completed():
+        health = api("/health")
+        return any(value is True for value in (
+            health.get("last_sync_ok"), health.get("mac_last_sync_ok"),
+            health.get("mac", {}).get("last_sync_ok"),
+            health.get("fleet", {}).get("last_sync_ok"),
+        ))
+    eventually(restarted_sync_completed)
+    result["checks"]["post_restart_synchronization_completed"] = True
     # A complete successful snapshot may remove an entire discovered project.
     # Preserve a separate local task while sweeping every cached MAC repository.
     repo_ids = {r["mac_project"]: r["id"] for r in api("/api/repos")["items"]}

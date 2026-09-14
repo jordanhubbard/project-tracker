@@ -4,6 +4,7 @@
 Never reads production credentials or writes production tasks. Output is private QA
 data; use a fresh --output directory for each run.
 """
+from test_tools import NODE, CHROME
 
 import argparse, http.server, json, os, select, signal, socket, subprocess, threading, time, urllib.request
 from pathlib import Path
@@ -102,7 +103,7 @@ env.update(
 log = (out / "server.log").open("w")
 child = subprocess.Popen(
     [
-        "/opt/homebrew/opt/node@22/bin/node",
+        NODE,
         str(entrypoint),
         "--litai-serve",
         "--host",

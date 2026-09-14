@@ -70,7 +70,12 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                 if response.status == 404 and path == '/api/settings' and method == 'PATCH':
                     return request('PUT', path, body, expected)
                 allowed = expected if isinstance(expected, tuple) else (expected,)
-                assert response.status in allowed, (method, path, response.status, text)
+                if response.status not in allowed:
+                    failure = (method, path, response.status, text)
+                    if not diagnostic_continue:
+                        raise AssertionError(failure)
+                    diagnostic_failures.append({'phase': 'HTTP response contract', 'error': str(failure)[:2000]})
+                    print(f'Diagnostic HTTP failure: {failure}', file=sys.stderr)
             return entity_response(json.loads(text)) if text else None
 
         def start():
