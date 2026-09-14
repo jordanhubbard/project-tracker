@@ -81,6 +81,7 @@ under TRACK-004. Earlier scoped evidence is in
 - **Conclusion:** Live import aborts on valid upstream dependency IDs after three projects; requests also time out. Correct upstream/local identity translation, complete fleet reconciliation and observable synchronization failures. Use isolated read-only live verification; production writes remain deliberate UI actions.
 - **Depends on:** none
 - **Implementation:**
+  - [ ] Rebind the reviewed persistent-service acceptance contract to the current specification set; candidate15 stopped at its stale binding before acceptance. Keep every isolated service probe and external data-directory setting.
   - [ ] Correct candidate14's late fleet identity-index regression: insertion and lookup must use the same composite key; retain real dependency-only update assertions.
   - [ ] Return a useful client-validation error for invalid local dependencies, preserving rows, revisions and events on rejection.
   - [ ] Keep the mobile navigation drawer dismissible and close it after navigation; verify Activity and Settings remain reachable.
