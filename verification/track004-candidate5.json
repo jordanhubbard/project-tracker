@@ -1,0 +1,85 @@
+{
+  "status": "interrupted_before_acceptance",
+  "component_revision": "120ff97d5dafe4cc075f2b11b7adb600b56f17381d67dff8b65bcc86274a4cb0",
+  "scope": "Unmodified provisional generated backend and native diagnostic modules; no final entrypoint or full artifact acceptance. All network fixtures are synthetic.",
+  "saved_snapshot": {
+    "provisional": true,
+    "ok": true,
+    "rollback": true,
+    "recovery_events": 2,
+    "field_mismatches": {},
+    "projects": 28,
+    "project_tasks": 9077,
+    "same_project_dependencies": 8210,
+    "unchanged_poll": true
+  },
+  "focused_git": {
+    "ok": true,
+    "provisional": true,
+    "branch_filename_collision": true,
+    "feature_commits": 2,
+    "main_commits": 4,
+    "unknown_branch_is_error": true
+  },
+  "focused_edits": {
+    "ok": false,
+    "provisional": true,
+    "checks": [
+      {
+        "name": "first dependency on an existing empty task",
+        "ok": true
+      },
+      {
+        "name": "new dependency on an existing task preserves unresolved edges",
+        "ok": true
+      },
+      {
+        "name": "full edit preserves long text and references",
+        "ok": true
+      },
+      {
+        "name": "unchanged poll after full edit preserves revision and dependency projection",
+        "ok": false,
+        "error": "Expected values to be strictly equal:\n\n6 !== 5\n"
+      },
+      {
+        "name": "explicit removal removes only missing reference",
+        "ok": true
+      },
+      {
+        "name": "deselect resolved dependency retains foreign reference",
+        "ok": true
+      }
+    ]
+  },
+  "native_mac_diagnostic": {
+    "ok": true,
+    "checks": {
+      "dependency_identity": true,
+      "unresolved_preservation": true,
+      "explicit_removal": true,
+      "snapshot_rollback": true,
+      "commit_events": true,
+      "non_json_outage": true,
+      "complete_reconciliation": true,
+      "serialized_reads": true,
+      "restart_persistence": true
+    }
+  },
+  "body_timeout": {
+    "ok": false,
+    "configured_read_budget_seconds": 60,
+    "abort_signal_milliseconds": 60002,
+    "fixture_watchdog_milliseconds": 70002,
+    "client_settled_milliseconds": 70010.100833,
+    "finding": "After receiving HTTP200 headers and one byte of an incomplete body, abort fires but body consumption remains pending. Only forced fixture socket closure settles the request. An earlier uninstrumented default request remained pending for more than three minutes before termination. A one-second request timeout control succeeds.",
+    "native_coverage_gap": "The provisional serialized_reads check covers overlap and an8500ms successful delay, but does not execute a stalled-body assertion."
+  },
+  "dependency_projection": {
+    "raw_upstream_references_preserved": true,
+    "revision_before_unchanged_poll": 5,
+    "revision_after_unchanged_poll": 6,
+    "finding": "Snapshot import resolves across the whole fleet, but the write response imports same-project links only. An unchanged poll restores the foreign link and adds an extra revision."
+  },
+  "privacy": "Only aggregate and synthetic-fixture evidence is committed."
+}

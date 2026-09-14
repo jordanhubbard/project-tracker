@@ -10,11 +10,11 @@ and LLM credentials.
 - [Active work and verification](docs/roadmap/active-work.md)
 - [Project guide](docs/README.md)
 
-MAC synchronization repair is in progress under TRACK-004. Earlier candidates
-passed scoped fleet, edit and browser checks. The latest provisional backend
-fixes dependency selection and Git branch filtering, but incorrectly maps several
-MAC task states to open. Lifecycle preservation and final acceptance remain open;
-see the active work record for evidence and current status.
+MAC synchronization repair is in progress under TRACK-004. The latest provisional
+backend preserves the captured fleet's task states and passes focused dependency
+and Git checks. A stalled response-body timeout and post-edit dependency-projection
+consistency remain open. See the active work record for evidence and acceptance
+status.
 
 ## Run
 

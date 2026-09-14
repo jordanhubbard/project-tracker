@@ -1,6 +1,6 @@
 # Design traceability
 
-<!-- literate-ai:authority-reviewed sha256:dff3c2c0df7073b400aba439d40022d26b89ad3904fb4b7dbe490dd2f2858da9 -->
+<!-- literate-ai:authority-reviewed sha256:6808a1c7a0977d8f5195387d3034708f65ce7ed42553f21ac8bde39f4833912c -->
 
 [Project guide](../README.md) → design traceability
 
@@ -29,3 +29,8 @@ observed states before task projection. Local workflow defaults remain separate.
 Native fixtures check state preservation, empty columns, later state discovery and
 restart. The portable acceptance contract keeps disposable storage outside the
 packaged source using the framework's assigned port.
+
+The MAC response deadline bounds body consumption independently of abort-signal
+delivery and closes the stalled response connection. Native fixtures exercise the
+default read budget. Mutation responses and complete polls share the same
+dependency projection, preventing transient link changes and duplicate revisions.

@@ -96,6 +96,14 @@ under TRACK-004. Earlier scoped evidence is in
     checks. Correct the MAC-only fixture's unsupported in_progress assumption,
     retain local defaults, and add native state-preservation coverage. See
     [candidate-four evidence](../../verification/track004-candidate4.json).
+  - [ ] Enforce a deadline on response-body consumption itself. Candidate five's
+    provisional backend preserves all captured states and passes its nine native
+    MAC flags, but a stalled successful response stays pending after the 60-second
+    abort signal. Require the real default-budget regression in the native gate.
+  - [ ] Keep the dependency projection identical after a write and the next
+    unchanged poll. Candidate five temporarily drops a cross-project link from
+    that projection, then restores it with an extra revision. Raw upstream
+    references remain intact. See [candidate-five evidence](../../verification/track004-candidate5.json).
 - **Evidence:**
   - [ ] Native authenticated fixtures cover reverse-order dependencies, missing and cross-project references, unchanged polls, deletion beyond 200 tasks, failure recovery and nonoverlapping slow synchronization.
   - [ ] Replay the real hub snapshot and verify complete project/task counts and dependency preservation.

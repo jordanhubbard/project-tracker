@@ -7,6 +7,18 @@ kind: verification
 
 ## Confirmed regeneration regressions
 
+Execute the stalled HTTP200 body scenario from mac-integration.md in the native
+serialized_reads check using the actual default60-second read budget. An8500ms
+successful read plus a true flag is insufficient: a prior candidate emitted its
+abort signal at60 seconds but settled only when a watchdog closed the socket at70.
+The timeout must reject the client operation independently of body settlement and
+the native check must fail if fixture cleanup is what releases that operation.
+
+The native dependency_identity check also verifies that an editor mutation and
+the next unchanged snapshot expose identical dependency/reference projections,
+stable revisions and no duplicate task events. Keep foreign tracker links in
+unresolved-reference detail consistently, as specified in mac-integration.md.
+
 The native MAC complete_reconciliation check must preserve all twelve native MAC
 states and additional observed states through import, update, task detail and
 restart, including empty workflow columns and stable unchanged polls. Execute the

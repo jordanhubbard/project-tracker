@@ -5,6 +5,48 @@ kind: integration
 ---
 # MAC integration behavior
 
+## Enforce the response-body deadline
+
+A read timeout must bound the entire client operation, including consuming a
+successful response body. A confirmed Node 22 regression sends HTTP200 headers,
+Content-Length100 and the single byte `[`, then never finishes the response.
+With the ordinary 60-second read budget, the abort signal fires but awaiting the
+body can remain pending indefinitely. Calling AbortController.abort alone does
+not establish a deadline. The caller must reject by the configured deadline
+(allow at most five seconds of scheduling margin), release owned response-body
+resources, clear its timer, and permit later requests and synchronization attempts.
+Enforce the deadline independently of whether fetch or its body promise settles.
+Keep successful reads delayed beyond eight seconds valid within that budget.
+
+The native mac-selfcheck serialized_reads gate must execute the actual default
+read path against an authenticated disposable HTTP fixture with that incomplete
+HTTP200 body. Do not shorten the client timeout, substitute a fetch mock, or count
+an emitted abort signal as successful timeout behavior. Observe settlement of the
+client promise, its timeout/unavailability classification, closure of the stalled
+HTTP1 connection by the same deadline margin, and a healthy follow-up read. A
+fixture watchdog at70 seconds exists only to clean up a failed test; if it
+must close the socket to settle the client, the check is false. Assert elapsed
+time below65 seconds for the default60-second request and close all owned fixture
+connections even on failure. Retain the manual/timer overlap and slow-read tests.
+
+## Stable dependency projection after writes
+
+Use the same relationship projection for full snapshot import and for importing
+a MAC create/update/transition response. The ordinary `dependencies` selection
+contains same-project tracker IDs. Preserve foreign and missing IDs in
+`upstream_dependencies`; expose their explanation and any known foreign tracker
+link in `unresolved_dependencies`. Do not alternate between including a foreign
+task in the ordinary selection during polls and excluding it after a write.
+
+After a successful full editor Save on an existing task with prerequisite,
+missing and foreign references, capture its returned revision, dependency
+selection and unresolved-reference detail. With upstream fields unchanged, the
+next complete synchronization must preserve all three and publish zero additional
+task changes. This also holds after adding a new prerequisite and after explicit
+unresolved-reference removal. Exercise actual shared mutation and synchronization
+services in the native dependency_identity check, inspecting store revisions and
+committed event rows/listeners rather than only the outbound MAC body.
+
 ## Preserve the real MAC lifecycle
 
 The supported MAC states are `open`, `waiting`, `blocked`, `claimed`, `running`,
