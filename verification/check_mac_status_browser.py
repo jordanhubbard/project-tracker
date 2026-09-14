@@ -37,11 +37,11 @@ with tempfile.TemporaryDirectory() as tmp, MacFixture() as fleet:
    board.locator('.repo-card').filter(has=board.get_by_role('heading',name=repo['name'],exact=True)).get_by_role('button',name='Open board',exact=True).click()
    card=overview.locator('.repo-card').filter(has=overview.get_by_role('heading',name=repo['name'],exact=True))
    sync_value=inspector.locator('main:visible')
-   expect(sync_value).to_contain_text('Last synchronized');expect(sync_value).not_to_contain_text(re.compile('unavailable|503|outage',re.I));expect(card).not_to_contain_text(re.compile('unavailable|503|outage',re.I))
-   overview.evaluate("""() => { window.probeEvents=[]; window.probeSource=new EventSource('/api/events'); window.probeReady=false; probeSource.onopen=()=>window.probeReady=true; probeSource.addEventListener('repository-changed',e=>probeEvents.push({id:e.lastEventId,data:JSON.parse(e.data)})); }""")
+   expect(sync_value).to_contain_text(re.compile('Last (?:synchronized|synced)',re.I));expect(sync_value).not_to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I));expect(card).not_to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I))
+   overview.evaluate("""() => { window.probeEvents=[]; window.probeSource=new EventSource('/api/events'); window.probeReady=false; probeSource.onopen=()=>window.probeReady=true; for (const eventName of ['repository-changed','repository.updated']) probeSource.addEventListener(eventName,e=>probeEvents.push({id:e.lastEventId,data:JSON.parse(e.data)})); }""")
    overview.wait_for_function('window.probeReady');overview.evaluate('window.probeEvents=[]')
    writes=len(fleet.writes);fleet.unavailable=True
-   expect(card).to_contain_text(re.compile('unavailable|503|outage',re.I),timeout=20000);expect(sync_value).to_contain_text(re.compile('unavailable|503|outage',re.I),timeout=20000)
+   expect(card).to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I),timeout=20000);expect(sync_value).to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I),timeout=20000)
    overview.screenshot(path=str(out/'overview-outage.png'),full_page=True);inspector.screenshot(path=str(out/'inspector-outage.png'),full_page=True)
    outage_events=overview.evaluate('window.probeEvents');assert outage_events,outage_events
    overview.wait_for_timeout(11000)
@@ -55,7 +55,7 @@ with tempfile.TemporaryDirectory() as tmp, MacFixture() as fleet:
    dialog.get_by_role('button',name='Cancel',exact=True).click()
    fleet.unavailable=False
    try:
-    expect(card).not_to_contain_text(re.compile('unavailable|503|outage',re.I),timeout=20000);expect(sync_value).not_to_contain_text(re.compile('unavailable|503|outage',re.I),timeout=20000)
+    expect(card).not_to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I),timeout=20000);expect(sync_value).not_to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I),timeout=20000)
    except Exception:
     (out/'recovery-failure.json').write_text(json.dumps({'repository':request(f"/api/repos/{repo['id']}"),'overview':card.inner_text(),'inspector':sync_value.all_text_contents(),'events':overview.evaluate('window.probeEvents')},indent=2)+'\n')
     overview.screenshot(path=str(out/'recovery-failure.png'),full_page=True)

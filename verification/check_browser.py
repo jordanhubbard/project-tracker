@@ -37,6 +37,10 @@ def list_control(page, action, name):
     page.get_by_role('button', name=re.compile(r'^(?:List menu for ' + re.escape(name) + r'|Open ' + re.escape(name) + r' list menu|List ' + re.escape(name) + r' menu|Open the list menu for ' + re.escape(name) + r'|' + re.escape(name) + r' list menu)$')).click()
     menu_scope = page.get_by_role('dialog').or_(page.get_by_role('group', name=f'{name} list menu', exact=True)).or_(page.get_by_role('menu'))
     menu_action = menu_scope.get_by_role('button', name=f'{action} list', exact=True)
+    inline_name = page.get_by_role('dialog').get_by_role('textbox', name='List name', exact=True)
+    inline_destination = page.get_by_role('dialog').get_by_role('combobox', name=re.compile('Destination|Move.*to',re.I))
+    if action == 'Rename' and inline_name.count(): return
+    if action == 'Delete' and inline_destination.count(): return
     if menu_action.count():
         menu_action.click()
 
@@ -428,7 +432,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             heading = title_control(page, name=re.compile(
                                 r"^" + re.escape(destination.get('display_name', destination['name'])) + r"(?:\s|$)", re.I))
                             column = page.locator(f'[data-state-id="{destination["id"]}"]')
-                            if not column.count(): column = page.locator('.board-list').filter(has=page.get_by_role('heading', name=destination['name'], exact=True))
+                            if not column.count(): column = page.locator('.board-list, section.list').filter(has=page.get_by_role('heading', name=destination['name'], exact=True))
                             lists = column.get_by_role("list")
                             target = lists.first if lists.count() else column
                             card.drag_to(target)
@@ -463,7 +467,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             list_control(page, 'Rename', old['name'])
                             dialog = page.get_by_role('dialog')
                             dialog.get_by_role('textbox', name=re.compile(r'^(?:List name|Rename list)$')).fill(new_name)
-                            dialog.get_by_role('button', name='Save', exact=True).click()
+                            dialog.get_by_role('button', name=re.compile(r'^(?:Save|Rename list)$')).click()
                             dialog.wait_for(state='hidden')
                             page.locator('.list-name').filter(has_text=re.compile('^'+re.escape(new_name)+'$')).wait_for()
                             saved = next(x for x in api('GET', f"/api/repos/{repo['id']}/states")['items'] if x['id'] == old['id'])
@@ -474,7 +478,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
 
                         def workflow_lifecycle():
                             added_name = f'Browser column {name}'
-                            page.get_by_role('button', name='+ Add list', exact=True).click()
+                            page.get_by_role('button', name=re.compile(r'^(?:\+ )?Add list$')).click()
                             dialog = page.get_by_role('dialog')
                             dialog.get_by_label('List name', exact=True).fill(added_name)
                             dialog.get_by_role('button', name='Add list', exact=True).click()

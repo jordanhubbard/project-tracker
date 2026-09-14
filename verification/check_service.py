@@ -173,7 +173,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                 raise AssertionError('SSE stream ended without a replayable event')
             history = request('GET', '/api/activity')['items']
             assert len(history) >= 3, history
-            cursor = str(min(int(event.get('seq', event['id'])) for event in history))
+            cursor = str(min(int(event.get('seq', event.get('id'))) for event in history))
             first = first_event(cursor)
             assert int(first['id']) > int(cursor), (cursor, first)
             stop()

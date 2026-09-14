@@ -5,6 +5,44 @@ kind: integration
 ---
 # MAC integration behavior
 
+## Observed repair failures that must be closed
+
+An imported task can have dependencies `[prerequisite, missing, foreign]`, where
+prerequisite is in the same project, missing has no mirrored task, and foreign is
+in another project. A PATCH containing `dependencies: [trackerPrerequisiteId]`
+is the editor's resolved selection, not permission to delete the other two edges.
+Translate that selection to MAC IDs and retain existing unresolved/outside-project
+MAC IDs. Omitting dependencies preserves every upstream edge. Add the optional
+PATCH field `remove_upstream_dependencies`, an array of existing unresolved MAC
+IDs explicitly selected for removal; validate it and remove only those references.
+This removal works without an accompanying ordinary field edit. Task detail exposes
+`upstream_dependencies` and `unresolved_dependencies` with `id`, `reason`, and an
+optional `tracker_id`. The editor displays each unresolved reference and its reason,
+offers a labelled removal control, and submits removals only after that control is
+used. A full editor Save with no removal must preserve missing and foreign edges.
+The normal same-project dependency selector remains named Dependencies. Preserve
+unrelated metadata and references on title-only edits and full editor saves.
+
+Snapshot commit is fleet-wide. Start from alpha/task-a titled Old alpha and
+beta/task-b titled Old beta. The next snapshot changes both titles. Inject a storage
+failure while applying beta, after alpha's update has executed. The failed sync must
+leave both old titles and revisions intact, and emit/persist zero task-change events.
+Per-repository transactions are insufficient: they leave New alpha committed when
+beta fails. Cover repository discovery, workflow changes, task upserts, dependency
+data, deletion and success timestamps in the same atomic snapshot boundary. Nested
+store helpers must cooperate with that boundary. Queue notifications until commit;
+emitting an event inside a transaction that later rolls back is incorrect. On failure
+only the failed-attempt health/error status may change. Repeating the same snapshot
+without the injected fault applies both changes once and publishes committed events.
+
+Classify HTTP failure status independently of body format. A proxy may return an
+HTML, plain-text, empty or malformed-JSON body with HTTP503. Those are all MAC
+unavailability and become tracker503 for writes. Parsing a non-JSON503 body must
+not replace the status with502/invalid-response. Keep useful bounded sanitized detail
+when available, and keep malformed successful responses distinct from upstream503.
+Test JSON, HTML, empty and malformed-JSON503 bodies through the actual authenticated
+HTTP client and shared mutation service, retaining cached tasks and revisions.
+
 The initial empty tracker database must discover fleet repositories without any
 operator registration first. Fetch projects and registry, group their records by
 logical MAC project, and upsert those groups before iterating local repositories.

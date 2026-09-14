@@ -1,6 +1,6 @@
 # Design traceability
 
-<!-- literate-ai:authority-reviewed sha256:7d7e9c623eb8c4c46f3a6b027cef2670a88ec96debf20813918ec92c40f73e56 -->
+<!-- literate-ai:authority-reviewed sha256:4e21c1c05ba2f9d2fd23783c2cb1cc9babc2f28d68248233235b7dba7ca0cc83 -->
 
 [Project guide](../README.md) → design traceability
 
@@ -18,3 +18,8 @@ MAC snapshot import preserves upstream dependency identity independently of loca
 task validation. The integration contract and native regression requirements cover
 forward, missing and cross-project references, complete fleet reconciliation and
 truthful synchronization health. Live verification remains isolated and read-only.
+
+The MAC native gate runs a disposable integration self-check. Fleet snapshot
+transactions include every project and publish events only after commit. Explicit
+upstream-reference removal is separate from the resolved dependency selection, and
+HTTP failure classification survives non-JSON proxy responses.

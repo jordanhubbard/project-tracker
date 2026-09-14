@@ -73,16 +73,6 @@ under TRACK-004. Earlier scoped evidence is in
   [final-result.json](../../verification/final-result.json) and the verified public
   launch command in the root README.
 
-## Scope and retained history
-
-Validation used isolated databases, authenticated MAC/LLM fixtures and real child
-processes. Production fleet mutation, remote publication, background-service
-registration and fleet-wide installation were not requested. No Git remote is
-configured; the LitAI tracker/peer survey reported unsupported forge and skipped
-remote reconciliation. Prior rejected candidates and corrective iterations remain
-in Git history and ignored build diagnostics; they are superseded by the final
-artifact above.
-
 ### [ ] TRACK-004 — Complete live MAC task synchronization
 
 - **Priority:** P0
@@ -91,9 +81,36 @@ artifact above.
 - **Conclusion:** Live import aborts on valid upstream dependency IDs after three projects; requests also time out. Correct upstream/local identity translation, complete fleet reconciliation and observable synchronization failures. Use isolated read-only live verification; production writes remain deliberate UI actions.
 - **Depends on:** none
 - **Implementation:**
-  - [ ] Specify order-independent upstream dependency import and outbound identity translation with fleet-scale reconciliation.
-  - [ ] Regenerate the exported application through the supported lifecycle.
+  - [x] Specify order-independent upstream dependency import and outbound identity translation with fleet-scale reconciliation.
+  - [ ] Regenerate the exported application through the supported lifecycle. Candidate
+    b37824adbd2ff5093391 passes full live import but fails three repair gates; see
+    [candidate evidence](../../verification/track004-candidate1.json). Next action:
+    close atomic snapshot, unresolved-reference edit and non-JSON outage regressions.
+    Native acceptance must execute the new MAC self-check, not only pure vectors.
 - **Evidence:**
   - [ ] Native authenticated fixtures cover reverse-order dependencies, missing and cross-project references, unchanged polls, deletion beyond 200 tasks, failure recovery and nonoverlapping slow synchronization.
   - [ ] Replay the real hub snapshot and verify complete project/task counts and dependency preservation.
   - [ ] Verify an isolated exported tracker completes live read-only synchronization and renders MAC tasks.
+
+### [ ] TRACK-005 — Persist the Project Tracker workspace on GitHub
+
+- **Priority:** P0
+- **Owner:** repository
+- **Direction:** Use git@github.com:jordanhubbard/project-tracker.git to persist this project.
+- **Conclusion:** Origin is reachable and contains an unrelated starter commit. Preserve its ancestry and BSD license while retaining the established LitAI project authority; publish through the repository review workflow without force-pushing.
+- **Depends on:** none
+- **Implementation:**
+  - [x] Configure origin and back up the previously verified workspace history.
+  - [ ] Integrate starter ancestry and land the verified repaired workspace through a GitHub pull request.
+- **Evidence:**
+  - [x] Verify workspace-import exists on GitHub at 6ef7b8b4f39be4c23aec55d47414029c190aca4b.
+  - [ ] Verify the merged GitHub main and local main agree after landing.
+
+## Scope and retained history
+
+TRACK-001 through TRACK-003 used isolated databases, authenticated MAC/LLM fixtures
+and real child processes. TRACK-004 adds isolated read-only live fleet checks.
+TRACK-005 adds the requested GitHub persistence; origin now points to the user-supplied
+repository. Production fleet writes, background-service registration and fleet-wide
+installation remain outside this work. Historical candidates and results remain in
+Git history and ignored diagnostics; current repair status is recorded above.

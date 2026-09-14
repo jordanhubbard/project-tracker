@@ -10,6 +10,10 @@ and LLM credentials.
 - [Active work and verification](docs/roadmap/active-work.md)
 - [Project guide](docs/README.md)
 
+MAC synchronization repair is in progress under TRACK-004. Live read-only import
+passes on the first repair candidate; edit-preservation and failure-atomicity gates
+remain open. See the active work record for current acceptance status.
+
 ## Run
 
 After a successful LitAI build, launch the exported application:

@@ -5,6 +5,38 @@ kind: verification
 ---
 # Product verification and completeness
 
+## Native MAC regression gate
+
+The native test suite must execute the MAC integration scenarios below, not merely
+pure identity, metadata-merge or error-classification vectors. A candidate with only
+those vectors can report all tests passing while dropping missing dependencies,
+committing a partial fleet snapshot and turning an HTML503 into tracker502.
+
+Provide the maintenance diagnostic JSON invocation `["mac-selfcheck"]`. It starts
+disposable authenticated loopback MAC fixtures and isolated tracker storage, invokes
+the real synchronization, HTTP client and mutation service, and cleans up all servers,
+processes and files. It never consumes the operator's fleet URL, credentials or data.
+Register this invocation as a native manifest case and run it from --litai-test.
+Its deterministic result is `{"ok":true,"checks":{"dependency_identity":true,
+"unresolved_preservation":true,"explicit_removal":true,"snapshot_rollback":true,
+"commit_events":true,"non_json_outage":true,"complete_reconciliation":true,
+"serialized_reads":true,"restart_persistence":true}}` only when those assertions
+actually pass. Compute each check from observed service/store/HTTP results; a constant
+success object, mocked success helper or standalone unused regression file is invalid.
+Any failed assertion makes the native test fail. Retain the existing native coverage.
+
+Use the concrete alpha/beta failure and prerequisite/missing/foreign edit scenarios
+in mac-integration.md. Verify full dependency selection preserves both unresolved
+references, then explicitly remove just missing and verify foreign remains. Observe
+both durable event rows and connected service listeners during an injected failure
+after alpha changed but before beta commits; zero task events may escape rollback.
+Recover and require exactly one committed change per changed task. Exercise JSON,
+HTML, empty and malformed JSON HTTP503 bodies. Complete-reconciliation coverage must
+include 10,000 tasks, 201 projects, updates and deletions beyond item200, stable repeat
+polls and late dependency resolution. Serialized-read coverage overlaps manual/timer
+polls, delays a response beyond eight seconds and verifies a bounded body-read timeout.
+Restart the store and verify relationships survive. Keep native fixtures synthetic.
+
 ## Fleet dependency and scale regression acceptance
 
 Use authenticated disposable MAC HTTP fixtures through the actual service. Return
