@@ -6,6 +6,10 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 from service_response import entity_response
 
+def commit_node(page, commit_hash):
+    node = page.locator(f'svg [role="button"][data-hash="{commit_hash}"]')
+    return node if node.count() else page.locator('svg').get_by_role('button', name=re.compile(commit_hash[:8]))
+
 def commit_circle(node):
     return node if node.evaluate("n=>n.tagName.toLowerCase()") == 'circle' else node.locator('circle').first
 
@@ -13,7 +17,10 @@ def commit_circle(node):
 def expect_selected_hash(page, commit_hash):
     inspector = page.locator("#commit-inspector, .commit-inspector, .inspector").first
     value = inspector.locator('dt').filter(has_text=re.compile(r'^Hash$')).locator('xpath=following-sibling::dd[1]')
-    expect(value).to_have_text(commit_hash, timeout=2000)
+    if value.count():
+        expect(value).to_have_text(commit_hash, timeout=2000)
+    else:
+        expect(inspector.get_by_text(f'Hash {commit_hash}', exact=True)).to_be_visible(timeout=2000)
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("entrypoint", type=Path)
@@ -241,7 +248,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_role('button', name=re.compile(r'^(?:Back to board|Board)$')).or_(page.get_by_role('tab', name='Board', exact=True)).or_(page.get_by_role('link', name='Board', exact=True)).first.click()
                             page.get_by_role('button', name='Graph', exact=True).or_(page.get_by_role('tab', name='Graph', exact=True)).or_(page.get_by_role('link', name='Graph', exact=True)).click()
                             page.wait_for_timeout(400)
-                            commit_circle(page.locator('svg').get_by_role('button', name=re.compile(mergehash[:8]))).click()
+                            commit_circle(commit_node(page, mergehash)).click()
                             page.wait_for_timeout(100)
                             if socket.gethostname() not in page.locator('main').inner_text():
                                 issues.append('Graph omits the active coding-session host association')
@@ -329,7 +336,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 far = timeline_positions[mainhash] - timeline_positions[basehash]
                                 if far <= 0 or abs(near / far - 0.1) > 0.03:
                                     issues.append(f"Timeline: 0/10/100-second spacing is not proportional: {timeline_positions}")
-                        commit_circle(page.locator("svg").get_by_role("button", name=re.compile(mergehash[:8]))).click()
+                        commit_circle(commit_node(page, mergehash)).click()
                         expect_selected_hash(page, mergehash)
                         selected = page.locator("#commit-inspector, .commit-inspector, .inspector").first.inner_text()
                         if re.search(r'\b(?:undefined|NaN)\b', selected):
@@ -359,7 +366,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             or option["text"] in ("feature", "refs/heads/feature")
                         )
                         page.get_by_role("combobox", name=re.compile("branch", re.I)).or_(page.locator("#branch-filter")).select_option(feature_option)
-                        filtered_node = page.locator("svg").get_by_role("button", name=re.compile(featurehash[:8]))
+                        filtered_node = commit_node(page, featurehash)
                         expect(filtered_node).to_be_visible(timeout=2000)
                         commit_circle(filtered_node).click()
                         expect_selected_hash(page, featurehash)
@@ -432,6 +439,21 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 ).first.is_visible(),
                             }
                         )
+                        task_region = page.locator("#commit-inspector, .commit-inspector, .inspector").first
+                        task_link = task_region.get_by_role('link', name=re.compile(re.escape(feature_task_title))).or_(task_region.get_by_role('button', name=re.compile(re.escape(feature_task_title))))
+                        if not task_link.count():
+                            issues.append(f'{mode}: related task is plain text without an actionable link')
+                        else:
+                            task_link.first.click()
+                            expect(page.get_by_label('Title', exact=True)).to_have_value(feature_task_title)
+                            page.screenshot(path=str(out / f'{name}-{mode.lower()}-related-task.png'), full_page=True)
+                            # Persist through the editor opened from this association.
+                            description = f'Related task edit from {name} {mode}'
+                            page.get_by_label('Description', exact=True).fill(description)
+                            page.get_by_role('dialog').get_by_role('button', name='Save', exact=True).click()
+                            page.get_by_role('dialog').wait_for(state='hidden')
+                            linked_task = next(t for t in api('GET', f"/api/repos/{repo['id']}/tasks")['items'] if t['title'] == feature_task_title)
+                            assert linked_task['description'] == description, linked_task
                     if dimensions["document"] > dimensions["viewport"]:
                         issues.append(f"Board document overflow: {dimensions}")
                     evidence.append(

@@ -242,3 +242,17 @@ labels and place secondary actions in the accessible menu or a separate compact
 row. Keep ordinary column widths and horizontal board scrolling. Measure the
 rendered list-name element and require scrollWidth <= clientWidth for these names;
 review screenshots as well as successful rename/reorder/delete behavior.
+
+Related tasks in the selected commit inspector are actionable links or buttons,
+not a sentence listing task titles. Preserve each association's task ID and route
+activation to the same loaded task editor used by the board. In Graph and Timeline,
+select a feature-branch commit, activate its related task by title and verify that
+the editor shows that exact task's title and current attributes. Cancel closes it
+without mutation; save uses the normal revision-aware task update. Keep task-link
+activation independent of commit-node selection and branch filtering.
+
+The task dependency multiple-select has an accessible name such as Dependencies.
+Associate its visible label using label/for or aria-labelledby, or provide an
+aria-label. aria-describedby supplies supplemental help and does not name the
+control. Screen readers and role/name selectors must identify the dependency
+listbox by its label; choosing dependencies by task title remains supported.

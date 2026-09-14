@@ -30,28 +30,28 @@ with tempfile.TemporaryDirectory() as tmp, MacFixture() as fleet:
    inspector.locator('.repo-card').filter(has=inspector.get_by_role('heading',name=repo['name'],exact=True)).get_by_role('button',name='Inspector',exact=True).click()
    board.locator('.repo-card').filter(has=board.get_by_role('heading',name=repo['name'],exact=True)).get_by_role('button',name='Open board',exact=True).click()
    card=overview.locator('.repo-card').filter(has=overview.get_by_role('heading',name=repo['name'],exact=True))
-   sync_value=inspector.locator('dt').filter(has_text=re.compile('^Sync error$')).locator('xpath=following-sibling::dd[1]')
-   expect(sync_value).to_have_text('none');expect(card).not_to_contain_text('Sync error:')
-   overview.evaluate("""() => { window.probeEvents=[]; window.probeSource=new EventSource('/api/events'); window.probeReady=false; probeSource.onopen=()=>window.probeReady=true; probeSource.addEventListener('repo.updated',e=>probeEvents.push({id:e.lastEventId,data:JSON.parse(e.data)})); }""")
+   sync_value=inspector.locator('main .error-state').filter(has_text=re.compile('^Sync error:'))
+   expect(sync_value).to_have_count(0);expect(card).not_to_contain_text('Sync error:')
+   overview.evaluate("""() => { window.probeEvents=[]; window.probeSource=new EventSource('/api/events'); window.probeReady=false; probeSource.onopen=()=>window.probeReady=true; probeSource.addEventListener('repository.changed',e=>probeEvents.push({id:e.lastEventId,data:JSON.parse(e.data)})); }""")
    overview.wait_for_function('window.probeReady');overview.evaluate('window.probeEvents=[]')
    writes=len(fleet.writes);fleet.unavailable=True
-   expect(card).to_contain_text('Sync error:',timeout=20000);expect(sync_value).not_to_have_text('none',timeout=20000)
+   expect(card).to_contain_text('Sync error:',timeout=20000);expect(sync_value).to_be_visible(timeout=20000)
    overview.screenshot(path=str(out/'overview-outage.png'),full_page=True);inspector.screenshot(path=str(out/'inspector-outage.png'),full_page=True)
    outage_events=overview.evaluate('window.probeEvents');assert outage_events,outage_events
    overview.wait_for_timeout(11000)
    assert overview.evaluate('window.probeEvents')==outage_events,'Repeated failure emitted duplicate repo updates'
-   board.get_by_role('button',name=f"Edit {task['title']}",exact=True).click();dialog=board.get_by_role('dialog')
+   board.get_by_role('button',name=f"Edit task {task['title']}",exact=True).click();dialog=board.get_by_role('dialog')
    dialog.get_by_label('Title',exact=True).fill('Outage must reject this edit');dialog.get_by_role('button',name='Save',exact=True).click()
-   expect(dialog).to_contain_text(re.compile('unavailable|offline|503|outage|failed|MAC',re.I))
+   expect(board.get_by_role('alert')).to_contain_text(re.compile('unavailable|offline|503|outage|failed',re.I))
    assert request(f"/api/repos/{repo['id']}/tasks")['items']==tasks
    assert len(fleet.writes)==writes
    board.screenshot(path=str(out/'mutation-rejected.png'),full_page=True)
    dialog.get_by_role('button',name='Cancel',exact=True).click()
    fleet.unavailable=False
    try:
-    expect(card).not_to_contain_text('Sync error:',timeout=20000);expect(sync_value).to_have_text('none',timeout=20000)
+    expect(card).not_to_contain_text('Sync error:',timeout=20000);expect(sync_value).to_have_count(0,timeout=20000)
    except Exception:
-    (out/'recovery-failure.json').write_text(json.dumps({'repository':request(f"/api/repos/{repo['id']}"),'overview':card.inner_text(),'inspector':sync_value.inner_text(),'events':overview.evaluate('window.probeEvents')},indent=2)+'\n')
+    (out/'recovery-failure.json').write_text(json.dumps({'repository':request(f"/api/repos/{repo['id']}"),'overview':card.inner_text(),'inspector':sync_value.all_text_contents(),'events':overview.evaluate('window.probeEvents')},indent=2)+'\n')
     overview.screenshot(path=str(out/'recovery-failure.png'),full_page=True)
     raise
    recovery_events=overview.evaluate('window.probeEvents');assert len(recovery_events)>len(outage_events)

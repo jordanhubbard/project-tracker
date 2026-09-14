@@ -293,9 +293,9 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert settings['llm_key_configured'] is True, settings
                     assert settings['llm_url'] == environment['TRACKER_LLM_URL'], settings
                     assert settings['llm_model'] == 'fixture-model', settings
-                    request('PATCH', '/api/settings', {'llm_key': ''})
+                    request('PUT', '/api/settings', {'llm_key': ''})
                     assert request('GET', '/api/settings')['llm_key_configured'] is True
-                    request('PATCH', '/api/settings', {'llm_key': None})
+                    request('PUT', '/api/settings', {'clear': ['llm_key']})
                     stop()
                     start()
                     cleared = request('GET', '/api/settings')
@@ -434,7 +434,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     refs = graph.get('refs', [])
                     for expected_name, expected_hash in [('main', merge_hash), ('feature', feature_hash)]:
                         assert any(ref.get('name') in (expected_name, f'refs/heads/{expected_name}')
-                                   and ref.get('hash') == expected_hash for ref in refs), refs
+                                   and ref.get('hash', ref.get('object_id')) == expected_hash for ref in refs), refs
                 run_phase('real_branch_refs', real_branch_refs)
                 commits = {commit['hash']: commit for commit in graph['commits']}
                 assert set(commits[merge_hash]['parents']) == {feature_hash, main_hash}, graph

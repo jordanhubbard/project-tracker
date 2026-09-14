@@ -516,3 +516,27 @@ queue item or let `docs/roadmap/` become a plan archive.
   transaction and consistent shared-service error normalization for MAC creation,
   editing and transitions; preserve the passing board/protocol/Git behavior and
   regenerate. Public build/run, receipt and complete handoff remain pending.
+
+### MAC recovery final result and task-detail navigation repair
+
+- Generation at315c519 completed native acceptance with52 tests. Final37-file
+  hashes are `_build/mac-recovery-final-provenance.json`; native result is
+  `_build/mac-recovery-native-result.json`. Service and frontend files match the
+  independently tested31-file snapshot. The only existing-file change is the
+  diagnostic A2A operation projection; final additions are tests and metadata.
+- `_build/mac-recovery-backend2.log` passes the complete independent backend
+  suite, including MAC creation/edit/transition outage routing and reporter
+  survival. `_build/mac-recovery-status2/result.json` proves already-open overview
+  and inspector update through healthy503healthy without reload, cached task
+  changes, shadow writes or duplicate events on unchanged polls.
+- All15 board interactions pass at desktop1440/mobile390. Dependency selection
+  works, but the select has only aria-describedby and no accessible name. The
+  board checker retains this failure while testing the remaining attributes.
+- Peer UI, actual session expiry, empty/bounded Git and both graph timing fixtures
+  pass their existing behaviors. Graph/Timeline related tasks remain plain text;
+  `_build/mac-recovery-graph2` and `_build/mac-recovery-irregular2` fail solely the
+  required actionable related-task links at both viewports.
+- Next action in progress: require related-task controls to open the actual task
+  editor from Graph and Timeline, and associate the dependency selector with a
+  real accessible label. Preserve the verified MAC recovery and all existing
+  behavior, regenerate, then complete public build/run and handoff verification.

@@ -312,3 +312,16 @@ addition to existing-task edits and transitions. Require tracker503 and no cache
 insertion from REST, and the equivalent unavailable result from MCP and A2A.
 Typed client errors must cross the shared-service boundary as recognized service
 errors. Do not count a generic internal500 as an actionable fleet outage.
+
+Browser acceptance for related tasks must activate a task link from a selected
+feature commit in both Graph and Timeline at desktop and mobile widths, then
+assert the opened task editor's Title control contains that task's exact title.
+Showing the title as plain text in a branch-association summary is insufficient.
+Retain the graph's parent-edge, timestamp-spacing, zoom, selection and physical
+host assertions while adding this navigation check.
+
+Locate the dependency multiple-select by role listbox and accessible name
+Dependencies (or an equivalent visible label) before selecting the prerequisite
+task. A nearby span referenced only through aria-describedby does not satisfy
+this accessible-name requirement. Save and reopen the task to verify the selected
+dependency persists together with its other editable attributes.

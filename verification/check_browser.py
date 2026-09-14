@@ -34,8 +34,9 @@ def list_control(page, action, name):
     if direct.count():
         direct.click()
         return
-    page.get_by_role('button', name=f'List menu for {name}', exact=True).click()
-    menu_action = page.get_by_role('dialog').get_by_role('button', name=f'{action} list', exact=True)
+    page.get_by_role('button', name=re.compile(r'^(?:List menu for ' + re.escape(name) + r'|Open ' + re.escape(name) + r' list menu)$')).click()
+    menu_scope = page.get_by_role('dialog').or_(page.get_by_role('group', name=f'{name} list menu', exact=True))
+    menu_action = menu_scope.get_by_role('button', name=f'{action} list', exact=True)
     if menu_action.count():
         menu_action.click()
 
@@ -224,12 +225,12 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 if page.url != board_url: page.goto(board_url)
 
                         def heading_geometry():
-                            rows = page.locator('.board-list .list-name').evaluate_all("""nodes => nodes.map(e => {
+                            rows = page.locator('.board-list .list-name, .list .list-title').evaluate_all(r"""nodes => nodes.map(e => {
                                 const r=e.getBoundingClientRect();
                                 const range=document.createRange(); range.selectNodeContents(e);
                                 const text=range.getBoundingClientRect();
                                 const siblings=[...e.parentElement.children].filter(x=>x!==e).map(x=>x.getBoundingClientRect());
-                                return {name:e.textContent,client:e.clientWidth,scroll:e.scrollWidth,
+                                return {name:e.textContent.replace(/\s+\(\d+\)$/, ''),client:e.clientWidth,scroll:e.scrollWidth,
                                     overlap:siblings.some(s=>text.left<s.right && text.right>s.left && text.top<s.bottom && text.bottom>s.top),
                                     width:r.width};
                             })""")
@@ -342,7 +343,11 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             if priority.evaluate('e=>e.tagName') == 'SELECT': priority.select_option('2')
                             else: priority.fill('2')
                             dialog.get_by_label(re.compile(r'^Labels', re.I)).fill('QA, UI')
-                            dialog.get_by_role('listbox', name=re.compile(r'^(?:Depends on|Dependencies)', re.I)).select_option(prerequisite['id'])
+                            dependencies = dialog.get_by_role('listbox', name=re.compile(r'^(?:Depends on|Dependencies)', re.I))
+                            if not dependencies.count():
+                                dependencies = dialog.locator('select[name="dependencies"]')
+                                issues.append('Dependency selector lacks an accessible name')
+                            dependencies.select_option(prerequisite['id'])
                             dialog.get_by_role('button', name=re.compile(r'^Add checklist item$', re.I)).click()
                             check_text = dialog.get_by_role('textbox', name=re.compile(r'^Checklist item', re.I))
                             if not check_text.count():
@@ -482,14 +487,14 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
                             assert current[-2]['id'] == added['id'], current
                             page.reload()
-                            page.get_by_role('button', name=f'Delete list {added_name}', exact=True).or_(page.get_by_role('button', name=f'List menu for {added_name}', exact=True)).wait_for()
+                            page.get_by_role('button', name=f'Delete list {added_name}', exact=True).or_(page.get_by_role('button', name=re.compile(r'^(?:List menu for ' + re.escape(added_name) + r'|Open ' + re.escape(added_name) + r' list menu)$'))).wait_for()
                             assert api('GET', f"/api/repos/{repo['id']}/states")['items'] == current
                             migrating = api('POST', f"/api/repos/{repo['id']}/tasks", {'title': f'Workflow migration {name}', 'state': task_state(added)})
                             title_control(page, name=migrating['title'], exact=True).wait_for()
                             destination = next(x for x in current if x['id'] != added['id'])
                             list_control(page, 'Delete', added_name)
                             dialog.get_by_role('combobox', name=re.compile(r'Destination|Move.*to',re.I)).select_option(label=destination['name'])
-                            dialog.get_by_role('button', name=re.compile(r'Delete|Confirm',re.I)).click()
+                            dialog.get_by_role('button', name=re.compile(r'^(?:Delete(?: list)?|Confirm|Save)$',re.I)).click()
                             dialog.wait_for(state='hidden')
                             assert all(x['id'] != added['id'] for x in api('GET', f"/api/repos/{repo['id']}/states")['items'])
                             assert api('GET', f"/api/tasks/{migrating['id']}")['state'] == task_state(destination)

@@ -43,7 +43,7 @@ with tempfile.TemporaryDirectory() as root:
       (register.first if register.count() else page.get_by_role('button', name='Create', exact=True).first).click()
       page.get_by_label(re.compile(r'^(?:(?:Repository |Display )?Name)',re.I)).fill('Local only')
       page.get_by_label(re.compile(r'^Remote URL',re.I)).fill('https://example.test/local/only.git')
-      page.get_by_role('dialog').get_by_role('button', name=re.compile(r'^Register(?: repository)?$')).click()
+      page.get_by_role('dialog').get_by_role('button', name=re.compile(r'^(?:Register(?: repository)?|Save)$')).click()
       page.get_by_role('dialog').wait_for(state='hidden')
       local=next(repo for repo in request(a,'GET','/api/repos')['items'] if repo['name']=='Local only')
       assert local['remote_url']=='https://example.test/local/only.git' and local['authority']=='local'
@@ -53,9 +53,9 @@ with tempfile.TemporaryDirectory() as root:
       display = page.get_by_role('textbox', name=re.compile(r'^(?:Name|Display name|Peer name)$'))
       if display.count(): display.fill('Remote verification peer')
       page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL)$')).fill(b)
-      page.get_by_label(re.compile(r'^(?:(?:Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\)|Bearer token \(stored backend-only\)|Peer token \(write only\)|Access token \(stored backend-only\)|Outbound token \(write-only\))$')).fill(token)
+      page.get_by_label(re.compile(r'^(?:(?:Peer bearer t|Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\)|Bearer token \(stored backend-only\)|Peer token \(write only\)|Access token \(stored backend-only\)|Outbound token \(write-only\))$')).fill(token)
       scope = page.get_by_role('dialog') if page.get_by_role('dialog').count() else page
-      scope.get_by_role('button',name=re.compile(r'^Register(?: peer)?$')).click()
+      scope.get_by_role('button',name=re.compile(r'^(?:Register(?: peer)?|Save)$')).click()
       page.get_by_role('button',name=re.compile(r'^Send (?:a )?message(?: to .+)?$')).click()
       control=page.get_by_role('combobox',name=re.compile(r'^Remote repository id')).or_(page.get_by_role('textbox',name=re.compile(r'^Remote repository id')))
       page.wait_for_timeout(500)
@@ -69,7 +69,7 @@ with tempfile.TemporaryDirectory() as root:
         control.select_option(remote['id'])
       else:control.fill(remote['id'])
       page.get_by_label('Task title',exact=True).fill('Created through peer UI')
-      page.get_by_role('dialog').get_by_role('button',name=re.compile(r'^Send(?: create_task| message)?$')).click();page.wait_for_timeout(1000)
+      page.get_by_role('dialog').get_by_role('button',name=re.compile(r'^(?:Send(?: create_task| message)?|Save)$')).click();page.wait_for_timeout(1000)
       tasks=request(b,'GET',f"/api/repos/{remote['id']}/tasks",token=token)['items']
       assert any(t['title']=='Created through peer UI' for t in tasks), tasks
       assert token not in json.dumps(request(a,'GET','/api/peers'))
