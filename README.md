@@ -81,9 +81,11 @@ requiring database access. See [sessions and peers](docs/user/sessions-and-peers
 
 ## Release engineers
 
-No packaged release, background-service installation or fleet deployment is configured
-or claimed. GitHub publication preserves this development workspace. Runtime evidence is
-reported in [verification](docs/user/verification.md).
+- `jordanhubbard`
+
+The first stable release is being prepared as v1.0.0. Publication requires accepted
+tracker tests and verified packages. Current runtime evidence and remaining gates
+are reported in [verification](docs/user/verification.md).
 
 ## License
 

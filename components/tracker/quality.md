@@ -67,6 +67,17 @@ Never equate a short test, an abort signal, or a watchdog-closed socket with the
 full default-budget result. Handle rejected cancellation/cleanup promises locally;
 a locked response stream must not cause an unhandled rejection or process crash.
 
+The native stalled-body fixture records the exact request socket serving its
+incomplete `/tasks` response and observes that socket's close event before any
+fixture cleanup. HTTP keep-alive may reuse a socket accepted during an earlier
+healthy poll: do not restrict the assertion to connections accepted after the
+stall began. Exercise that reused-connection case deliberately, require caller
+rejection by the short deadline and closure of the recorded stalled socket, then
+verify unchanged cached revisions and a healthy follow-up. An unrelated closed
+socket, an empty slice of newly accepted connections, or fixture shutdown is not
+evidence about the stalled response. Retain all other native and independent
+default-deadline assertions.
+
 The native dependency_identity check also verifies that an editor mutation and
 the next unchanged snapshot expose identical dependency/reference projections,
 stable revisions and no duplicate task events. Keep foreign tracker links in

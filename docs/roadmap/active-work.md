@@ -148,6 +148,13 @@ under TRACK-004. Earlier scoped evidence is in
     payload. Correct that assertion without weakening preserved-edge, explicit
     removal, new-edge translation or unchanged-poll checks. See
     [candidate-twelve evidence](../../verification/track004-candidate12.json).
+  - [ ] Track the exact socket serving the native stalled-response request, including
+    keep-alive reuse. Candidate thirteen passes eight native MAC groups but the
+    timeout assertion inspects only newly accepted connections. An independent
+    actual-client probe confirms reuse, deadline rejection, closure of that exact
+    socket before fixture cleanup, and healthy recovery. Preserve these positive
+    assertions in the native diagnostic. See
+    [candidate-thirteen evidence](../../verification/track004-candidate13.json).
   - [ ] Deliver the accepted repair through the supported committed-source cache;
     verify portable isolated acceptance and cache reuse in a fresh GitHub checkout.
     These runtime-delivery checks remain here after the workspace import lands.
@@ -202,3 +209,18 @@ Git history and ignored diagnostics; current repair status is recorded above.
 - **Evidence:**
   - [ ] Validate documentation links and project authority; check commands and examples against the accepted artifact and supported CLI.
   - [ ] Persist reviewed documentation on GitHub with the repair and record the final verification scope.
+
+### [ ] TRACK-007 — Publish the first Project Tracker release
+
+- **Priority:** P0
+- **Owner:** project
+- **Direction:** Make the first release on GitHub.
+- **Conclusion:** Publish v1.0.0 from an accepted application and complete documentation. Replace the inherited sample release gate with tracker acceptance, resolve current native failures, package and verify artifacts, land the repair, and verify remote release publication.
+- **Depends on:** TRACK-004, TRACK-006
+- **Implementation:**
+  - [ ] Configure and validate the real tracker release policy and artifact packaging.
+  - [ ] Resolve native acceptance failures and finish final service, browser, live and portable-cache checks.
+  - [ ] Prepare, check and publish v1.0.0 with truthful notes and verified release artifacts.
+- **Evidence:**
+  - [ ] Current native and independent runtime acceptance passes for the exact release revision.
+  - [ ] The GitHub release, tag, downloadable artifacts and source revision are verified remotely.

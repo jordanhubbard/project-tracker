@@ -16,8 +16,8 @@ project registration and tasks. For repositories absent from the configured MAC 
 Project Tracker owns equivalent internal tasks. Absence and upstream failure differ.
 
 Execution of the application and its tests is part of this requested implementation.
-No release, remote repository creation or fleet-wide installation is needed to prove
-this application. Live fleet writes must be deliberate operator actions in the UI.
+Live fleet writes must be deliberate operator actions in the UI. Fleet-wide
+installation is outside this project implementation.
 
 ## Publication and documentation
 
@@ -25,3 +25,8 @@ Persist this workspace at `git@github.com:jordanhubbard/project-tracker.git`. Ma
 a complete user, operator, integrator and contributor manual under `docs/`, linked
 from the root README. Document actual accepted behavior and outstanding integration
 gates separately; GitHub persistence is not proof of runtime acceptance.
+
+Publish the first stable release, v1.0.0, to the existing GitHub repository after
+tracker acceptance, documented runtime verification and package verification pass.
+Ship downloadable artifacts and verify the remote tag and release against the
+accepted source revision.

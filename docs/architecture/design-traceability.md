@@ -1,6 +1,6 @@
 # Design traceability
 
-<!-- literate-ai:authority-reviewed sha256:01b5ad39eed35827191259b57306c8f058f7f13eb32a078c05875f67930f887e -->
+<!-- literate-ai:authority-reviewed sha256:fa69d4c87fe2ba1adadda0335b2001300edd721a215f4dc4e4212f8e70cbe3ae -->
 
 [Project guide](../README.md) → design traceability
 
@@ -38,6 +38,8 @@ genuine dependency-only change still advances its revision and notifies clients.
 Production MAC transport retains native HTTP/HTTPS request and response handles
 until completion and explicitly destroys them on an absolute deadline. Cleanup
 must prove connection release and process survival, not only caller rejection.
+The native fixture tracks the exact stalled request socket, including reuse of an
+earlier keep-alive connection, and observes closure before fixture cleanup.
 
 Transport acceptance covers byte volume as well as record count. The production
 MAC response budget is 256 MiB, with a native response of at least 80 MiB authenticated collection read

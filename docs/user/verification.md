@@ -78,3 +78,10 @@ actual PR checks separately; a secret scan is not a runtime test matrix.
 Run instructions and independent checks are in [development](development.md) and
 [test matrix](test-matrix.md). Work closes only after its required final-artifact evidence
 is recorded and the corresponding change is actually merged.
+
+Candidate thirteen passed eight of nine native MAC groups. Its serialized-read
+assertion considered only newly accepted sockets and missed keep-alive reuse. A
+separate actual-client probe confirmed the exact reused socket closed at the short
+deadline before fixture cleanup and a healthy follow-up succeeded. The lifecycle
+rejected this candidate; final acceptance remains pending. See
+[candidate-thirteen evidence](../../verification/track004-candidate13.json).
