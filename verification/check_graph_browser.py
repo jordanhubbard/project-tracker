@@ -17,10 +17,24 @@ def commit_circle(node):
 def expect_selected_hash(page, commit_hash):
     inspector = page.locator("#commit-inspector, .commit-inspector, .inspector").first
     value = inspector.locator('dt').filter(has_text=re.compile(r'^Hash$')).locator('xpath=following-sibling::dd[1]')
-    if value.count():
-        expect(value).to_have_text(commit_hash, timeout=2000)
-    else:
-        expect(inspector.get_by_text(f'Hash {commit_hash}', exact=True)).to_be_visible(timeout=2000)
+    expect(value).to_have_text(commit_hash, timeout=5000)
+
+def label_overlaps(page):
+    return page.locator('svg').first.evaluate("""svg => {
+                            const nodes=[...svg.querySelectorAll('[role=button]')].map(n=>({hash:(n.getAttribute('aria-label')||'').match(/[a-f0-9]{7,64}/)?.[0],rect:n.getBoundingClientRect()}));
+                            const result=[];
+                            for(const label of svg.querySelectorAll('text')) {
+                                const own=nodes.find(n=>n.hash && label.textContent.includes(n.hash));
+                                if(!own) continue;
+                                const r=label.getBoundingClientRect();
+                                for(const node of nodes) if(node.hash!==own.hash) {
+                                    const b=node.rect;
+                                    if(Math.min(r.right,b.right)-Math.max(r.left,b.left)>1 && Math.min(r.bottom,b.bottom)-Math.max(r.top,b.top)>1)
+                                        result.push({label:label.textContent,node:node.hash});
+                                }
+                            }
+                            return result;
+                        }""")
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("entrypoint", type=Path)
@@ -249,7 +263,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.get_by_role('button', name='Graph', exact=True).or_(page.get_by_role('tab', name='Graph', exact=True)).or_(page.get_by_role('link', name='Graph', exact=True)).click()
                             page.wait_for_timeout(400)
                             commit_circle(commit_node(page, mergehash)).click()
-                            page.wait_for_timeout(100)
+                            expect_selected_hash(page, mergehash)
                             if socket.gethostname() not in page.locator('main').inner_text():
                                 issues.append('Graph omits the active coding-session host association')
                             page.screenshot(path=str(out / 'desktop-active-session-graph.png'), full_page=True)
@@ -291,21 +305,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         invalid = page.locator("svg").evaluate_all(
                             "els => els.flatMap(el => [...el.querySelectorAll('*')].flatMap(n => [...n.attributes].filter(a => /NaN|Infinity/.test(a.value)).map(a => a.name + '=' + a.value)))"
                         )
-                        overlaps = page.locator('svg').first.evaluate("""svg => {
-                            const nodes=[...svg.querySelectorAll('[role=button]')].map(n=>({hash:(n.getAttribute('aria-label')||'').match(/[a-f0-9]{7,64}/)?.[0],rect:n.getBoundingClientRect()}));
-                            const result=[];
-                            for(const label of svg.querySelectorAll('text')) {
-                                const own=nodes.find(n=>n.hash && label.textContent.includes(n.hash));
-                                if(!own) continue;
-                                const r=label.getBoundingClientRect();
-                                for(const node of nodes) if(node.hash!==own.hash) {
-                                    const b=node.rect;
-                                    if(Math.min(r.right,b.right)-Math.max(r.left,b.left)>1 && Math.min(r.bottom,b.bottom)-Math.max(r.top,b.top)>1)
-                                        result.push({label:label.textContent,node:node.hash});
-                                }
-                            }
-                            return result;
-                        }""")
+                        overlaps = label_overlaps(page)
                         if overlaps: issues.append(f'{mode}: commit labels overlap other node hit targets: {overlaps}')
                         timeline_positions = {}
                         if mode == "Timeline" and args.irregular_times:
@@ -347,12 +347,16 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         page.wait_for_timeout(400)
                         zoomed = page.locator('svg').first.evaluate('n=>n.getBoundingClientRect().width')
                         zoomed_node_width = commit_circle(page.locator('svg [role=button]').first).evaluate('n=>n.getBoundingClientRect().width')
+                        overlaps = label_overlaps(page)
+                        if overlaps: issues.append(f'{mode} after Zoom in: commit labels overlap other node hit targets: {overlaps}')
                         if zoomed_node_width <= initial_node_width + .1:
                             issues.append(f'{mode}: Zoom in did not enlarge commit geometry ({initial_node_width} -> {zoomed_node_width})')
                         page.get_by_role('button', name=re.compile(r'^Reset(?: zoom| the graph scale)?$')).click()
                         page.wait_for_timeout(400)
                         reset = page.locator('svg').first.evaluate('n=>n.getBoundingClientRect().width')
                         reset_node_width = commit_circle(page.locator('svg [role=button]').first).evaluate('n=>n.getBoundingClientRect().width')
+                        overlaps = label_overlaps(page)
+                        if overlaps: issues.append(f'{mode} after Reset: commit labels overlap other node hit targets: {overlaps}')
                         if abs(reset_node_width - initial_node_width) > .1:
                             issues.append(f'{mode}: Reset did not restore commit geometry')
                         page.wait_for_function("hash=>[...document.querySelectorAll('select option')].some(o=>o.value===hash || o.value==='refs/heads/feature' || ['feature','refs/heads/feature'].includes(o.textContent))", arg=featurehash, timeout=2000)

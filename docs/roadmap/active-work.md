@@ -558,3 +558,25 @@ queue item or let `docs/roadmap/` become a plan archive.
 - Next action in progress: clarify that collision bounds include the complete
   composed hash, subject and ref suffix, regenerate with receipt creation in
   the same lifecycle, then repeat full acceptance and public launch verification.
+
+### Timeline bounds result and protected browser login
+
+- Generation at 10201b0 completed with 38 native tests. Final provenance is
+  `_build/label-bounds-final-provenance.json`; the native result is
+  `_build/label-bounds-native-result.json`. All eight final-source phases pass;
+  `_build/label-bounds-git2` supersedes the original hash-label parsing mismatch.
+  Additional conflict, missing-checkout and unavailable-peer probes also pass.
+- The preserved frontend passes all15 board interactions at desktop1440/mobile390,
+  both graph timing fixtures including collisions after Zoom/Reset, and MAC
+  outage/recovery and authenticated peer UI checks. Final frontend bytes match.
+- A token-protected browser opens a generic authentication error with no password
+  input or login control. Direct same-origin POST to the login API creates the
+  correct HttpOnly SameSite cookie and permits the overview, proving that the
+  missing piece is the browser login flow. The exact final source was tested;
+  evidence is `_build/label-bounds-login/result.json` and `before-login.png`.
+- Next action in progress: finish the remaining final-source audit and require an
+  accessible browser login form with invalid-token feedback, session reuse and
+  recovery from an expired session. Preserve the verified board, Git and protocol
+  behavior. Use the supported receipt-updating `build` command for the next
+  generation so it also creates the public run export; `rebuild` produced a
+  receipt and retained artifact but did not update that export.

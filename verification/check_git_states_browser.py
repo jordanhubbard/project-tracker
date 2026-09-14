@@ -116,7 +116,9 @@ with tempfile.TemporaryDirectory(prefix='tracker-git-states-') as temporary:
                     page.wait_for_timeout(400)
                     page.screenshot(path=str(out / f'{width}-bounded-timeline.png'), full_page=True)
                     (out / f'{width}-bounded-timeline.aria.txt').write_text(page.locator('body').aria_snapshot())
-                    expect(page.locator('svg [role=button]')).to_have_count(len(known), timeout=2000)
+                    rendered = page.locator('svg [role=button]').evaluate_all("nodes => nodes.map(n => n.getAttribute('aria-label').match(/^(?:Commit )?([a-f0-9]{7,64})/)[1])")
+                    assert {h[:8] for h in known} <= set(rendered) <= {h[:8] for h in known | boundary}, (set(rendered), known, boundary)
+                    assert len(rendered) == len(set(rendered))
 
                     results.append({'width': width, 'state': 'truncated', 'commits': len(known),
                                     'boundary': sorted(boundary), 'ok': True})

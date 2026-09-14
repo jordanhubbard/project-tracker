@@ -325,3 +325,14 @@ Dependencies (or an equivalent visible label) before selecting the prerequisite
 task. A nearby span referenced only through aria-describedby does not satisfy
 this accessible-name requirement. Save and reopen the task to verify the selected
 dependency persists together with its other editable attributes.
+
+Test protected browser access at desktop1440/mobile390 using an isolated backend
+with TRACKER_ACCESS_TOKEN and a fresh browser context. Without a cookie, require
+the accessible password input and Sign in control, with no repository data or
+authenticated event stream. An invalid token keeps the form visible and shows an
+error. Entering the valid token through the visible form opens the overview and
+establishes the live event connection. Verify the cookie is HttpOnly and SameSite,
+reload retains the session, and clearing the session cookie followed by reload
+returns to the usable login form. No token may appear in the URL, localStorage,
+sessionStorage or rendered page text. A direct API login request or manually
+injecting a browser cookie does not prove this browser interaction contract.

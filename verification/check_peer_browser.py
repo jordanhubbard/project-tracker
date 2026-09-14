@@ -43,7 +43,7 @@ with tempfile.TemporaryDirectory() as root:
       (register.first if register.count() else page.get_by_role('button', name='Create', exact=True).first).click()
       page.get_by_label(re.compile(r'^(?:(?:Repository |Display )?Name)',re.I)).fill('Local only')
       page.get_by_label(re.compile(r'^Remote URL',re.I)).fill('https://example.test/local/only.git')
-      page.get_by_role('dialog').get_by_role('button', name=re.compile(r'^(?:Register(?: repository)?|Save)$')).click()
+      page.get_by_role('dialog').get_by_role('button', name=re.compile(r'^(?:Register(?: repository| locally)?|Save)$')).click()
       page.get_by_role('dialog').wait_for(state='hidden')
       local=next(repo for repo in request(a,'GET','/api/repos')['items'] if repo['name']=='Local only')
       assert local['remote_url']=='https://example.test/local/only.git' and local['authority']=='local'
@@ -53,7 +53,7 @@ with tempfile.TemporaryDirectory() as root:
       display = page.get_by_role('textbox', name=re.compile(r'^(?:Name|Display name|Peer name)$'))
       if display.count(): display.fill('Remote verification peer')
       page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL)$')).fill(b)
-      page.get_by_label(re.compile(r'^(?:(?:Peer bearer t|Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\)|Bearer token \(stored backend-only\)|Peer token \(write only\)|Access token \(stored backend-only\)|Outbound token \(write-only\))$')).fill(token)
+      page.get_by_label(re.compile(r'^(?:(?:Peer bearer t|Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\)|Bearer token \(stored backend-only\)|Peer token \(write only\)|Access token \(stored backend-only\)|Outbound token \(write-only\)|Peer access token)$')).fill(token)
       scope = page.get_by_role('dialog') if page.get_by_role('dialog').count() else page
       scope.get_by_role('button',name=re.compile(r'^(?:Register(?: peer)?|Save)$')).click()
       page.get_by_role('button',name=re.compile(r'^Send (?:a )?message(?: to .+)?$')).click()
@@ -78,7 +78,7 @@ with tempfile.TemporaryDirectory() as root:
         active_dialog.get_by_role('button', name=re.compile(r'^(?:Close|Cancel)$')).click()
       page.once('dialog', lambda d: d.accept())
       page.get_by_role('button',name=re.compile(r'^Remove(?: peer(?: .+)?)?$')).click()
-      confirm = page.get_by_role('dialog').get_by_role('button', name=re.compile(r'^(?:Confirm|Remove peer)$'))
+      confirm = page.get_by_role('dialog').get_by_role('button', name=re.compile(r'^(?:Confirm|Remove(?: peer)?)$'))
       if confirm.count(): confirm.click()
       deadline=time.monotonic()+2
       while request(a,'GET','/api/peers')['items'] and time.monotonic()<deadline:page.wait_for_timeout(100)

@@ -8,7 +8,7 @@ Node 22+, Git, and Google Chrome installed. The local verification environment i
 _build/browser-qa/bin/python verification/check_all.py /absolute/path/to/main.js
 ```
 
-The command runs service/protocol checks, desktop/mobile board interactions, a
+The command runs service/protocol checks, protected browser login, desktop/mobile board interactions, a
 two-instance peer UI check, and real Git graph checks with equal and unequal commit
 timestamps. The graph check also displays an actual reporter child in Fleet and
 requires its stopped status to arrive live. A separate expiry check waits through
@@ -47,7 +47,8 @@ After the automated suite passes, review these flows against the same artifact:
   readable card metadata and visible focus. Inspect mobile screenshots for usable
   scrolling, dialogs and controls.
 - Register a repository through the UI, inspect its authority and metadata, use
-  repository/task search, and open task details from the overview and activity.
+  repository/task search, and read the activity feed. Open task details from the
+  board and selected Git commits.
 - Drag a task to another state and confirm a second browser receives the move.
   Rename, reorder, add and delete workflow states with task migration handling.
 - Exercise filters, repository inspector, commit-to-task links and graph empty,

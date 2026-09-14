@@ -220,6 +220,17 @@ unauthenticated requests to protect against DNS rebinding. No external CORS wild
 Configured upstream URL must be HTTP(S), no embedded credentials; disable redirects
 on authenticated upstream requests. Bounded timeouts and sanitized errors everywhere.
 
+Cookie login is a complete browser flow. Opening a token-protected deployment in
+a fresh browser presents a visibly labelled password input for the access token
+and a Sign in button. A generic authentication error with only Retry is not a
+login screen. Submit to the same-origin login endpoint, show an actionable error
+for an invalid token, and open the repository overview after successful login.
+Clear the entered token after success; keep it out of URLs, browser storage,
+rendered text and logs. Reload uses the HttpOnly SameSite session cookie. When a
+session is absent or expires, return to the login form so the user can sign in
+again. Login assets must load before authentication while repository data and
+task/session event streams remain protected.
+
 ## Visual and interaction contract
 
 Faithfully reinterpret the supplied Trello screenshot. Dark charcoal application chrome,

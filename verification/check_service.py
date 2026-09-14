@@ -295,7 +295,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     assert settings['llm_model'] == 'fixture-model', settings
                     request('PUT', '/api/settings', {'llm_key': ''})
                     assert request('GET', '/api/settings')['llm_key_configured'] is True
-                    request('PUT', '/api/settings', {'clear': ['llm_key']})
+                    request('PUT', '/api/settings', {'clear_llm_key': True})
                     stop()
                     start()
                     cleared = request('GET', '/api/settings')
@@ -303,7 +303,7 @@ def check(command: list[str], *, diagnostic_continue: bool = False) -> None:
                     calls_before = len(llm_calls)
                     disabled = request('POST', '/api/assistant', {
                         'question': 'This must not reach the gateway', 'repo_id': repo_id},
-                        expected=(400, 409, 503))
+                        expected=(400, 409, 412, 503))
                     assert 'error' in disabled, disabled
                     assert len(llm_calls) == calls_before, 'Explicit clear reused environment key'
                 finally:
