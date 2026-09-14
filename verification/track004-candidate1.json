@@ -1,0 +1,38 @@
+{
+  "status": "incomplete",
+  "artifact": "generated/artifacts/tracker/artifact-b37824adbd2ff5093391",
+  "native_tests": {
+    "passed": 37,
+    "failed": 0
+  },
+  "independent_passes": [
+    "service and protocols",
+    "protected browser login",
+    "MAC status outage and recovery",
+    "15 board interactions at desktop and mobile",
+    "peer browser flow",
+    "real session expiry",
+    "empty and bounded Git history",
+    "equal-time graph",
+    "irregular-time graph"
+  ],
+  "captured_snapshot": {
+    "projects": 28,
+    "project_tasks": 9077,
+    "all_ids_match": true,
+    "unchanged_poll": true
+  },
+  "read_only_live_probe": {
+    "projects": 28,
+    "project_tasks": 9078,
+    "all_ids_match": true,
+    "sync_seconds": 6.26
+  },
+  "remaining_failures": [
+    "Later-project storage failure leaves an earlier project committed and emits a task event.",
+    "Full dependency selection drops missing and outside-project MAC references.",
+    "HTML HTTP503 is translated to tracker502.",
+    "A full editor payload with unchanged imported long text is rejected by local title limits."
+  ],
+  "scope": "Independent checks used immutable provisional copies. Final product file comparison found only a lazy MCP import change in lib/http.js; the failing MAC/store/sync code is byte-identical. Live reads were isolated and no fleet writes occurred."
+}

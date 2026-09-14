@@ -1,0 +1,96 @@
+{
+  "schema": "literate-ai/persistent-service-acceptance@1",
+  "specification_set_identity": "sha256:183ed3dea9bd120b8df52e26661e0cd9117633e1b14993826e4314f1200a7f5a",
+  "process": {
+    "environment": {
+      "TRACKER_DATA_DIR": "../acceptance-data-{port}",
+      "TRACKER_MAC_URL": "",
+      "TRACKER_MAC_TOKEN": "",
+      "TRACKER_LLM_KEY": ""
+    },
+    "startup_timeout_seconds": 30,
+    "timeout_seconds": 120,
+    "arguments": [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "{port}"
+    ]
+  },
+  "readiness": {
+    "path": "/health",
+    "expected_status": 200
+  },
+  "requests": [
+    {
+      "path": "/",
+      "expected_text_contains": [
+        "Project Tracker"
+      ]
+    },
+    {
+      "path": "/api/repos",
+      "expected_status": 200
+    },
+    {
+      "path": "/api/tasks/missing",
+      "expected_status": 404
+    },
+    {
+      "path": "/api/sessions",
+      "expected_status": 200
+    },
+    {
+      "path": "/.well-known/agent-card.json",
+      "expected_text_contains": [
+        "0.3.0",
+        "skills"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/a2a",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{\"jsonrpc\": \"2.0\", \"id\": \"bad-method\", \"method\": \"not/a/method\", \"params\": {}}",
+      "expected_status": 200,
+      "expected_text_contains": [
+        "-32601"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/repos",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{\"name\":\"Acceptance repository\",\"remote_url\":\"https://example.test/org/acceptance.git\"}",
+      "expected_status": 201
+    },
+    {
+      "path": "/api/repos",
+      "expected_text_contains": [
+        "Acceptance repository",
+        "local"
+      ]
+    },
+    {
+      "path": "/api/settings",
+      "expected_status": 200
+    },
+    {
+      "path": "/openapi.json",
+      "expected_status": 200,
+      "expected_text_contains": [
+        "openapi",
+        "/api/repos",
+        "/api/tasks"
+      ]
+    },
+    {
+      "path": "/api/peers",
+      "expected_status": 200
+    }
+  ]
+}

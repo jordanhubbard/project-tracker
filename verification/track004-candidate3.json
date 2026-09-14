@@ -1,0 +1,71 @@
+{
+  "status": "incomplete",
+  "artifact": "artifact-7a1f3cd0aa4d08717013",
+  "component_revision": "7a1f3cd0aa4d0871701367cd4155b5e3dacb32c762ff3241305cf68d09b821a8",
+  "native_tests": {
+    "passed": 46,
+    "failed": 0,
+    "includes_authenticated_mac_selfcheck": true
+  },
+  "live_read_only_provisional": {
+    "projects": 28,
+    "project_scoped_tasks": 9078,
+    "missing_ids": 0,
+    "extra_ids": 0,
+    "sync_errors": 0
+  },
+  "saved_snapshot_provisional": {
+    "projects": 28,
+    "project_scoped_tasks": 9077,
+    "same_project_dependencies": 8210,
+    "cross_project_references": 1,
+    "unresolved_references": 9,
+    "missing_ids": 0,
+    "extra_ids": 0,
+    "unchanged_poll": true
+  },
+  "independent_provisional": {
+    "backend_scenario_groups": 22,
+    "board_scenarios_per_viewport": 15,
+    "viewports": [
+      1440,
+      390
+    ],
+    "passed_phases": [
+      "service",
+      "browser-login",
+      "mac-status-ui",
+      "board",
+      "peer-ui",
+      "session-expiry",
+      "git-states"
+    ],
+    "long_text_and_unresolved_reference_browser_edits": true,
+    "snapshot_rollback_and_commit_events": true,
+    "non_json_outage_body_variants": 4,
+    "failed_phases": [
+      "equal-time-graph",
+      "irregular-time-graph"
+    ]
+  },
+  "scope_note": "Independent UI checks used an unmodified provisional snapshot; changed files relative to the final export are listed below. Native acceptance and focused REST write regressions were checked on the final export. Live hub verification was read-only; all mutation checks used synthetic fixtures. No fleet data or credentials are committed.",
+  "changed_since_provisional": [
+    "web/dom.js",
+    "tests/manifest.json",
+    "tests/integration_test.js",
+    "lib/service.js",
+    "lib/selfcheck.js",
+    "lib/mac.js",
+    "lib/http.js"
+  ],
+  "remaining_failures": [
+    {
+      "behavior": "Adding a new dependency to an existing MAC task",
+      "evidence": "Final exported REST service drops the newly selected MAC ID; existing and foreign references remain. Identity map contains only existing upstream dependencies."
+    },
+    {
+      "behavior": "Branch filtering with a colliding filename",
+      "evidence": "A branch and file both named feature make the bare rev-list invocation fail128. The graph reader returns empty history instead of resolving the branch unambiguously."
+    }
+  ]
+}

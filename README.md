@@ -1,90 +1,114 @@
-# ai-template
+# Project Tracker
 
-A project template that enforces consistent conventions, structured development workflows, and a distinctive documentation persona across all AI-assisted repositories.
+A repository and task workspace built with LitAI: Trello-style boards, live task
+updates, physical coding-session activity, Git relationship graphs and timestamp
+timelines. The Node.js backend owns SQLite, MAC synchronization, MCP, A2A peering
+and LLM credentials.
 
-Repositories cloned from this template automatically inherit rules and skills that guide AI coding assistants — no manual setup or repeated prompting required.
+- [Product objective](PROJECT.md)
+- [Application specification](components/tracker/component.md)
+- [Active work and verification](docs/roadmap/active-work.md)
+- [Project guide](docs/README.md)
 
-## Behavior Switches (`skills/config.yaml`)
+MAC synchronization repair is in progress under TRACK-004. The latest provisional
+backend preserves the captured fleet's task states and passes focused dependency
+and Git checks. A stalled response-body timeout and post-edit dependency-projection
+consistency remain open. See the active work record for evidence and acceptance
+status.
 
-This template now ships with behavior switches so downstream repositories can opt out of conventions they do not want. That includes the README backstory requirement.
+## Run
 
-Default switches:
+After a successful LitAI build, launch the exported application:
 
-```yaml
-behavior_switches:
-  provenance_story:
-    enabled: true
-    require_readme_section: true
-    update_chronicle: true
-  responsible_vibe_workflow:
-    enabled: true
+```sh
+./scripts/litai-service.sh run components/tracker '["service","--host","127.0.0.1","--port","8765"]'
 ```
 
-If a repository built from this template wants a more neutral documentation style, set:
+Open `http://127.0.0.1:8765`. Readiness is `GET /health`. Add a repository from the
+workspace and supply its local checkout path for Git visualizations. Configure the
+MAC endpoint and LLM gateway in Settings or through backend environment variables.
 
-```yaml
-behavior_switches:
-  provenance_story:
-    enabled: false
+For an isolated sample workspace, add `"--demo"` inside the JSON argument array.
+
+When `TRACKER_ACCESS_TOKEN` is configured, the browser presents Sign in. Enter the
+token in that form; the backend establishes an HttpOnly session cookie. Reloading
+reuses the session. API clients use `Authorization: Bearer ...`; keep the token in
+the backend/client environment rather than a URL.
+
+## Build
+
+The wrapper requires the declared Node 22.23.2 and Git 2.50.1 toolchain, and selects
+Claude Code with `claude-fable-5-1` for generation. LitAI installs the exact npm lock.
+
+```sh
+./scripts/litai-service.sh lock components/tracker
+./scripts/litai-service.sh build components/tracker --model claude-fable-5-1 --update-receipt
+./scripts/litai-service.sh verify
 ```
 
-## What It Does
+## Backend configuration
 
-**ai-template** solves the problem of repeating yourself to AI assistants. Instead of explaining your project conventions every session, this template encodes them once and applies them everywhere:
+| Environment variable | Purpose |
+| --- | --- |
+| `TRACKER_DATA_DIR` | Private SQLite and settings directory |
+| `TRACKER_MAC_URL`, `TRACKER_MAC_TOKEN` | MAC fleet connection |
+| `TRACKER_LLM_URL`, `TRACKER_LLM_KEY`, `TRACKER_LLM_MODEL` | LLM gateway connection |
+| `TRACKER_ACCESS_TOKEN` | Backend bearer authentication; required for non-loopback binding |
 
-- **Project structure enforcement** — Required directories (`tests/`, `docs/`), Makefile targets (`make`, `make test`, `make start`, `make stop`, `make restart`, `make clean`), and minimum 70% test coverage.
-- **Structured development workflows** — Integration with [responsible-vibe-mcp](https://github.com/mrsimpson/responsible-vibe-mcp) for phase-based development (planning, implementation, testing, review) instead of unstructured "vibe coding."
-- **Configurable documentation persona** — The PROVENANCE skill can add a humorous serialized origin story (the programmer and Sir Reginald von Fluffington III), but this behavior is controlled by `skills/config.yaml` so downstream repositories can opt out.
-- **Security and quality guardrails** — OWASP top-10 awareness, no over-engineering, no scope creep beyond what was requested.
+Without `TRACKER_DATA_DIR`, data lives in the platform's per-user application-data
+directory (`~/Library/Application Support/project-tracker` on macOS). Set an
+absolute directory when running an isolated instance or keeping a separate demo.
 
-## What's Included
+Saved settings take precedence over environment defaults. Blank credential fields
+preserve stored credentials; explicit clear removes them. Credentials stay on the
+backend and API responses report only whether they are configured.
 
-| File / Directory | Purpose |
-|-----------------|---------|
-| [`CLAUDE.md`](CLAUDE.md) | Project conventions automatically loaded by Claude Code — directory structure, Makefile targets, test coverage, README requirements, code quality rules |
-| [`skills/`](skills/) | Reusable AI prompt templates (see [Skills Index](skills/README.md)) |
-| [`skills/config.yaml`](skills/config.yaml) | Behavior switches for optional conventions (for example, enabling/disabling PROVENANCE requirements) |
-| [`skills/PROVENANCE.md`](skills/PROVENANCE.md) | The origin story skill — style guide, character notes, chronicle chain, and checklist for adding new chapters |
-| [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/) | Repository issue templates for convention bugs and skill/convention requests |
-| [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) | Pull request checklist for skills, conventions, and behavior switch changes |
-| `.claude/skills/responsible-vibe/` | Structured development workflow skill for Claude Code |
-| `.github/skills/responsible-vibe/` | Structured development workflow skill for GitHub Copilot |
-| `.opencode/skills/responsible-vibe/` | Structured development workflow skill for OpenCode |
+MAC owns tasks for matched repositories. Confirmed absence permits local tracking.
+A fleet outage preserves cached tasks and rejects upstream mutations with 503;
+existing local tasks require explicit migration before MAC ownership.
 
-## Responsible Vibe MCP
+## Physical coding sessions
 
-The template includes the [responsible-vibe-mcp](https://github.com/mrsimpson/responsible-vibe-mcp) skill across multiple AI assistant platforms. This skill enforces structured development workflows — plan before you code, test what you build, review before you ship — rather than letting the AI jump straight into writing code without a plan.
+Run the reporter on the host where the coding CLI executes, with the backend URL
+and access token in its environment:
 
-The skill is installed for:
-- **Claude Code** (`.claude/skills/`)
-- **GitHub Copilot** (`.github/skills/`)
-- **OpenCode** (`.opencode/skills/`)
+```sh
+export TRACKER_URL=http://127.0.0.1:8765
+./scripts/litai-service.sh run components/tracker '["service","session","--repo","/absolute/repo/path","--cli","codex","--","codex"]'
+```
 
-You can disable expectations around this workflow for downstream repositories by setting `behavior_switches.responsible_vibe_workflow.enabled: false` in `skills/config.yaml`.
+It launches the real child process, reports its host, PID and branch, and records
+its stopped lifecycle. A backend outage does not terminate the coding child.
 
-## Usage
+## Agent interfaces
 
-1. Clone or use this repo as a GitHub template for a new project.
-2. Set `skills/config.yaml` switches for your project's preferred conventions.
-3. The `CLAUDE.md` will automatically guide AI assistants to follow project conventions.
-4. Replace this `README.md` with a project-specific one.
-5. If PROVENANCE switches are enabled, use the PROVENANCE skill to write your project's origin story chapter and chain it into the chronicle.
+MCP is available at `/mcp` and through the stdio command:
 
-## The Documentation Persona (Optional)
+```sh
+./scripts/litai-service.sh run components/tracker '["service","mcp"]'
+```
 
-Projects can include a section called "The Totally True and Not At All Embellished History of [Project Name]." Whether this is required depends on `skills/config.yaml`:
+The A2A endpoint is `/a2a`, with its card at `/.well-known/agent-card.json`.
+Register authenticated outbound peers by their base URL in Agents & peers. REST routes are described
+at `/openapi.json`.
 
-- If `behavior_switches.provenance_story.enabled: true` and `require_readme_section: true`, include it.
-- If either switch is off, the section is optional and should not be enforced.
+## Verification
 
-When enabled, the section has practical purpose:
+Verified artifact: `artifact-6119bda93ad771d2ed03` (authority `e09a08c`).
+All 28 native tests and nine independent phases passed, plus public launch and
+failure-state probes. See [completion evidence](docs/user/verification.md)
+and the [machine-readable result](verification/final-result.json).
 
-- **Provenance tracking** — If a project has this section, an AI was meaningfully involved in its development. If it doesn't, the author worked alone.
-- **Serialized narrative** — Each project is a numbered chapter in a continuing chronicle, with navigation links chaining them together across repositories.
-- **Consistent voice** — Third-person limited, dry-humorous, mock-historical. The programmer announces things to his cat. The cat does not care.
+Run the independent checks against the exported source:
 
-See [`skills/PROVENANCE.md`](skills/PROVENANCE.md) for the full style guide, character notes, and checklist.
+```sh
+_build/browser-qa/bin/python verification/check_all.py generated/artifacts/tracker/artifact-6119bda93ad771d2ed03/source/main.js
+```
 
-## License
+The retained QA environment uses Playwright and installed Google Chrome. Tests
+create isolated data and fixture endpoints. MAC integration was verified against
+an authenticated contract fixture, without production fleet mutations.
 
-BSD 2-Clause
+## Release engineers
+
+No public release or fleet installation is configured or claimed.

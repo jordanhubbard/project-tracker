@@ -1,0 +1,36 @@
+{
+  "status": "interrupted_before_acceptance",
+  "component_revision": "f58c9f99734984a14284aa3548efc8d350cd6db5c16a0dab67e7d0f7e19c109f",
+  "scope": "Unmodified provisional generated backend snapshot; generation was stopped after confirming the lifecycle defect. No final artifact or native acceptance is claimed.",
+  "focused_checks": {
+    "new_dependency_edits": true,
+    "branch_filename_collision": true,
+    "snapshot_rollback": true,
+    "recovery_task_events": 2,
+    "unchanged_poll": true
+  },
+  "saved_snapshot": {
+    "provisional": true,
+    "rollback": true,
+    "recovery_events": 2,
+    "field_mismatches": {
+      "state": 7622
+    },
+    "state_changes": {
+      "cancelled -> open": 4189,
+      "failed -> open": 2630,
+      "stopped -> open": 294,
+      "blocked -> open": 437,
+      "waiting -> open": 47,
+      "needs_input -> open": 23,
+      "running -> open": 2
+    },
+    "ok": false,
+    "projects": 28,
+    "project_tasks": 9077,
+    "same_project_dependencies": 8210,
+    "unchanged_poll": true
+  },
+  "remaining_failure": "Imported states absent from the three-state workflow silently fall back to open. MAC native lifecycle has twelve states; in_progress belongs to the local Tracker workflow and is not a native MAC state.",
+  "privacy": "Only aggregate results are committed. Captured fleet records and credentials remain private."
+}
