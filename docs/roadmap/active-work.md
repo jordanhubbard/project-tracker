@@ -81,7 +81,9 @@ under TRACK-004. Earlier scoped evidence is in
 - **Conclusion:** Live import aborts on valid upstream dependency IDs after three projects; requests also time out. Correct upstream/local identity translation, complete fleet reconciliation and observable synchronization failures. Use isolated read-only live verification; production writes remain deliberate UI actions.
 - **Depends on:** none
 - **Implementation:**
-  - [ ] Rebind the reviewed persistent-service acceptance contract to the current specification set; candidate15 stopped at its stale binding before acceptance. Keep every isolated service probe and external data-directory setting.
+  - [ ] Prevent obsolete asynchronous route renders from reopening registration dialogs after successful saves and navigation.
+  - [ ] Make status-only toasts non-intercepting; verify immediate mobile Settings saves during visible notifications.
+  - [x] Rebind the reviewed persistent-service contract without changing its probes or isolated data directory. Candidate15 then passed the supported build using the retained generation checkpoint (7 native groups); independent UI findings still block final acceptance.
   - [ ] Correct candidate14's late fleet identity-index regression: insertion and lookup must use the same composite key; retain real dependency-only update assertions.
   - [ ] Return a useful client-validation error for invalid local dependencies, preserving rows, revisions and events on rejection.
   - [ ] Keep the mobile navigation drawer dismissible and close it after navigation; verify Activity and Settings remain reachable.
@@ -224,7 +226,7 @@ Git history and ignored diagnostics; current repair status is recorded above.
 - **Packaging follow-up:** Literate AI 1.0.1 cannot build npm packages. Filed [upstream issue #411](https://github.com/NVIDIA-dev/literate-ai/issues/411), assigned to milestone 1.1. Use native `npm pack` for this release, bind it to accepted source and verify extraction, installation, runtime and uploaded bytes.
 - **Depends on:** TRACK-004, TRACK-006
 - **Implementation:**
-  - [ ] Configure and validate the real tracker release policy and artifact packaging.
+  - [x] Configure the tracker release policy and verified native npm packaging. Candidate15 archive passed exact47-file verification, fresh installation,7 native groups,22 service checks,6 rejected-write checks and byte-for-byte GitHub draft download verification. See [candidate15 evidence](../../verification/track004-candidate15.json).
   - [ ] Resolve native acceptance failures and finish final service, browser, live and portable-cache checks.
   - [ ] Prepare, check and publish v1.0.0 with truthful notes and verified release artifacts.
 - **Evidence:**

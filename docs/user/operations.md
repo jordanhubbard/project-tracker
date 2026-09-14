@@ -62,5 +62,7 @@ error, artifact identity and sanitized sync status when investigating a failure.
 bearer values, private URLs, raw fleet snapshots and private settings from public issues.
 Runtime checks write local reports under `_build/`; these are ignored by Git.
 
-There is no configured packaged installer, release pipeline or fleet deployment in this
-workspace. GitHub persistence is source publication, not installation or a release.
+Native npm packaging and archive verification are available; the first stable release
+is still pending final application acceptance. See [releases](releases.md) for the
+archive installation flow. Fleet deployment and background-service installation are
+separate operator actions.

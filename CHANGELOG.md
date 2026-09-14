@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Packaging: add verified native npm archives with locked dependencies, complete file
+  checksums, specifications and both source/resolved SBOMs. A private GitHub draft
+  passed download verification; stable release publication remains pending UI fixes.
+
 - Documentation: provide complete setup, configuration, project/task, MAC, Git,
   session/peer, API, operations, security, troubleshooting and contributor guides.
   Replace stale blanket completion claims with artifact-specific acceptance status.

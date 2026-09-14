@@ -45,7 +45,13 @@ with tempfile.TemporaryDirectory() as root:
       page.get_by_label(re.compile(r'^(?:(?:Repository |Display )?Name)',re.I)).fill('Local only')
       page.get_by_label(re.compile(r'^Remote URL',re.I)).fill('https://example.test/local/only.git')
       page.get_by_role('dialog').get_by_role('button', name=re.compile(r'^(?:Register(?: repository| locally)?|Save)$')).click()
-      page.get_by_role('dialog').wait_for(state='hidden')
+      try: page.get_by_role('dialog').wait_for(state='hidden')
+      except Exception:
+        page.screenshot(path=str(out/'registration-failure.png'),full_page=True)
+        (out/'registration-failure.aria.txt').write_text(page.locator('body').aria_snapshot())
+        (out/'registration-failure.json').write_text(json.dumps({'url':page.url,'repos':request(a,'GET','/api/repos'),'page_errors':errors},indent=2))
+        errors.append('Registration dialog remained open after submission')
+        page.get_by_role('dialog').get_by_role('button',name='Cancel',exact=True).click()
       local=next(repo for repo in request(a,'GET','/api/repos')['items'] if repo['name']=='Local only')
       assert local['remote_url']=='https://example.test/local/only.git' and local['authority']=='local'
       page.get_by_role('button',name='Agents & peers',exact=True).click()

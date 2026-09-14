@@ -85,3 +85,10 @@ separate actual-client probe confirmed the exact reused socket closed at the sho
 deadline before fixture cleanup and a healthy follow-up succeeded. The lifecycle
 rejected this candidate; final acceptance remains pending. See
 [candidate-thirteen evidence](../../verification/track004-candidate13.json).
+
+Candidate [15](../../verification/track004-candidate15.json) passed the supported
+native build after reviewing and rebinding the service acceptance contract. Its
+native npm archive passed exact file verification, installation, native/service
+checks and byte-for-byte download verification from an unpublished GitHub draft.
+Two browser defects remain: a stale render reopens the registration dialog and a
+status toast intercepts mobile Settings clicks. Stable release acceptance is pending.

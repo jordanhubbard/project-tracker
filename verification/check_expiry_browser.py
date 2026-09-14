@@ -62,7 +62,7 @@ with tempfile.TemporaryDirectory(prefix='tracker-expiry-') as data:
             page.set_default_timeout(5000)
             page.goto(base)
             page.get_by_role('button', name=re.compile(r'^Open board(?: for .+)?$',re.I)).or_(
-                page.get_by_role('link', name=re.compile(r'^Open board(?: for .+)?$',re.I))).click()
+                page.get_by_role('link', name=re.compile(r'^Open board(?: for .+)?$',re.I))).or_(page.locator('.repo-card[role="button"]')).first.click()
             page.get_by_role('tab', name='Fleet', exact=True).or_(
                 page.get_by_role('button', name='Fleet', exact=True)).or_(
                 page.get_by_role('link', name='Fleet', exact=True)).click()

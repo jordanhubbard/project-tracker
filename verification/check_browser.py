@@ -164,7 +164,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                     try:
                         page.get_by_role("button", name=re.compile(r"^Open board(?: for .+)?$", re.I)).or_(
                             page.get_by_role("link", name=re.compile(r"^Open board(?: for .+)?$", re.I))
-                        ).click()
+                        ).or_(page.locator('.repo-card[role="button"]')).first.click()
                     except Exception:
                         page.screenshot(
                             path=str(out / f"{name}-startup.png"), full_page=True
@@ -233,7 +233,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 if page.url != board_url: page.goto(board_url)
 
                         def heading_geometry():
-                            rows = page.locator('.board-list .list-name, .list .list-title, .list .list-name').evaluate_all(r"""nodes => nodes.map(e => {
+                            rows = page.locator('.board-list .list-name, .list .list-title, .list .list-name, .list-column .list-name').evaluate_all(r"""nodes => nodes.map(e => {
                                 const r=e.getBoundingClientRect();
                                 const range=document.createRange(); range.selectNodeContents(e);
                                 const text=range.getBoundingClientRect();
@@ -361,7 +361,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             if not check_text.count():
                                 check_text = dialog.locator('.checklist-editor li').last.get_by_role('textbox')
                             check_text.last.fill('Review browser attributes')
-                            dialog.get_by_role('checkbox', name=re.compile(r'^(?:Done|Completed:|Checklist item completed?|Checklist item \d+ (?:done|complete))', re.I)).last.check()
+                            dialog.get_by_role('checkbox', name=re.compile(r'^(?:Mark checklist item \d+ complete|Done|Completed:|Checklist item completed?|Checklist item \d+ (?:done|complete))', re.I)).last.check()
                             dialog.get_by_role('button', name=re.compile(r'^Save(?: task)?$')).click()
                             dialog.wait_for(state='hidden')
                             saved = api('GET', f"/api/tasks/{task['id']}")
@@ -498,7 +498,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         def workflow_lifecycle():
                             added_name = f'Browser column {name}'
                             before_ids={x['id'] for x in api('GET', f"/api/repos/{repo['id']}/states")['items']}
-                            page.get_by_role('button', name=re.compile(r'^(?:\+ )?Add list$')).click()
+                            page.get_by_role('button', name=re.compile(r'^(?:(?:\+ )?Add list|Add a workflow list)$')).click()
                             dialog = page.get_by_role('dialog')
                             deadline=time.monotonic()+5
                             while time.monotonic()<deadline:
@@ -577,7 +577,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 page.get_by_role(
                                     "button",
                                     name=re.compile(
-                                        "^menu$|sidebar|(?:Toggle|Show|Hide) repositories", re.I
+                                        "^menu$|sidebar|^Toggle navigation$|(?:Toggle|Show|Hide) repositories", re.I
                                     ),
                                 ).click()
                             page.get_by_role("button", name="Activity", exact=True, include_hidden=True).or_(
@@ -588,7 +588,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             ).wait_for()
                             expect(page.locator('main:visible')).to_contain_text('Remote attribute update visible', timeout=5000)
                             if name == "mobile":
-                                menu = page.get_by_role("button", name=re.compile("^menu$|sidebar|(?:Toggle|Show|Hide) repositories", re.I))
+                                menu = page.get_by_role("button", name=re.compile("^menu$|sidebar|^Toggle navigation$|(?:Toggle|Show|Hide) repositories", re.I))
                                 expect(menu).to_have_attribute("aria-expanded", "false")
                                 menu.click()
                                 expect(menu).to_have_attribute("aria-expanded", "true")

@@ -7,6 +7,26 @@ kind: verification
 
 ## Confirmed regeneration regressions
 
+Async UI renders must not commit an obsolete route after navigation or a completed
+mutation. Recheck the active route/render generation after awaited reads, and never
+reopen a modal from an outdated registration route. With an SSE connection active,
+register a remote-only local repository using the browser form: require exactly one
+new repository, navigation to its board, and a closed registration dialog that stays
+closed after the repository-created event and subsequent refresh. Preserve the user's
+current modal draft during unrelated SSE refreshes. Verify cancellation does not imply
+that an already completed registration was undone. The prior candidate persisted and
+navigated correctly but a stale render reopened an empty registration form.
+
+Informational toast notifications must not intercept pointer input intended for the
+workspace. A status-only toast has no interactive hit target; retain accessible live
+announcements while allowing underlying controls to receive normal clicks. At
+mobile390x844, save a repository description and immediately navigate to Settings,
+edit URL/model/key and click Save settings while the success notification is visible.
+The save must complete without forced clicks or waiting for notification expiry.
+If a notification contains an explicit action, restrict hit testing to that action
+and keep primary controls reachable. Preserve the verified mobile drawer behavior.
+
+
 Fleet identity indexing must use exactly the same composite key for insertion and
 retrieval, including identical delimiters and encoding. Candidate14 introduced a
 NUL-versus-space key mismatch during a late scale optimization: all seeded tasks

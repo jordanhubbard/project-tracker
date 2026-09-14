@@ -16,7 +16,7 @@ def commit_circle(node):
 
 
 def expect_selected_hash(page, commit_hash):
-    inspector = page.locator("#commit-inspector, .commit-inspector, .inspector").first
+    inspector = page.locator('#commit-inspector, .commit-inspector, .inspector, [aria-label=\"Commit inspector\"]').first
     expect(inspector).to_contain_text(commit_hash, timeout=5000)
     value = inspector.locator('dt').filter(has_text=re.compile(r'^Hash$')).locator('xpath=following-sibling::dd[1]')
     if value.count():
@@ -213,7 +213,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                     try:
                         page.get_by_role("button", name=re.compile(r"^Open board(?: for .+)?$", re.I)).or_(
                             page.get_by_role("link", name=re.compile(r"^Open board(?: for .+)?$", re.I))
-                        ).click()
+                        ).or_(page.locator('.repo-card[role="button"]')).first.click()
                     except Exception:
                         page.screenshot(
                             path=str(out / f"{name}-startup.png"), full_page=True
@@ -330,7 +330,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                     matching_hashes = [h for h in commits if h.startswith(short_hash.group())]
                                     assert len(matching_hashes) == 1, (label, matching_hashes)
                                     expect_selected_hash(page, matching_hashes[0])
-                                details = page.locator("#commit-inspector, .commit-inspector, .inspector").first.inner_text()
+                                details = page.locator('#commit-inspector, .commit-inspector, .inspector, [aria-label=\"Commit inspector\"]').first.inner_text()
                                 match = re.search(r"\b([a-f0-9]{40,64})\b", details)
                                 center = commit_circle(node).evaluate(
                                     "n => {const p = n.ownerSVGElement.createSVGPoint(); p.x=n.cx.baseVal.value; p.y=n.cy.baseVal.value; return p.matrixTransform(n.getCTM()).x}"
@@ -352,7 +352,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
 
                         commit_circle(commit_node(page, mergehash)).click()
                         expect_selected_hash(page, mergehash)
-                        selected = page.locator("#commit-inspector, .commit-inspector, .inspector").first.inner_text()
+                        selected = page.locator('#commit-inspector, .commit-inspector, .inspector, [aria-label=\"Commit inspector\"]').first.inner_text()
                         if re.search(r'\b(?:undefined|NaN)\b', selected):
                             issues.append(f'{mode} commit inspector contains an undefined value')
                         initial_width = page.locator("svg").first.evaluate("n=>n.getBoundingClientRect().width")
@@ -388,23 +388,23 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         expect(filtered_node).to_be_visible(timeout=2000)
                         commit_circle(filtered_node).click()
                         expect_selected_hash(page, featurehash)
-                        filtered = page.locator("#commit-inspector, .commit-inspector, .inspector").first.inner_text()
+                        filtered = page.locator('#commit-inspector, .commit-inspector, .inspector, [aria-label=\"Commit inspector\"]').first.inner_text()
                         if feature_task_title not in filtered or main_task_title in filtered:
                             issues.append(f'{mode}: filtered feature inspector does not distinguish actual branch task associations')
 
                         inspector_bounds = page.locator(
-                            "#commit-inspector, .commit-inspector, .inspector"
+                            "#commit-inspector, .commit-inspector, .inspector, [aria-label=\"Commit inspector\"]"
                         ).first.bounding_box()
                         deadline = time.monotonic() + 2
                         while True:
                             try:
-                                page.locator("#commit-inspector, .commit-inspector, .inspector").first.scroll_into_view_if_needed(timeout=1000)
+                                page.locator('#commit-inspector, .commit-inspector, .inspector, [aria-label=\"Commit inspector\"]').first.scroll_into_view_if_needed(timeout=1000)
                                 break
                             except Exception:
                                 if time.monotonic() >= deadline:
                                     raise
                         inspector_bounds = page.locator(
-                            "#commit-inspector, .commit-inspector, .inspector"
+                            "#commit-inspector, .commit-inspector, .inspector, [aria-label=\"Commit inspector\"]"
                         ).first.bounding_box()
                         page.screenshot(
                             path=str(out / f"{name}-{mode.lower()}-filtered.png"),
@@ -453,11 +453,11 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 "zoomed_width": zoomed,
                                 "reset_width": reset,
                                 "inspector_visible": page.locator(
-                                    "#commit-inspector, .commit-inspector, .inspector"
+                                    "#commit-inspector, .commit-inspector, .inspector, [aria-label=\"Commit inspector\"]"
                                 ).first.is_visible(),
                             }
                         )
-                        task_region = page.locator("#commit-inspector, .commit-inspector, .inspector").first
+                        task_region = page.locator('#commit-inspector, .commit-inspector, .inspector, [aria-label=\"Commit inspector\"]').first
                         task_link = task_region.get_by_role('link', name=re.compile(re.escape(feature_task_title))).or_(task_region.get_by_role('button', name=re.compile(re.escape(feature_task_title))))
                         if not task_link.count():
                             issues.append(f'{mode}: related task is plain text without an actionable link')

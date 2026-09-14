@@ -60,7 +60,7 @@ with tempfile.TemporaryDirectory(prefix='tracker-git-states-') as temporary:
                 browser = p.chromium.launch(executable_path=CHROME)
                 def open_graph(page):
                     page.goto(base)
-                    page.get_by_role('button', name=re.compile(r'^Open board(?: for .+)?$')).click()
+                    page.get_by_role('button', name=re.compile(r'^Open board(?: for .+)?$')).or_(page.locator('.repo-card[role="button"]')).first.click()
                     with page.expect_response(lambda response: '/graph' in response.url and response.status == 200) as fetched:
                         page.get_by_role('button', name='Graph', exact=True).or_(
                             page.get_by_role('link', name='Graph', exact=True)).or_(
