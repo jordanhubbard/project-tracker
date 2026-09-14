@@ -68,6 +68,15 @@ heartbeat expiry, Git failure states and equal/irregular-time graphs. They use i
 storage and synthetic upstreams. Browser screenshots and assertions complement native
 acceptance; they do not manufacture a framework receipt.
 
+Run the maintained MAC regression harnesses against the same accepted source. Use a
+fresh output directory for each invocation:
+
+```sh
+python3 verification/check_mac_timeout.py /absolute/path/to/accepted/source/main.js --output _build/mac-timeout
+python3 verification/check_mac_lifecycle.py /absolute/path/to/accepted/source --output _build/mac-lifecycle
+_build/browser-qa/bin/python verification/check_mac_writes.py /absolute/path/to/accepted/source --browser --output _build/mac-writes
+```
+
 The MAC repair additionally requires complete snapshot reconciliation, dependency/lifecycle
 regressions, synthetic write and browser checks, and an actual-service default 60-second
 stalled-body test. The installed packaged test runner has a fixed 60-second process
