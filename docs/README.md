@@ -19,6 +19,7 @@ are separate milestones.
 | [Git views](user/git-views.md) | Graph, Timeline, branch filters, task links and checkout requirements |
 | [Sessions and peers](user/sessions-and-peers.md) | Reporter deployment, host activity and A2A peers |
 | [Operations](user/operations.md) | Startup, shutdown, backup, restore and upgrades |
+| [Managed deployment](user/deployment.md) | macOS service files, sign-in and launchd controls |
 | [Troubleshooting](user/troubleshooting.md) | Common symptoms and diagnostic steps |
 | [Security](user/security.md) | Credentials, browser access and execution boundaries |
 

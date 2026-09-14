@@ -62,7 +62,7 @@ error, artifact identity and sanitized sync status when investigating a failure.
 bearer values, private URLs, raw fleet snapshots and private settings from public issues.
 Runtime checks write local reports under `_build/`; these are ignored by Git.
 
-Native npm packaging and archive verification are available; the first stable release
-is still pending final application acceptance. See [releases](releases.md) for the
-archive installation flow. Fleet deployment and background-service installation are
-separate operator actions.
+Native npm packaging and archive verification are available. Published v1.0.0 includes
+known UI limitations listed in its release notes. See [releases](releases.md) for the
+archive installation flow and [managed deployment](deployment.md) for the installed
+macOS service layout and launchd controls.

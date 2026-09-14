@@ -236,3 +236,21 @@ Git history and ignored diagnostics; current repair status is recorded above.
 - **Evidence:**
   - [ ] Current native and independent runtime acceptance passes for the exact release revision.
   - [ ] The GitHub release, tag, downloadable artifacts and source revision are verified remotely.
+
+### [x] TRACK-008 — Deploy published v1.0.0 to puck.local
+
+- **Priority:** P0
+- **Owner:** operations
+- **Direction:** Deploy the published release to puck.local.
+- **Conclusion:** Install unchanged verified release assets with durable private storage, managed startup, protected browser access and read-only MAC synchronization; verify actual health and remote access.
+- **Depends on:** none
+- **Implementation:**
+  - [x] Inspect host prerequisites and existing configuration; verify the published archive and install locked dependencies.
+  - [x] Install and start a managed service with separate persistent data and private credentials.
+- **Evidence:**
+  - [x] Confirm native diagnostics, remote HTTP readiness, authenticated browser access, managed restart and MAC synchronization when configured.
+
+Deployment completed: unchanged v1.0.0 archive,7 native groups, authenticated browser
+access, graceful managed restart and exact MAC comparison of28 repositories/8947tasks
+passed. See [deployment evidence](../../verification/deployment-puck-v1.0.0.json) and
+[operator guide](../user/deployment.md). The existing release UI limitations remain.
