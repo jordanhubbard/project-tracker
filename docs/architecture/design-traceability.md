@@ -1,6 +1,6 @@
 # Design traceability
 
-<!-- literate-ai:authority-reviewed sha256:67bd76824380387f3d488a15d6d98c86618b2213d9849e862493cc6383eb8416 -->
+<!-- literate-ai:authority-reviewed sha256:7d7e9c623eb8c4c46f3a6b027cef2670a88ec96debf20813918ec92c40f73e56 -->
 
 [Project guide](../README.md) → design traceability
 
@@ -13,3 +13,8 @@ derived evidence outside source authority. Changes should update the owning arti
 its nearby explanation or diagram,
 and an end-to-end test. Illustrations aid understanding; prose requirements and
 acceptance scenarios remain normative. See the [project map](../user/project-layout.md).
+
+MAC snapshot import preserves upstream dependency identity independently of local
+task validation. The integration contract and native regression requirements cover
+forward, missing and cross-project references, complete fleet reconciliation and
+truthful synchronization health. Live verification remains isolated and read-only.

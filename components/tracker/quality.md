@@ -5,6 +5,33 @@ kind: verification
 ---
 # Product verification and completeness
 
+## Fleet dependency and scale regression acceptance
+
+Use authenticated disposable MAC HTTP fixtures through the actual service. Return
+dependent tasks before their prerequisites, put those prerequisites beyond item200,
+include another project's dependency, a missing reference and an upstream cycle.
+Require complete import, correct tracker-ID links, durable raw upstream references,
+visible unresolved-reference detail, last_sync_ok true, and an unchanged second
+poll with no revision/event churn. Restore the missing task in a later poll and
+verify the relationship resolves. Restart and verify dependency persistence.
+
+Capture upstream create/edit bodies: each selected tracker dependency becomes the
+corresponding MAC ID. A title-only edit and the browser's full editor Save preserve
+missing/cross-project references and foreign metadata. Explicit removal of an
+unresolved reference must work through a labelled control. Keep local dependency
+cycle and cross-repository rejection tests. Imported upstream cycles are read data,
+not an excuse to bypass local mutation validation.
+
+Import at least 10,000 tasks and at least201 projects. Change and delete tasks beyond
+the first200, verify exact totals and unchanged revisions elsewhere, and verify all
+repositories show outage/recovery. Inject an import failure after enumeration and
+assert rollback to the last-good snapshot, truthful failed health and recovery.
+Overlap explicit synchronize calls with a slow fixture and assert one in-flight
+poll; verify reads delayed beyond eight seconds can succeed and response-body stalls
+remain bounded. No native test may contact the real fleet. Bind separate read-only
+live evidence to the exported source identity and compare all snapshot IDs/counts,
+not only a healthy HTTP socket or the first page of repositories.
+
 ## Required verification
 
 Generated tests exercise real HTTP and SQLite persistence after restart, replayed SSE,

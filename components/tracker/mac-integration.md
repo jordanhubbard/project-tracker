@@ -137,3 +137,52 @@ repository and upstream503, POST a new task: return tracker503, insert no cache
 or local task, and preserve existing task revisions. Retain useful genuine4xx
 rejection details separately. Exercise creation, editing and transitions through
 the real shared service with an HTTP fleet fixture.
+
+## Complete fleet snapshots and dependency identity
+
+MAC dependency values are upstream task IDs; tracker task IDs belong to a separate
+namespace. Import is independent of task order and project order. Establish every
+discovered repository and task identity before resolving dependency relationships,
+or use an equivalent stable mapping that supports forward references. A dependent
+task arriving before its prerequisite must import successfully. Translate resolved
+dependencies to tracker IDs for public task APIs and the editor, and translate
+tracker IDs back to MAC IDs on explicit upstream creates/edits. Never send tracker
+UUIDs to MAC as dependency IDs. Preserve unchanged dependencies on unrelated edits.
+
+MAC is authoritative for its existing dependency graph. References to another MAC
+project, missing/archived tasks and upstream cycles must not abort discovery, erase
+relationships or prevent unrelated tasks from importing. Preserve the complete raw
+upstream dependency list in durable upstream data. Expose unresolved references with
+their upstream IDs and a useful missing/outside-project explanation in task detail;
+resolved cross-project references may link to the corresponding tracker task. Do not
+force the stricter local-task repository/cycle validation onto an imported upstream
+snapshot. Local task mutations retain those validations. An unrelated MAC edit must
+not clear missing or cross-project references. Explicit dependency edits translate
+selected local IDs and retain unresolved references unless the operator explicitly
+removes them. Recheck references on later snapshots so missing tasks can resolve.
+
+Reconcile the full snapshot, not just the first API page. Public page limits must
+not cap internal import, deletion, identity resolution, dependency validation or
+failure-status propagation. Verify more than 200 tasks per repository and more than
+200 repositories with changes/removals beyond the first page. Use complete keyed
+lookups and transactions or equivalent bounded work; avoid rescanning the entire
+fleet per imported task. A fleet of at least 10,000 tasks must remain practical.
+An unchanged complete poll emits no task changes and keeps revisions stable.
+
+Serialize synchronization: at most one poll may be in flight, even when a poll
+takes longer than its interval or a manual refresh overlaps the timer. All exits,
+including import errors after successful HTTP reads, update last_sync_at and
+last_sync_ok and expose a sanitized actionable sync_error. Never silently swallow
+an import exception and leave health indeterminate. Preserve last-good snapshots
+on failure and do not publish partial import success. Recovery clears errors and
+emits the required status transition after the entire snapshot is reconciled.
+
+Enumeration reads must tolerate the real fleet's response time while remaining
+bounded. Use a 60-second timeout for read requests through response-body consumption;
+keep mutations bounded separately and never automatically retry a write. Avoid
+serial project-detail calls when summaries plus the known lifecycle suffice; any
+optional detail enrichment uses bounded concurrency and cannot block all task import.
+The HTTP service must remain available during synchronization, with readiness clearly
+distinguished from socket liveness. Native acceptance uses disposable fixtures only;
+separate operator-authorized live verification uses an isolated tracker database and
+read-only MAC requests, never automatic fleet writes.

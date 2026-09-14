@@ -1,7 +1,8 @@
 # Active work
 
 This is the durable queue for the requested Project Tracker application. The local
-implementation is complete; detailed evidence is in
+implementation passed isolated acceptance; live MAC synchronization repair is active
+under TRACK-004. Earlier scoped evidence is in
 [product completion evidence](../user/verification.md) and
 [the consolidated result](../../verification/final-result.json).
 
@@ -81,3 +82,18 @@ configured; the LitAI tracker/peer survey reported unsupported forge and skipped
 remote reconciliation. Prior rejected candidates and corrective iterations remain
 in Git history and ignored build diagnostics; they are superseded by the final
 artifact above.
+
+### [ ] TRACK-004 — Complete live MAC task synchronization
+
+- **Priority:** P0
+- **Owner:** components/tracker
+- **Direction:** Fix the live integration failure and verify project and task handling against the accessible MAC hub.
+- **Conclusion:** Live import aborts on valid upstream dependency IDs after three projects; requests also time out. Correct upstream/local identity translation, complete fleet reconciliation and observable synchronization failures. Use isolated read-only live verification; production writes remain deliberate UI actions.
+- **Depends on:** none
+- **Implementation:**
+  - [ ] Specify order-independent upstream dependency import and outbound identity translation with fleet-scale reconciliation.
+  - [ ] Regenerate the exported application through the supported lifecycle.
+- **Evidence:**
+  - [ ] Native authenticated fixtures cover reverse-order dependencies, missing and cross-project references, unchanged polls, deletion beyond 200 tasks, failure recovery and nonoverlapping slow synchronization.
+  - [ ] Replay the real hub snapshot and verify complete project/task counts and dependency preservation.
+  - [ ] Verify an isolated exported tracker completes live read-only synchronization and renders MAC tasks.
