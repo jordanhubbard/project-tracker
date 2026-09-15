@@ -5,6 +5,33 @@ kind: verification
 ---
 # Product verification and completeness
 
+## MAC project-detail metadata
+
+Use an authenticated synthetic MAC fixture with two discovered projects. Its project
+summaries contain only routing identity; `GET /projects/{project}` supplies project ID,
+repository URL and nested metadata containing strings, numbers, booleans, null, arrays,
+empty containers, markup-shaped text and secret-shaped keys. Require at most four detail
+requests concurrently. Repeated automatic five-second synchronization within one minute
+must not refetch an already successful detail, while an explicit manual synchronization
+must refresh it.
+
+After synchronization, authenticated `GET /api/repos/{id}` must expose the matching
+bounded `mac_project_detail`; `GET /api/repos` must omit it. Assert every secret-shaped
+value is exactly `[redacted]`, markup remains inert text, distinct JSON scalar/container
+types survive, and configured size/depth/count limits produce visible truncation markers.
+A detail-only 503 or malformed response for one project must preserve its last-good
+detail and fetched time with a sanitized per-project error while the other project and
+the complete task snapshot still update. Restart against the same SQLite directory and
+require the safe last-good detail to remain available before the next successful refresh.
+
+In desktop and 390x844 browser checks, open a MAC repository Inspector and verify the
+MAC project name/ID, repository URL, fetched/freshness state and nested metadata are
+readable and accessible. Expand nested values through normal pointer and keyboard input;
+confirm null, false, zero and empty collections are not presented as missing. Assert no
+page-level horizontal overflow, no secret value in DOM text/HTML/storage, and no console,
+page, request or HTTP errors. Local and unresolved repository Inspectors must omit the
+metadata tree and explain that MAC detail is unavailable for their authority.
+
 ## Confirmed regeneration regressions
 
 After a previously successful MAC enumeration, a failed poll invalidates that

@@ -32,6 +32,14 @@ polls share one in-flight synchronization, so a slow upstream does not accumulat
 polls. Discovery reads `/projects` and `/bridge/repositories`; task import reads `/tasks`.
 Fleet information also reads `/agents` and `/machines`.
 
+Open a repository's **Inspector** to see the last-good MAC project detail and its
+structured metadata. The detail panel includes its fetch time and any project-specific
+refresh error. Project Tracker refreshes missing details promptly and existing details
+at most once per minute; **Synchronize** requests an immediate refresh. Secret-shaped
+metadata fields are redacted before they enter the tracker database or browser. The
+repository collection stays compact; authenticated repository detail responses expose
+the same safe projection as `mac_project_detail`.
+
 A successful import reconciles the complete project-scoped snapshot, including records
 beyond the UI's first page. Task dependencies are translated after identities are known,
 so upstream ordering cannot drop forward references. The import commits atomically;

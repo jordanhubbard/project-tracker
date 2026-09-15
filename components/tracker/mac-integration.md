@@ -306,6 +306,23 @@ On successful complete project and registry reads:
 7. Emit durable events for actual upstream changes, including state and deletion.
    Unchanged polling must not increment task revisions every five seconds.
 
+Project summaries are identity input, not the complete Inspector record. For every
+discovered project, obtain its authoritative detail from `GET /projects/{project}`.
+Cache a bounded redacted projection with fetched-at and error state. Refresh missing
+details immediately and successful cached details at most once per minute; a manual
+sync bypasses that age limit. Use at most four concurrent detail requests so a large
+fleet cannot fan out without bound. Detail failures are isolated per project: retain
+last-good detail, mark it stale with a sanitized error, and continue atomically importing
+the successful project, registry and task collections. A detail response may add
+information but cannot change the logical routing name established by discovery.
+
+Recursively redact values under secret-shaped keys (`token`, `secret`, `password`,
+`credential`, `authorization`, `cookie`, `private_key`, `api_key`, case-insensitive and
+including compound keys). Apply size, depth, array and string bounds before persistence.
+The REST response and browser must receive only this safe projection, never the raw
+detail or MAC bearer credential. JSON strings are displayed as text; markup-shaped
+content must remain inert.
+
 Workflow state names and IDs must not collide during this import. If a newly
 discovered MAC repo receives initial local-style states with generated IDs, an
 upstream state named `open` must reuse or deliberately replace the existing `open`

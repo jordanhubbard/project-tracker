@@ -254,3 +254,18 @@ Deployment completed: unchanged v1.0.0 archive,7 native groups, authenticated br
 access, graceful managed restart and exact MAC comparison of28 repositories/8947tasks
 passed. See [deployment evidence](../../verification/deployment-puck-v1.0.0.json) and
 [operator guide](../user/deployment.md). The existing release UI limitations remain.
+
+### [ ] TRACK-009 — Show MAC project metadata in repository Inspector
+
+- **Priority:** P1
+- **Owner:** component://project-tracker/tracker
+- **Direction:** Expose the per-project information and metadata stored by MAC in Project Tracker.
+- **Conclusion:** Fetch MAC project detail for each discovered MAC project, retain a bounded safe projection in the local cache, expose it through the repository detail API, and display structured metadata in Inspector while preserving last-good data during outages.
+- **Depends on:** TRACK-004
+- **Implementation:**
+  - [x] Specify the project-detail data model, privacy boundary, synchronization behavior, REST contract and Inspector presentation.
+  - [ ] Regenerate the application through the supported LitAI lifecycle.
+  - [ ] Verify authenticated MAC project-detail reads, atomic persistence, outage retention, API schemas and desktop/mobile Inspector rendering.
+- **Evidence:**
+  - [ ] Generated native acceptance and independent service/browser checks pass for the exact artifact.
+  - [ ] A read-only deployed-fixture comparison confirms displayed project identity and metadata without production writes.

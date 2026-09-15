@@ -3,7 +3,7 @@ namespace: project-tracker
 version: 1.0.0
 display_name: Project Tracker
 profiles: ["application", "service", "full-stack"]
-specification_roots: ["component.md", "runtime.md", "mac-integration.md", "quality.md", "visual.md"]
+specification_roots: ["component.md", "runtime.md", "mac-integration.md", "project-details.md", "quality.md", "visual.md"]
 sample: false
 inheritable: false
 provides:
@@ -253,7 +253,8 @@ A failed save/move retains draft, restores card position, and shows actionable e
 Add list and list menu edit workflow. Persist board selection in URL hash (deep links).
 
 Repo inspector shows Git origin/path/default branch, authority/sync freshness, MAC link,
-active physical host sessions, task metrics and editable description. Fleet view shows
+active physical host sessions, task metrics and editable description. It follows the
+project-detail metadata behavior in `project-details.md`. Fleet view shows
 host, CLI, branch, task, last heartbeat and explicit active/stale/stopped status. Activity
 feed shows human-readable task creation, state and attribute edits in time order.
 All live SSE events update counts/cards/details without page reload or discarding an

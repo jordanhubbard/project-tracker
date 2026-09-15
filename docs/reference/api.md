@@ -25,7 +25,7 @@ When sending to a peer, use repository IDs belonging to that receiving instance.
 | `GET /openapi.json` | REST contract |
 | `GET /api/repos` | Paginated repositories |
 | `POST /api/repos` | Register a repository |
-| `GET /api/repos/{id}` | Repository detail |
+| `GET /api/repos/{id}` | Repository detail with safe cached `mac_project_detail` for MAC-owned repositories |
 | `PATCH /api/repos/{id}` | Edit repository metadata |
 | `GET /api/repos/{id}/tasks` | Paginated tasks for a repository |
 | `POST /api/repos/{id}/tasks` | Create a task through its authority |
