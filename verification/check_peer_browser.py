@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+from test_tools import NODE, CHROME
 import argparse, json, os, re, socket, subprocess, sys, tempfile, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from service_response import entity_response
 parser = argparse.ArgumentParser(description="Verify peer registration and remote task creation through Chrome.")
 parser.add_argument('entrypoint', type=Path)
-parser.add_argument('--node', default='/opt/homebrew/opt/node@22/bin/node')
+parser.add_argument('--node', default=NODE)
 parser.add_argument('--output', type=Path, default=Path('_build/peer-browser'))
 args = parser.parse_args()
 entry = args.entrypoint.resolve(strict=True)
@@ -33,18 +34,49 @@ with tempfile.TemporaryDirectory() as root:
     a=start('a'); token='disposable-ui-peer-token'; b=start('b',token)
     remote=request(b,'POST','/api/repos',{'name':'Remote only','remote_url':'https://example.test/remote/only.git'},token)
     with sync_playwright() as p:
-      browser=p.chromium.launch(executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
+      browser=p.chromium.launch(executable_path=CHROME)
       page=browser.new_page(viewport={'width':1440,'height':1000});page.set_default_timeout(5000)
       errors=[]
       page.on('pageerror', lambda e: (errors.append(str(e)), (out/'page-errors.json').write_text(json.dumps(errors))))
+      page.add_init_script("""
+        window.__trackerVerificationRepoEvents = 0;
+        const NativeEventSource = window.EventSource;
+        window.EventSource = class extends NativeEventSource {
+          constructor(...args) {
+            super(...args);
+            for (const name of ['repo.created','repo.changed','repository.created','repository.changed','repository.updated','repository-changed']) {
+              this.addEventListener(name, () => window.__trackerVerificationRepoEvents++);
+            }
+          }
+        };
+      """)
       page.goto(a)
       page.get_by_role('heading',name='Project overview').wait_for()
       register = page.get_by_role('button',name=re.compile(r'^(?:Register (?:a )?|Add )repository$'))
       (register.first if register.count() else page.get_by_role('button', name='Create', exact=True).first).click()
       page.get_by_label(re.compile(r'^(?:(?:Repository |Display )?Name)',re.I)).fill('Local only')
       page.get_by_label(re.compile(r'^Remote URL',re.I)).fill('https://example.test/local/only.git')
+      page.get_by_text('Connected',exact=True).wait_for()
+      event_cursor = page.evaluate('window.__trackerVerificationRepoEvents')
+      request(a,'POST','/api/repos',{'name':'Unrelated live update','remote_url':'https://example.test/local/unrelated.git'})
+      page.wait_for_function('cursor => window.__trackerVerificationRepoEvents > cursor',arg=event_cursor)
+      page.wait_for_timeout(500)
+      name_control = page.get_by_label(re.compile(r'^(?:(?:Repository |Display )?Name)',re.I))
+      remote_control = page.get_by_label(re.compile(r'^Remote URL',re.I))
+      if name_control.input_value() != 'Local only' or remote_control.input_value() != 'https://example.test/local/only.git':
+        errors.append('Live repository event cleared the registration draft')
+        page.screenshot(path=str(out/'registration-draft-cleared.png'),full_page=True)
+        name_control.fill('Local only')
+        remote_control.fill('https://example.test/local/only.git')
+
       page.get_by_role('dialog').get_by_role('button', name=re.compile(r'^(?:Register(?: repository| locally)?|Save)$')).click()
-      page.get_by_role('dialog').wait_for(state='hidden')
+      try: page.get_by_role('dialog').wait_for(state='hidden')
+      except Exception:
+        page.screenshot(path=str(out/'registration-failure.png'),full_page=True)
+        (out/'registration-failure.aria.txt').write_text(page.locator('body').aria_snapshot())
+        (out/'registration-failure.json').write_text(json.dumps({'url':page.url,'repos':request(a,'GET','/api/repos'),'page_errors':errors},indent=2))
+        errors.append('Registration dialog remained open after submission')
+        page.get_by_role('dialog').get_by_role('button',name='Cancel',exact=True).click()
       local=next(repo for repo in request(a,'GET','/api/repos')['items'] if repo['name']=='Local only')
       assert local['remote_url']=='https://example.test/local/only.git' and local['authority']=='local'
       page.get_by_role('button',name='Agents & peers',exact=True).click()
@@ -53,7 +85,7 @@ with tempfile.TemporaryDirectory() as root:
       display = page.get_by_role('textbox', name=re.compile(r'^(?:Name|Display name|Peer name)$'))
       if display.count(): display.fill('Remote verification peer')
       page.get_by_label(re.compile(r'^(?:Peer (?:base )?URL|Base URL|Peer A2A endpoint URL)$')).fill(b)
-      page.get_by_label(re.compile(r'^(?:(?:Peer bearer t|Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\)|Bearer token \(stored backend-only\)|Peer token \(write only\)|Access token \(stored backend-only\)|Outbound token \(write-only\)|Peer access token|Peer bearer token|Access token)$')).and_(page.locator('input:visible')).fill(token)
+      page.get_by_label(re.compile(r'^(?:(?:Peer bearer t|Peer t|T)oken \(stored backend-only\)|Peer access token \((?:write only|stored backend-only)\)|Bearer credential \(stored on this backend only\)|Access token \(write only\)|Bearer token \(stored backend-only\)|Peer token \(write only\)|Access token \(stored backend-only\)|Outbound token \(write-only\)|Peer access token|Peer bearer token|Access token).*$')).and_(page.locator('input:visible')).fill(token)
       scope = page.get_by_role('dialog') if page.get_by_role('dialog').count() else page
       scope.get_by_role('button',name=re.compile(r'^(?:Register(?: peer)?|Save)$')).click()
       page.get_by_role('button',name=re.compile(r'^Send (?:a )?message(?: to .+)?$')).click()

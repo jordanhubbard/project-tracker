@@ -4,6 +4,7 @@
 Usage: python verification/check_browser.py /path/to/main.js
 This checks board behavior; graph and protocol checks remain separate.
 """
+from test_tools import NODE, CHROME
 
 import argparse, json, os, re, socket, subprocess, tempfile, time, traceback, urllib.request
 from pathlib import Path
@@ -35,7 +36,7 @@ def list_control(page, action, name):
         direct.click()
         return
     page.get_by_role('button', name=re.compile(r'^(?:List menu for ' + re.escape(name) + r'|Open ' + re.escape(name) + r' list menu|List ' + re.escape(name) + r' menu|Open the list menu for ' + re.escape(name) + r'|' + re.escape(name) + r' list menu)$')).click()
-    menu_scope = page.get_by_role('dialog').or_(page.get_by_role('group', name=f'{name} list menu', exact=True)).or_(page.get_by_role('menu'))
+    menu_scope = page.get_by_role('dialog').or_(page.get_by_role('group', name=f'{name} list menu', exact=True)).or_(page.get_by_role('menu')).or_(page.locator('.menu:visible'))
     menu_action = menu_scope.get_by_role('button', name=f'{action} list', exact=True)
     inline_name = page.get_by_role('dialog').get_by_role('textbox', name=re.compile(r'^(?:List name|Rename this list)$'))
     inline_destination = page.get_by_role('dialog').get_by_role('combobox', name=re.compile('Destination|Move.*to',re.I))
@@ -49,7 +50,7 @@ def task_state(st):
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("entrypoint", type=Path)
-parser.add_argument("--node", default="/opt/homebrew/opt/node@22/bin/node")
+parser.add_argument("--node", default=NODE)
 parser.add_argument("--output", type=Path, default=Path("_build/browser-behavior"))
 args = parser.parse_args()
 out = args.output
@@ -142,7 +143,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
         with sync_playwright() as p:
             browser = p.chromium.launch(
                 headless=True,
-                executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+                executable_path=CHROME,
             )
             evidence = []
             try:
@@ -163,7 +164,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                     try:
                         page.get_by_role("button", name=re.compile(r"^Open board(?: for .+)?$", re.I)).or_(
                             page.get_by_role("link", name=re.compile(r"^Open board(?: for .+)?$", re.I))
-                        ).click()
+                        ).or_(page.locator('.repo-card[role="button"], button.repo-card')).first.click()
                     except Exception:
                         page.screenshot(
                             path=str(out / f"{name}-startup.png"), full_page=True
@@ -232,7 +233,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 if page.url != board_url: page.goto(board_url)
 
                         def heading_geometry():
-                            rows = page.locator('.board-list .list-name, .list .list-title, .list .list-name').evaluate_all(r"""nodes => nodes.map(e => {
+                            rows = page.locator('.board-list .list-name, .list .list-title, .list .list-name, .list-column .list-name').evaluate_all(r"""nodes => nodes.map(e => {
                                 const r=e.getBoundingClientRect();
                                 const range=document.createRange(); range.selectNodeContents(e);
                                 const text=range.getBoundingClientRect();
@@ -344,7 +345,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             dialog = page.get_by_role('dialog')
                             dialog.get_by_label(re.compile(r'^Assignee$', re.I)).fill('QA operator')
                             dialog.get_by_label(re.compile(r'^Branch$', re.I)).fill('feature/browser-verification')
-                            dialog.get_by_label(re.compile(r'^Due date$', re.I)).fill('2026-10-02')
+                            dialog.get_by_label(re.compile(r'^Due date(?: \(YYYY-MM-DD\))?.*$', re.I)).fill('2026-10-02')
                             dialog.get_by_role('combobox', name=re.compile(r'^Cover(?: colou?r)?$', re.I)).select_option('purple')
                             priority = dialog.get_by_label(re.compile(r'^Priority'))
                             if priority.evaluate('e=>e.tagName') == 'SELECT': priority.select_option('2')
@@ -360,7 +361,11 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             if not check_text.count():
                                 check_text = dialog.locator('.checklist-editor li').last.get_by_role('textbox')
                             check_text.last.fill('Review browser attributes')
-                            dialog.get_by_role('checkbox', name=re.compile(r'^(?:Done|Completed:|Checklist item completed?|Checklist item \d+ (?:done|complete))', re.I)).last.check()
+                            check_done = dialog.get_by_role('checkbox', name=re.compile(r'^(?:Mark checklist item \d+ complete|Done|Completed:|Checklist item completed?|Checklist item \d+ (?:done|complete))', re.I))
+                            if not check_done.count():
+                                issues.append('Checklist completion checkbox lacks an accessible name')
+                                check_done = dialog.locator('.checklist-row input[type="checkbox"]')
+                            check_done.last.check()
                             dialog.get_by_role('button', name=re.compile(r'^Save(?: task)?$')).click()
                             dialog.wait_for(state='hidden')
                             saved = api('GET', f"/api/tasks/{task['id']}")
@@ -432,10 +437,15 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             heading = title_control(page, name=re.compile(
                                 r"^" + re.escape(destination.get('display_name', destination['name'])) + r"(?:\s|$)", re.I))
                             column = page.locator(f'[data-state-id="{destination["id"]}"]')
+                            if not column.count():
+                                column = page.get_by_role('region', name=f"{destination['name']} list", exact=True)
                             if not column.count(): column = page.locator('.board-list, section.list').filter(has=page.get_by_role('heading', name=destination['name'], exact=True))
                             lists = column.get_by_role("list")
                             target = lists.first if lists.count() else column
-                            card.drag_to(target)
+                            try:
+                                card.drag_to(target)
+                            finally:
+                                page.mouse.up()
                             deadline = time.monotonic() + 2
                             while time.monotonic() < deadline:
                                 if api("GET", f"/api/tasks/{task['id']}")["state"] == task_state(destination):
@@ -463,6 +473,9 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         def workflow():
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
                             old = current[0]
+                            occupants = [t for t in api('GET', f"/api/repos/{repo['id']}/tasks")['items']
+                                         if t['state'] == task_state(old)]
+                            assert occupants, 'The rename fixture must contain tasks'
                             new_name = f'Ready {name}'
                             list_control(page, 'Rename', old['name'])
                             dialog = page.get_by_role('dialog')
@@ -472,6 +485,16 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             page.locator('.list-name').filter(has_text=re.compile('^'+re.escape(new_name)+'$')).wait_for()
                             saved = next(x for x in api('GET', f"/api/repos/{repo['id']}/states")['items'] if x['id'] == old['id'])
                             assert saved['name'] == new_name, saved
+                            for occupant in occupants:
+                                after = api('GET', f"/api/tasks/{occupant['id']}")
+                                assert after['state'] == task_state(saved), after
+                            page.reload(wait_until='domcontentloaded')
+                            renamed = page.get_by_role('region', name=f'{new_name} list', exact=True)
+                            if not renamed.count():
+                                renamed = page.locator('.board-list, section.list').filter(
+                                    has=page.locator('.list-name').filter(has_text=re.compile('^'+re.escape(new_name)+'$')))
+                            for occupant in occupants:
+                                renamed.get_by_text(occupant['title'], exact=True).first.wait_for()
 
                         check("rename workflow state", workflow)
                         check("legible renamed list heading", heading_geometry)
@@ -479,7 +502,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                         def workflow_lifecycle():
                             added_name = f'Browser column {name}'
                             before_ids={x['id'] for x in api('GET', f"/api/repos/{repo['id']}/states")['items']}
-                            page.get_by_role('button', name=re.compile(r'^(?:\+ )?Add list$')).click()
+                            page.get_by_role('button', name=re.compile(r'^(?:(?:\+ )?Add list|Add a workflow list)$')).click()
                             dialog = page.get_by_role('dialog')
                             deadline=time.monotonic()+5
                             while time.monotonic()<deadline:
@@ -493,7 +516,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 dialog.get_by_role('button',name=re.compile(r'^(?:Save|Rename(?: list)?)$')).click()
                             else:
                                 dialog.get_by_label('List name',exact=True).fill(added_name)
-                                dialog.get_by_role('button',name='Add list',exact=True).click()
+                                dialog.get_by_role('button',name=re.compile(r'^(?:Add list|Save)$')).click()
                             dialog.wait_for(state='hidden')
                             page.locator('.list-name').filter(has_text=re.compile('^'+re.escape(added_name)+'$')).wait_for()
                             current = api('GET', f"/api/repos/{repo['id']}/states")['items']
@@ -558,7 +581,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 page.get_by_role(
                                     "button",
                                     name=re.compile(
-                                        "^menu$|sidebar|(?:Toggle|Show|Hide) repositories", re.I
+                                        "^menu$|sidebar|^Toggle navigation$|(?:Toggle|Show|Hide) repositories", re.I
                                     ),
                                 ).click()
                             page.get_by_role("button", name="Activity", exact=True, include_hidden=True).or_(
@@ -569,24 +592,20 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             ).wait_for()
                             expect(page.locator('main:visible')).to_contain_text('Remote attribute update visible', timeout=5000)
                             if name == "mobile":
-                                navigation = (
-                                    page.get_by_role(
-                                        "button", name="Activity", exact=True, include_hidden=True
-                                    )
-                                    .or_(
-                                        page.get_by_role(
-                                            "link", name="Activity", exact=True, include_hidden=True
-                                        )
-                                    )
-                                    .bounding_box()
-                                )
-                                if navigation and navigation["x"] >= 0 and page.get_by_role("button", name=re.compile("^menu$|sidebar|(?:Toggle|Show|Hide) repositories", re.I)).count():
-                                    page.get_by_role(
-                                        "button",
-                                        name=re.compile(
-                                            "^menu$|sidebar|(?:Toggle|Show|Hide) repositories", re.I
-                                        ),
-                                    ).click()
+                                menu = page.get_by_role("button", name=re.compile("^menu$|sidebar|^Toggle navigation$|(?:Toggle|Show|Hide) repositories", re.I))
+                                expect(menu).to_have_attribute("aria-expanded", "false")
+                                menu.click()
+                                expect(menu).to_have_attribute("aria-expanded", "true")
+                                page.keyboard.press("Escape")
+                                expect(menu).to_have_attribute("aria-expanded", "false")
+                                menu.click()
+                                expect(menu).to_have_attribute("aria-expanded", "true")
+                                close = page.get_by_role("button", name=re.compile(r"^Close (?:menu|navigation|sidebar)$", re.I))
+                                if close.count() and close.first.is_visible():
+                                    close.first.click()
+                                else:
+                                    menu.click()
+                                expect(menu).to_have_attribute("aria-expanded", "false")
 
                         check("activity navigation shows task events", activity)
 

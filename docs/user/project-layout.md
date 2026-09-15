@@ -1,32 +1,37 @@
 # Project layout
 
-[`literate.project.json`](../../literate.project.json) names every authoritative root,
-including `documentation_roots`; nearby directories are ambient until declared. Keep
-the provider-neutral onboarding skill at root `SKILL.md` and make provider files thin
-pointers to it.
+[Documentation](../README.md)
 
-The manifest declares source-intelligence policy as provider `none` with every
-stage off. Literate AI does not ship or invoke a source-graph indexer.
+| Path | Purpose |
+| --- | --- |
+| `PROJECT.md` | Durable product objective |
+| `AGENTS.md`, `SKILL.md` | Agent entry point and specification-led workflow |
+| `components/tracker/` | Product, integration, quality, visual and exact runtime specifications |
+| `flavors/` | Selected and inherited target policies |
+| `skills/`, `workflows/`, `routing/` | Pinned conversion and lifecycle guidance |
+| `literate.project.json` | Declared roots, lifecycle binding, cache and repository policies |
+| `.literate/` | Framework-managed ancestry and import records |
+| `scripts/litai-service.sh` | Toolchain-aware local lifecycle wrapper |
+| `verification/acceptance/` | Authored persistent-service acceptance contracts |
+| `verification/check_*.py` | Independent product and browser harnesses |
+| `verification/current.json` | Framework-owned test receipt |
+| `verification/final-result.json` | Consolidated delivery evidence; inspect its artifact scope |
+| `docs/` | User, integrator, architecture and development documentation |
+| `docs/roadmap/active-work.md` | Current work and completion gates |
+| `generated/artifacts/` | Disposable exported application trees |
+| `generated/accepted-source-cache/` | Local runtime source cache |
+| `generated/committed-source-cache/` | Deliberately published exact-key cache, when present |
+| `_build/` | Ignored diagnostics, browser reports, fixtures and temporary drafts |
 
-Repository inheritance is separate from Git remotes. `.literate/repository-parent.json`
-records the direct parent selection, `.literate/repository-lineage.json` locks the
-complete exact ancestor DAG, and `.literate/imports.json` records inherited Component,
-Flavor, and skill files. `litai update` re-resolves that chain; `litai reparent none`
-explicitly makes the project a root.
+User data belongs in `TRACKER_DATA_DIR`, outside generated source and transient build
+storage. It is not part of the repository or source cache.
 
-Component specifications may place explanatory Mermaid diagrams beside their prose so
-behavior and its illustration evolve together. Diagrams explain; prose requirements and
-acceptance scenarios remain normative. See the
-[traceability rule](../architecture/design-traceability.md) and
-[framework flow](framework-flow.md).
+`literate.project.json` declares documentation and source roots. Repository inheritance is
+separate from the Git remote: `.literate/repository-parent.json` selects the parent,
+`.literate/repository-lineage.json` records its exact ancestor graph, and imports track
+inherited authority. The GitHub `origin` persists this project's history.
 
-A normal Component keeps portable metadata and its default behavior together in
-`components/NAME/component.md`. Generated `component.lock.json` records exact target and
-dependency resolution beside it but is not hand-maintained prose. Extra specification or
-interface files are exceptional named boundaries, not boilerplate for every Component.
-Harness vectors and private expected-value oracles live outside Component authority.
-
-The initializer installs the content-pinned `flavors/build-bazel/` policy and its exact
-`skills/specification-to-source/bazel-build-system/` input. The manifest selects it by
-default only when a Component declares a compatible `build.system` slot. It is not
-runtime enforcement or evidence that Bazel actually built an application.
+`component.lock.json` is generated resolution, not hand-maintained product prose. Only
+files named by a Component's specification roots contribute to that Component's authored
+specification set. The source-intelligence policy is currently `none`, with stages off;
+this project has no CodeGraph index and does not create one automatically.

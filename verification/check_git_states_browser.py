@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check visible empty and truncated real Git histories in isolated Chrome sessions."""
+from test_tools import NODE, CHROME
 import argparse
 import json
 import os
@@ -15,7 +16,7 @@ from service_response import entity_response
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('entrypoint', type=Path)
-parser.add_argument('--node', default='/opt/homebrew/opt/node@22/bin/node')
+parser.add_argument('--node', default=NODE)
 parser.add_argument('--output', type=Path, default=Path('_build/git-states-browser'))
 args = parser.parse_args()
 entry = args.entrypoint.resolve(strict=True)
@@ -56,10 +57,10 @@ with tempfile.TemporaryDirectory(prefix='tracker-git-states-') as temporary:
                     time.sleep(.1)
             repo = request('POST', '/api/repos', {'name': 'History fixture', 'local_path': str(checkout)})
             with sync_playwright() as p:
-                browser = p.chromium.launch(executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
+                browser = p.chromium.launch(executable_path=CHROME)
                 def open_graph(page):
                     page.goto(base)
-                    page.get_by_role('button', name=re.compile(r'^Open board(?: for .+)?$')).click()
+                    page.get_by_role('button', name=re.compile(r'^Open board(?: for .+)?$')).or_(page.locator('.repo-card[role="button"], button.repo-card')).first.click()
                     with page.expect_response(lambda response: '/graph' in response.url and response.status == 200) as fetched:
                         page.get_by_role('button', name='Graph', exact=True).or_(
                             page.get_by_role('link', name='Graph', exact=True)).or_(

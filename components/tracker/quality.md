@@ -7,12 +7,149 @@ kind: verification
 
 ## Confirmed regeneration regressions
 
-Execute the stalled HTTP200 body scenario from mac-integration.md in the native
-serialized_reads check using the actual default60-second read budget. An8500ms
-successful read plus a true flag is insufficient: a prior candidate emitted its
-abort signal at60 seconds but settled only when a watchdog closed the socket at70.
-The timeout must reject the client operation independently of body settlement and
-the native check must fail if fixture cleanup is what releases that operation.
+After a previously successful MAC enumeration, a failed poll invalidates that
+snapshot as proof of absence for NEW registrations. Retain last-good repositories
+and tasks for display, but never infer local authority from a stale complete discovery
+index. During the outage, registering an unmatched URL must return unresolved and
+creating a task there must fail with 503 without local task/event creation. Test the
+healthy-to-outage transition, not only startup while unavailable. Recovery requires
+a fresh successful enumeration before absence can again authorize local work.
+
+Session status projection must distinguish active, stale and explicitly stopped
+sessions. Once the expiry scheduler persists `stale`, REST listings, session events,
+repository counts and browser views must retain that stale status. Do not map all
+non-running values to stopped. Expire a running session using the service's clock
+boundary, assert its emitted and persisted projections are stale, assert a repeated
+expiry emits nothing, then verify a fresh heartbeat restores active and an explicit
+exit becomes stopped. The full generated native self-check must pass these assertions.
+
+Every checklist completion checkbox must have a programmatic accessible name such as
+"Checklist item 1 complete", including newly added rows. A named text input beside an
+unnamed checkbox does not label the checkbox. Verify normal browser interaction through
+the checkbox's role and name, then save and reopen to check persisted completion.
+
+Public MAC task list and detail projections must include `mac_id` with the original
+upstream task ID and `owner_agent_id` with the upstream owner, alongside tracker-local
+`id`. Preserve these fields through edits, polling and restart. Storing them only in
+SQLite is insufficient: external reconciliation must read the original identity and
+owner from GET /api/tasks/{id} and GET /api/repos/{id}/tasks. Retain raw
+upstream_dependencies and unresolved_dependencies in those projections as well.
+
+Async UI renders must not commit an obsolete route after navigation or a completed
+mutation. Recheck the active route/render generation after awaited reads, and never
+reopen a modal from an outdated registration route. With an SSE connection active,
+register a remote-only local repository using the browser form: require exactly one
+new repository, navigation to its board, and a closed registration dialog that stays
+closed after the repository-created event and subsequent refresh. Preserve the user's
+current modal draft during unrelated SSE refreshes. Verify cancellation does not imply
+that an already completed registration was undone. The prior candidate persisted and
+navigated correctly but a stale render reopened an empty registration form.
+
+Informational toast notifications must not intercept pointer input intended for the
+workspace. A status-only toast has no interactive hit target; retain accessible live
+announcements while allowing underlying controls to receive normal clicks. At
+mobile390x844, save a repository description and immediately navigate to Settings,
+edit URL/model/key and click Save settings while the success notification is visible.
+The save must complete without forced clicks or waiting for notification expiry.
+If a notification contains an explicit action, restrict hit testing to that action
+and keep primary controls reachable. Preserve the verified mobile drawer behavior.
+
+
+Fleet identity indexing must use exactly the same composite key for insertion and
+retrieval, including identical delimiters and encoding. Candidate14 introduced a
+NUL-versus-space key mismatch during a late scale optimization: all seeded tasks
+were skipped during projection. Do not silently skip an established task identity.
+Keep first import, dependency-only and combined changes, unchanged polling and
+large-response assertions in the complete native run after every optimization.
+Use one key constructor or nested maps if indexing composite identities.
+
+Invalid local task dependencies (self-reference, unknown ID, cross-repository ID
+or a cycle) are client input errors. Through actual HTTP create/update endpoints,
+return 400, 409 or 422 with a useful validation message, never generic HTTP500.
+Reject atomically: retain all existing task fields, revisions and durable/live
+change events, and create no task on an invalid create. Native service acceptance
+must exercise these HTTP contracts as well as direct validation. Preserve imported
+MAC dependency semantics; upstream cycles remain readable upstream data.
+
+At mobile390x844, an open navigation drawer must retain a visible, clickable close
+control. Menu toggling, Escape and backdrop dismissal must work and aria-expanded
+must reflect actual visibility. Selecting a navigation destination closes the
+drawer and leaves Activity content and the Settings control usable without pointer
+interception. Test open -> Activity -> Settings, reopen -> Escape, and reopen ->
+close control using normal pointer/keyboard actions, without forced clicks or DOM
+mutation. Keep all existing desktop/mobile task and workflow interactions.
+
+
+A successful complete fleet snapshot must reconcile disappeared task IDs across all
+cached MAC repositories, including repositories no longer in current project discovery.
+Use the complete upstream task-ID set, preserve local tasks and repository metadata,
+and retain cache on any incomplete/failed read. Execute the removed-project and
+successful-empty-snapshot cases in mac-integration.md. Do not reset the database between
+lifecycle and scale phases to hide stale tasks left by incomplete reconciliation.
+
+The native rollback fixture must retain its initial import events and compare against
+the captured pre-failure task-event count/cursor. Zero new task events is required;
+zero total historical events is incorrect. Verify recovery adds exactly two task events
+for the two changed projects, without weakening the row/revision rollback assertions.
+
+Native MAC checks must establish fleet-wide identities before dependency projection,
+including the alpha-to-later-beta unresolved reference fixture in mac-integration.md.
+The measured large-response fixture must exceed 83,886,080 bytes; construct sufficient
+padding rather than accepting an undersized fixture or lowering the assertion.
+
+Renaming a populated local workflow state must preserve its stable state ID and every
+occupying task's board membership. If tasks persist state names, atomically update those
+names along with the workflow row; if tasks persist state IDs, keep those IDs unchanged
+and expose the renamed display label consistently. A task may never reference a removed
+state name after a successful rename. Preserve unrelated fields/dependencies, advance
+changed task revisions once and emit committed events with the final projection.
+Native and browser checks must create a task in open, rename open to Ready, verify the
+same state ID, fetch the task, and confirm it appears in Ready after reload and restart.
+Retain task moves, workflow ordering, populated deletion migration and MAC lifecycle
+ownership. Checking only the renamed heading is insufficient.
+
+The MAC complete_reconciliation gate must execute the >=80MiB real authenticated
+HTTP collection-read scenario in mac-integration.md using the production256MiB
+response limit. A previous candidate passed adapter-level import of all captured
+tasks but its48MiB transport cap rejected the actual80,765,554-byte JSON response.
+Keep byte-volume coverage distinct from task-count coverage; retain all ordinary
+store/snapshot scenarios and the separate final exported-service captured replay.
+
+Production MAC requests retain Node HTTP/HTTPS request and response ownership through
+body completion; absolute-deadline failure destroys both handles. Execute the real
+transport in short native and independent default60-second acceptance. A prior
+fetch candidate avoided its cancellation crash but left the socket open after65
+seconds. Catching stream.cancel rejection is not sufficient cleanup evidence.
+
+The native dependency_identity gate must distinguish unchanged polling from
+genuine dependency-only upstream changes. Execute the concrete a/p fixture in
+mac-integration.md: dependency-only and combined title/dependency changes each
+advance one revision and publish one committed task event, while the following
+identical poll does neither. Do not use revision suppression on existing tasks
+to make a no-churn assertion pass. Any emitted full task payload must match the
+final committed projection. Retain atomic rollback and post-edit stability.
+
+Execute the stalled HTTP200 body scenario from mac-integration.md in two scopes:
+the native serialized_reads check uses a short configurable deadline so the full
+suite fits the installed runner's 60-second process limit; independent delivery
+acceptance uses the actual exported service's default 60-second deadline. Both
+must observe caller failure, original connection cleanup before fixture cleanup,
+process survival and healthy follow-up. The independent default-budget check must
+also preserve cached task revisions and show failed then recovered synchronization.
+Never equate a short test, an abort signal, or a watchdog-closed socket with the
+full default-budget result. Handle rejected cancellation/cleanup promises locally;
+a locked response stream must not cause an unhandled rejection or process crash.
+
+The native stalled-body fixture records the exact request socket serving its
+incomplete `/tasks` response and observes that socket's close event before any
+fixture cleanup. HTTP keep-alive may reuse a socket accepted during an earlier
+healthy poll: do not restrict the assertion to connections accepted after the
+stall began. Exercise that reused-connection case deliberately, require caller
+rejection by the short deadline and closure of the recorded stalled socket, then
+verify unchanged cached revisions and a healthy follow-up. An unrelated closed
+socket, an empty slice of newly accepted connections, or fixture shutdown is not
+evidence about the stalled response. Retain all other native and independent
+default-deadline assertions.
 
 The native dependency_identity check also verifies that an editor mutation and
 the next unchanged snapshot expose identical dependency/reference projections,
@@ -75,6 +212,20 @@ include 10,000 tasks, 201 projects, updates and deletions beyond item200, stable
 polls and late dependency resolution. Serialized-read coverage overlaps manual/timer
 polls, delays a response beyond eight seconds and verifies a bounded body-read timeout.
 Restart the store and verify relationships survive. Keep native fixtures synthetic.
+
+Dependency-preservation assertions observe the actual upstream task after the write,
+the returned Tracker task, and a subsequent complete synchronization. A full editor
+save may omit unchanged fields from its outgoing update: absence of `dependencies`
+in that request is valid when the upstream edges remain intact. Do not require an
+unchanged field to be retransmitted merely to satisfy a fixture-body assertion.
+For the explicit_removal gate, first save labels with the original resolved selection
+and require prerequisite, missing and foreign references to survive upstream and in
+the Tracker projection. Then remove only missing and require prerequisite and foreign
+to remain. Also select a genuinely new same-project prerequisite, inspect its translated
+MAC ID in the actual outgoing write, and require stable projections and revisions on
+the following unchanged polls. If an update does send dependencies, verify the sent
+IDs and preserved unresolved references as well. No assertion may be replaced by a
+constant, a mocked success, or a synthesized fixture request field.
 
 The unresolved_preservation check also covers one synthetic imported task with a
 720-character title and 110,000-character description. Submit the full editor payload

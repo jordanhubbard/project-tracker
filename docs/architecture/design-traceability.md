@@ -1,6 +1,6 @@
 # Design traceability
 
-<!-- literate-ai:authority-reviewed sha256:6808a1c7a0977d8f5195387d3034708f65ce7ed42553f21ac8bde39f4833912c -->
+<!-- literate-ai:authority-reviewed sha256:21db41ed4b82e5c83b545f11e4124f3cf92260d7726c1a08e711e4462e657a1b -->
 
 [Project guide](../README.md) → design traceability
 
@@ -8,10 +8,8 @@ Behavior belongs in Component specifications; target variance belongs in Flavors
 conversion technique belongs in exact skills; execution order belongs in workflows;
 model eligibility belongs in routing; validation and authorization remain framework
 policy. The manifest selects the source-intelligence provider, while its local database
-remains
-derived evidence outside source authority. Changes should update the owning artifact,
-its nearby explanation or diagram,
-and an end-to-end test. Illustrations aid understanding; prose requirements and
+remains derived evidence outside source authority. Changes should update the owning artifact,
+its nearby explanation or diagram, and an end-to-end test. Illustrations aid understanding; prose requirements and
 acceptance scenarios remain normative. See the [project map](../user/project-layout.md).
 
 MAC snapshot import preserves upstream dependency identity independently of local
@@ -31,6 +29,24 @@ restart. The portable acceptance contract keeps disposable storage outside the
 packaged source using the framework's assigned port.
 
 The MAC response deadline bounds body consumption independently of abort-signal
-delivery and closes the stalled response connection. Native fixtures exercise the
-default read budget. Mutation responses and complete polls share the same
+delivery and closes the stalled response connection. Native fixtures exercise a short deadline within the packaged runner limit;
+independent exported-service acceptance exercises the actual default read budget. Mutation responses and complete polls share the same
 dependency projection, preventing transient link changes and duplicate revisions.
+Existing tasks compare their complete projected state before one update, so a
+genuine dependency-only change still advances its revision and notifies clients.
+
+Production MAC transport retains native HTTP/HTTPS request and response handles
+until completion and explicitly destroys them on an absolute deadline. Cleanup
+must prove connection release and process survival, not only caller rejection.
+The native fixture tracks the exact stalled request socket, including reuse of an
+earlier keep-alive connection, and observes closure before fixture cleanup.
+
+Transport acceptance covers byte volume as well as record count. The production
+MAC response budget is 256 MiB, with a native response of at least 80 MiB authenticated collection read
+and a final full-service captured replay. Adapter-only enumeration cannot prove
+that the actual HTTP client accepts a production-sized snapshot.
+
+Dependency-preservation tests inspect the upstream and cached task after an update
+and again after synchronization. Unchanged fields may be omitted from an outgoing
+update; that omission must not be mistaken for deletion. Explicit removals and newly
+selected prerequisites still require checks of the actual transmitted MAC IDs.

@@ -1,0 +1,84 @@
+{
+  "status": "interrupted_before_acceptance",
+  "component_revision": "6c23274a655a291c053b2ea345afd3789dda64b5c8b5d03f5e082a62e9dd8a67",
+  "scope": "Unmodified provisional modules. No final native acceptance or export.",
+  "timeout": {
+    "ok": true,
+    "provisional": true,
+    "settled_seconds": 60.005433624999995,
+    "unavailable": true,
+    "socket_closed_before_cleanup": true,
+    "socket_closed_seconds": 60.00794474999999,
+    "healthy_followup": true
+  },
+  "dependency_events": {
+    "ok": true,
+    "provisional": true,
+    "authenticated_real_http": true,
+    "cases": [
+      {
+        "name": "dependency_only",
+        "ok": true,
+        "revision": 2,
+        "durable_events": 1,
+        "live_events": 1
+      },
+      {
+        "name": "unchanged",
+        "ok": true,
+        "revision": 2,
+        "durable_events": 0,
+        "live_events": 0
+      },
+      {
+        "name": "combined",
+        "ok": true,
+        "revision": 3,
+        "durable_events": 1,
+        "live_events": 1
+      },
+      {
+        "name": "unchanged_again",
+        "ok": true,
+        "revision": 3,
+        "durable_events": 0,
+        "live_events": 0
+      }
+    ]
+  },
+  "adapter_snapshot": {
+    "provisional": true,
+    "ok": true,
+    "rollback": true,
+    "recovery_events": 2,
+    "field_mismatches": {},
+    "projects": 28,
+    "project_tasks": 9077,
+    "same_project_dependencies": 8210,
+    "unchanged_poll": true
+  },
+  "git": {
+    "ok": true,
+    "provisional": true,
+    "branch_filename_collision": true,
+    "feature_commits": 2,
+    "main_commits": 4,
+    "unknown_branch_is_error": true
+  },
+  "actual_http_response_size": {
+    "ok": false,
+    "provisional": true,
+    "response_bytes": 80765554,
+    "error": "The fleet response exceeded the permitted size.",
+    "unavailable": true
+  },
+  "aggregate_size_audit": {
+    "records": 9717,
+    "response_bytes": 80765554,
+    "largest_record_bytes": 120931,
+    "largest_title_characters": 719,
+    "largest_description_characters": 106757,
+    "largest_metadata_bytes": 83633
+  },
+  "next": "Production256MiB response limit and native>=80MiB realHTTP transport fixture, retaining all other gates. Final capturedHTTP replay required."
+}

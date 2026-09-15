@@ -1,0 +1,48 @@
+{
+  "candidate": "bb6c96b59490043243e3f48c8c32079a8eb7decb509121041a07d86beab896d3",
+  "authority_commit": "9487640be71780323d6791b645af9a46d5935863",
+  "native_accepted": true,
+  "release_ready": false,
+  "native_tests": {
+    "failed": 0,
+    "passed": 7,
+    "skipped": 0,
+    "total": 7
+  },
+  "packaging": {
+    "verified": true,
+    "files": 47,
+    "sha256": "2d9d8525c03fdba92a5eb017551fd16168d76080d90418a659f41743578d2292",
+    "npm_version": "10.9.8",
+    "node_version": "v22.23.2",
+    "remote": {
+      "ok": true,
+      "is_draft": true,
+      "url": "https://github.com/jordanhubbard/project-tracker/releases/tag/untagged-0eb99700657374215b09",
+      "target_commit": "9487640be71780323d6791b645af9a46d5935863",
+      "assets": {
+        "project-tracker-1.0.0.tgz": "2d9d8525c03fdba92a5eb017551fd16168d76080d90418a659f41743578d2292",
+        "package-manifest.json": "04c3a84da26d97b679b7db6bbf74c0b4a6379484004ebebe8acf3a76330c8aea",
+        "SHA256SUMS": "655628634253db3ba4587a89c2902ffd3901aebba214519e2150b184ce80901a"
+      }
+    },
+    "extracted_native_groups": 7,
+    "extracted_service_checks": 22,
+    "extracted_dependency_rejection_checks": 6
+  },
+  "independent_scope": "Earlier immutable snapshot passed MAC full-fleet fields/dependencies, lifecycle, write/outage,60-second transport, service and documented examples. Final extracted archive separately passed native and service checks.",
+  "ui_findings": [
+    "Obsolete async render reopens empty registration modal after successful creation/navigation",
+    "Informational toast intercepts mobile Settings save clicks"
+  ],
+  "ui_passes": [
+    "Desktop board interactions",
+    "Mobile task and workflow interactions",
+    "Mobile navigation drawer",
+    "MAC outage and recovery across open views",
+    "Login and session expiry",
+    "Peer operations after separately recording registration modal failure",
+    "Git states and equal/irregular graph/timeline layouts"
+  ],
+  "next_action": "Correct the two UI regressions through the supported lifecycle and repeat final acceptance before stable release publication."
+}

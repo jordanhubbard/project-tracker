@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Verify live expiry of a disposable heartbeat, without another application request."""
+from test_tools import NODE, CHROME
 import argparse
 import json
 import os
@@ -16,7 +17,7 @@ from service_response import entity_response
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('entrypoint', type=Path)
-parser.add_argument('--node', default='/opt/homebrew/opt/node@22/bin/node')
+parser.add_argument('--node', default=NODE)
 parser.add_argument('--output', type=Path, default=Path('_build/expiry-browser'))
 args = parser.parse_args()
 out = args.output
@@ -56,19 +57,19 @@ with tempfile.TemporaryDirectory(prefix='tracker-expiry-') as data:
         started = time.monotonic()
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(
-                executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
+                executable_path=CHROME)
             page = browser.new_page(viewport={'width': 1440, 'height': 1000})
             page.set_default_timeout(5000)
             page.goto(base)
             page.get_by_role('button', name=re.compile(r'^Open board(?: for .+)?$',re.I)).or_(
-                page.get_by_role('link', name=re.compile(r'^Open board(?: for .+)?$',re.I))).click()
+                page.get_by_role('link', name=re.compile(r'^Open board(?: for .+)?$',re.I))).or_(page.locator('.repo-card[role="button"], button.repo-card')).first.click()
             page.get_by_role('tab', name='Fleet', exact=True).or_(
                 page.get_by_role('button', name='Fleet', exact=True)).or_(
                 page.get_by_role('link', name='Fleet', exact=True)).click()
             row = page.get_by_role('cell', name='synthetic-expiry-host', exact=True).locator('..')
             row.get_by_text(re.compile(r'^(active|running)$', re.I)).wait_for()
             repo_control = page.get_by_role('navigation').get_by_role('button', name=re.compile('Expiry fixture')).locator('..')
-            assert re.search(r'\b1\b', repo_control.inner_text()), repo_control.inner_text()
+            assert re.search(r'\b1\b', repo_control.locator('.badge').inner_text() if repo_control.locator('.badge').count() else repo_control.inner_text()), repo_control.locator('.badge').inner_text() if repo_control.locator('.badge').count() else repo_control.inner_text()
             page.screenshot(path=str(out / 'active.png'), full_page=True)
             print('Waiting for the specified 90-second heartbeat deadline', flush=True)
             stale = row.get_by_text(re.compile(r'^stale$', re.I))
@@ -76,7 +77,7 @@ with tempfile.TemporaryDirectory(prefix='tracker-expiry-') as data:
                 page.wait_for_timeout(500)
             elapsed = round(time.monotonic() - started, 2)
             result = {'elapsed_seconds': elapsed, 'row': row.inner_text(),
-                      'sidebar': repo_control.inner_text(), 'stale_visible': stale.is_visible()}
+                      'sidebar': repo_control.locator('.badge').inner_text() if repo_control.locator('.badge').count() else repo_control.inner_text(), 'stale_visible': stale.is_visible()}
             result['ok'] = result['stale_visible'] and (bool(re.search(r'\b0\b', result['sidebar'])) or result['sidebar'].strip() == repo['name'])
             (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
             page.screenshot(path=str(out / 'after-deadline.png'), full_page=True)

@@ -1,114 +1,92 @@
 # Project Tracker
 
-A repository and task workspace built with LitAI: Trello-style boards, live task
-updates, physical coding-session activity, Git relationship graphs and timestamp
-timelines. The Node.js backend owns SQLite, MAC synchronization, MCP, A2A peering
-and LLM credentials.
+A repository and task workspace with live boards, physical coding-session activity,
+Git relationship graphs and timestamp timelines. A Node.js backend owns SQLite,
+MAC synchronization, MCP, A2A peering and LLM credentials.
 
-- [Product objective](PROJECT.md)
-- [Application specification](components/tracker/component.md)
-- [Active work and verification](docs/roadmap/active-work.md)
-- [Project guide](docs/README.md)
+[Start here](docs/user/getting-started.md) · [Full documentation](docs/README.md) ·
+[Verification status](docs/user/verification.md) · [Active work](docs/roadmap/active-work.md)
 
-MAC synchronization repair is in progress under TRACK-004. The latest provisional
-backend preserves the captured fleet's task states and passes focused dependency
-and Git checks. A stalled response-body timeout and post-edit dependency-projection
-consistency remain open. See the active work record for evidence and acceptance
-status.
+The project is persisted on [GitHub](https://github.com/jordanhubbard/project-tracker).
+MAC repair acceptance is tracked separately from source publication; consult the current
+verification record before treating an export as the accepted application.
 
-## Run
+## Build and run
 
-After a successful LitAI build, launch the exported application:
-
-```sh
-./scripts/litai-service.sh run components/tracker '["service","--host","127.0.0.1","--port","8765"]'
-```
-
-Open `http://127.0.0.1:8765`. Readiness is `GET /health`. Add a repository from the
-workspace and supply its local checkout path for Git visualizations. Configure the
-MAC endpoint and LLM gateway in Settings or through backend environment variables.
-
-For an isolated sample workspace, add `"--demo"` inside the JSON argument array.
-
-When `TRACKER_ACCESS_TOKEN` is configured, the browser presents Sign in. Enter the
-token in that form; the backend establishes an HttpOnly session cookie. Reloading
-reuses the session. API clients use `Authorization: Bearer ...`; keep the token in
-the backend/client environment rather than a URL.
-
-## Build
-
-The wrapper requires the declared Node 22.23.2 and Git 2.50.1 toolchain, and selects
-Claude Code with `claude-fable-5-1` for generation. LitAI installs the exact npm lock.
+The current toolchain is macOS, Node.js 22.23.2, Git 2.50.1 and installed Literate AI 1.0.1.
+The wrapper selects Claude Code by default; the coding provider must be configured for
+generation. See [setup](docs/user/getting-started.md) for requirements and limitations.
 
 ```sh
 ./scripts/litai-service.sh lock components/tracker
 ./scripts/litai-service.sh build components/tracker --model claude-fable-5-1 --update-receipt
-./scripts/litai-service.sh verify
+export TRACKER_DATA_DIR="$HOME/Library/Application Support/project-tracker"
+./scripts/litai-service.sh run components/tracker '["service","--host","127.0.0.1","--port","8765"]'
 ```
 
-## Backend configuration
+After a successful build, open `http://127.0.0.1:8765`. `GET /health` reports service
+readiness; repository sync status reports MAC health. Add `"--demo"` inside the argument
+array for an isolated sample workspace. Stop the foreground service with Ctrl-C.
 
-| Environment variable | Purpose |
+## Work with projects and tasks
+
+Register a local checkout or remote repository URL and open its board. Create, edit,
+label and move tasks; customize local workflow lists; inspect dependency references;
+and receive committed changes live. A local checkout enables Graph and Timeline with
+real forks, merges, refs, task links and physical-host session associations.
+
+MAC owns tasks for matched projects. Confirmed absence permits local tracking. Upstream
+outages preserve cached data and reject MAC writes instead of creating shadow local work.
+Read [projects and tasks](docs/user/projects-and-tasks.md) and
+[MAC integration](docs/user/mac-integration.md) for the full behavior.
+
+## Configure connections
+
+| Variables | Purpose |
 | --- | --- |
-| `TRACKER_DATA_DIR` | Private SQLite and settings directory |
-| `TRACKER_MAC_URL`, `TRACKER_MAC_TOKEN` | MAC fleet connection |
-| `TRACKER_LLM_URL`, `TRACKER_LLM_KEY`, `TRACKER_LLM_MODEL` | LLM gateway connection |
-| `TRACKER_ACCESS_TOKEN` | Backend bearer authentication; required for non-loopback binding |
+| `TRACKER_DATA_DIR` | Private database/settings directory |
+| `TRACKER_ACCESS_TOKEN` | Browser sign-in and client bearer authentication |
+| `TRACKER_MAC_URL`, `TRACKER_MAC_TOKEN` | Backend MAC connection |
+| `TRACKER_LLM_URL`, `TRACKER_LLM_KEY`, `TRACKER_LLM_MODEL` | Backend assistant gateway |
+| `TRACKER_URL` | Host-side reporter destination |
 
-Without `TRACKER_DATA_DIR`, data lives in the platform's per-user application-data
-directory (`~/Library/Application Support/project-tracker` on macOS). Set an
-absolute directory when running an isolated instance or keeping a separate demo.
+Saved settings override environment defaults. Blank secret inputs preserve credentials;
+explicit clear removes them. Non-loopback service binding requires an access token.
+See [configuration](docs/user/configuration.md) and [security](docs/user/security.md).
 
-Saved settings take precedence over environment defaults. Blank credential fields
-preserve stored credentials; explicit clear removes them. Credentials stay on the
-backend and API responses report only whether they are configured.
+## Agents and physical coding sessions
 
-MAC owns tasks for matched repositories. Confirmed absence permits local tracking.
-A fleet outage preserves cached tasks and rejects upstream mutations with 503;
-existing local tasks require explicit migration before MAC ownership.
+MCP is available at `/mcp` and through `["service","mcp"]`. A2A 0.3.0 uses `/a2a`,
+with its card at `/.well-known/agent-card.json`. REST schemas are at `/openapi.json`.
+See the [API reference](docs/reference/api.md) for authenticated client examples.
 
-## Physical coding sessions
-
-Run the reporter on the host where the coding CLI executes, with the backend URL
-and access token in its environment:
+Run the reporter on the host where the coding CLI actually executes:
 
 ```sh
 export TRACKER_URL=http://127.0.0.1:8765
 ./scripts/litai-service.sh run components/tracker '["service","session","--repo","/absolute/repo/path","--cli","codex","--","codex"]'
 ```
 
-It launches the real child process, reports its host, PID and branch, and records
-its stopped lifecycle. A backend outage does not terminate the coding child.
+It wraps the child and reports physical hostname, PID, branch and lifecycle without
+requiring database access. See [sessions and peers](docs/user/sessions-and-peers.md).
 
-## Agent interfaces
+## Development and operations
 
-MCP is available at `/mcp` and through the stdio command:
-
-```sh
-./scripts/litai-service.sh run components/tracker '["service","mcp"]'
-```
-
-The A2A endpoint is `/a2a`, with its card at `/.well-known/agent-card.json`.
-Register authenticated outbound peers by their base URL in Agents & peers. REST routes are described
-at `/openapi.json`.
-
-## Verification
-
-Verified artifact: `artifact-6119bda93ad771d2ed03` (authority `e09a08c`).
-All 28 native tests and nine independent phases passed, plus public launch and
-failure-state probes. See [completion evidence](docs/user/verification.md)
-and the [machine-readable result](verification/final-result.json).
-
-Run the independent checks against the exported source:
-
-```sh
-_build/browser-qa/bin/python verification/check_all.py generated/artifacts/tracker/artifact-6119bda93ad771d2ed03/source/main.js
-```
-
-The retained QA environment uses Playwright and installed Google Chrome. Tests
-create isolated data and fixture endpoints. MAC integration was verified against
-an authenticated contract fixture, without production fleet mutations.
+- [Development](docs/user/development.md): change specifications and use the supported lifecycle.
+- [Architecture](docs/architecture/application.md): shared service, authority and transaction boundaries.
+- [Operations](docs/user/operations.md): backup, restore, shutdown and upgrades.
+- [Troubleshooting](docs/user/troubleshooting.md): diagnose runtime, connection and toolchain problems.
+- [Product objective](PROJECT.md), [Component specification](components/tracker/component.md),
+  root `CHANGELOG.md`, and [contributing](docs/user/contributing.md).
 
 ## Release engineers
 
-No public release or fleet installation is configured or claimed.
+- `jordanhubbard`
+
+The first stable release is being prepared as v1.0.0. Publication requires accepted
+tracker tests and verified packages. Current runtime evidence and remaining gates
+are reported in [verification](docs/user/verification.md).
+
+## License
+
+[BSD 2-Clause](LICENSE).

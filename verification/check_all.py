@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run independent runtime/browser checks; this does not create a LitAI receipt."""
+from test_tools import NODE, CHROME
 import argparse
 import json
 from pathlib import Path
@@ -11,7 +12,7 @@ import time
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('entrypoint', type=Path)
-    parser.add_argument('--node', default='/opt/homebrew/opt/node@22/bin/node')
+    parser.add_argument('--node', default=NODE)
     parser.add_argument('--output', type=Path, default=Path('_build/independent-checks'))
     args = parser.parse_args()
     entrypoint = args.entrypoint.resolve(strict=True)

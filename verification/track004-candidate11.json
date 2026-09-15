@@ -1,0 +1,204 @@
+{
+  "candidate": "5a317504000c5bb286eae527b1693ea36053beb7b5841cdf628210ef5e37115c",
+  "authority_commit": "971a2c89c9dc6f6dfdb6d6a172501338e3e31275",
+  "accepted": false,
+  "build": "Stopped before final generation/native acceptance after confirming snapshot removal defect and failing provisional MAC selfcheck. No final export.",
+  "native_mac_selfcheck": {
+    "ok": false,
+    "checks": {
+      "dependency_identity": true,
+      "unresolved_preservation": true,
+      "explicit_removal": true,
+      "snapshot_rollback": false,
+      "commit_events": true,
+      "non_json_outage": true,
+      "complete_reconciliation": false,
+      "serialized_reads": true,
+      "restart_persistence": true
+    }
+  },
+  "direct_removal_and_rollback": {
+    "ok": false,
+    "provisional": true,
+    "authenticated_real_http": true,
+    "cases": [],
+    "rollback": true,
+    "baseline_task_events": 4,
+    "task_events_after_failure": 4,
+    "recovery_events": 2,
+    "expected_remaining_tasks": 1,
+    "actual_remaining_tasks": 4,
+    "deleted_task_events": 0,
+    "error": "AssertionError [ERR_ASSERTION]: Removed project task records remain in the read store\n\n4 !== 1\n"
+  },
+  "confirmed_findings": [
+    "Rollback preserves the initial four durable task events and leaks no task changes; the generated native fixture incorrectly requires the total historical task-event count to equal zero.",
+    "Successful removal of alpha from discovery and its tasks from the complete task collection leaves all four old tasks instead of only beta: the deletion sweep considers only currently discovered repositories.",
+    "The native complete_reconciliation case retains old lifecycle tasks when replacing discovery with the 201-project scale snapshot, so it fails before reaching its correctly sized response fixture."
+  ],
+  "provisional_passes": {
+    "default_timeout": {
+      "ok": true,
+      "provisional": true,
+      "settled_seconds": 60.005348917,
+      "unavailable": true,
+      "socket_closed_before_cleanup": true,
+      "socket_closed_seconds": 60.006481708,
+      "healthy_followup": true
+    },
+    "captured_response_size": {
+      "provisional": true,
+      "ok": true,
+      "bytes": 80765554,
+      "records": 9717
+    },
+    "captured_http_snapshot": {
+      "ok": true,
+      "provisional": true,
+      "taskResponseBytes": 80765554,
+      "projects": 28,
+      "tasks": 9077,
+      "edges": 8210,
+      "unchanged_poll": true,
+      "first": {
+        "ok": true,
+        "configured": true,
+        "repositories": 28,
+        "tasks": 9717,
+        "changed": 9077
+      },
+      "second": {
+        "ok": true,
+        "configured": true,
+        "repositories": 28,
+        "tasks": 9717,
+        "changed": 0
+      },
+      "requests": [
+        "/projects",
+        "/bridge/repositories",
+        "/tasks",
+        "/agents",
+        "/machines",
+        "/projects",
+        "/bridge/repositories",
+        "/tasks",
+        "/agents",
+        "/machines"
+      ]
+    },
+    "first_poll_relations_and_events": {
+      "ok": true,
+      "provisional": true,
+      "authenticated_real_http": true,
+      "cases": [
+        {
+          "name": "dependency_only",
+          "revision": 2,
+          "durable_events": 1,
+          "live_events": 1
+        },
+        {
+          "name": "unchanged",
+          "revision": 2,
+          "durable_events": 0,
+          "live_events": 0
+        },
+        {
+          "name": "combined",
+          "revision": 3,
+          "durable_events": 1,
+          "live_events": 1
+        },
+        {
+          "name": "unchanged_again",
+          "revision": 3,
+          "durable_events": 0,
+          "live_events": 0
+        }
+      ],
+      "first_poll_foreign_link": true,
+      "reversed_order_stable": true,
+      "restart_stable": true
+    },
+    "populated_state_rename": {
+      "provisional": true,
+      "ok": true,
+      "stable_state_id": true,
+      "task_membership": true,
+      "unchanged_title_and_dependencies": true,
+      "restart": true
+    },
+    "git_collision": {
+      "ok": true,
+      "provisional": true,
+      "branch_filename_collision": true,
+      "feature_commits": 2,
+      "main_commits": 4,
+      "unknown_branch_is_error": true
+    },
+    "documented_examples": {
+      "documented_json_service_startup": true,
+      "python_create_edit_example": true,
+      "official_mcp_example": true
+    },
+    "http_mac_writes": [
+      {
+        "name": "create translates tracker dependency IDs to MAC IDs",
+        "ok": true
+      },
+      {
+        "name": "dependency-only and combined upstream changes advance exactly one revision, then remain stable",
+        "ok": true
+      },
+      {
+        "name": "title-only edit retains raw dependencies and foreign metadata",
+        "ok": true
+      },
+      {
+        "name": "full editor dependency submission retains unresolved references",
+        "ok": true
+      },
+      {
+        "name": "transition uses upstream lifecycle endpoint",
+        "ok": true
+      },
+      {
+        "name": "explicit removal removes only the selected unresolved reference",
+        "ok": true
+      },
+      {
+        "name": "adding a new dependency to an existing task translates its ID",
+        "ok": true
+      },
+      {
+        "name": "json outage rejects mutation with 503 and preserves cache",
+        "ok": true
+      },
+      {
+        "name": "html outage rejects mutation with 503 and preserves cache",
+        "ok": true
+      },
+      {
+        "name": "empty outage rejects mutation with 503 and preserves cache",
+        "ok": true
+      },
+      {
+        "name": "malformed_json outage rejects mutation with 503 and preserves cache",
+        "ok": true
+      }
+    ]
+  },
+  "scope": "Unmodified generated source snapshots only. Actual HTTP client/synchronizer and service probes do not replace final framework/export/browser/cache acceptance.",
+  "independent_service_negative_control": {
+    "prior_lifecycle_checks": [
+      "all_native_and_observed_imported_states",
+      "supported_empty_columns",
+      "later_observed_state_and_stable_workflow_ids",
+      "unchanged_poll",
+      "restart"
+    ],
+    "failure": "Disappeared-project MAC tasks remain after a successful smaller snapshot; actual HTTP lifecycle harness times out waiting for only beta.",
+    "fixture_scope": "Authenticated loopback MAC fixture and disposable local service; no production writes."
+  }
+}

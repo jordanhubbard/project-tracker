@@ -5,6 +5,135 @@ kind: integration
 ---
 # MAC integration behavior
 
+## Reconcile disappeared task records across cached MAC repositories
+
+After projects, registry and the complete task collection all succeed, sweep MAC-owned
+cached tasks across every previously known MAC repository, not only repositories still
+present in the current discovery map. Remove a cached MAC task exactly when its upstream
+ID is absent from the complete successful incoming task collection. Preserve local-owned
+tasks, repository registrations/descriptions/paths, and existing workflow identities.
+A missing project record alone is not proof that a task vanished: use the complete task
+ID set. Any failed or incomplete enumeration keeps the prior snapshot intact.
+
+Native complete_reconciliation must first import alpha and beta, then successfully return
+only beta from discovery and only beta's task from /tasks. Alpha's MAC task disappears
+from reads and emits one committed deletion; beta and any local task remain unchanged.
+Repeat an identical snapshot without duplicate deletion events, then return successful
+empty projects/registry/tasks and verify all cached MAC tasks are removed while local
+work and repository metadata remain. Retain the existing lifecycle-then-201-project,
+10,000-task fixture in one database: tasks from its removed first projects must not inflate
+the new snapshot's count. Keep the separate measured >=80 MiB transport fixture.
+
+For native snapshot_rollback, capture the durable task-event count or last event cursor
+after establishing the baseline snapshot. That initial import legitimately creates task
+events. Inject the later beta storage failure, require task rows/revisions and the task-event
+count to remain equal to their baseline, and require zero newly published task events.
+Do not compare the entire historical task-event table to zero or discard earlier events.
+After recovery, require exactly one new durable/live task event per changed task.
+
+## Resolve relationships after fleet-wide identity discovery
+
+Within one snapshot transaction, discover every repository and establish stable task
+identities for every project before projecting any task relationships. A per-project
+seed-and-project loop is insufficient: when alpha references a beta task and beta sorts
+later, the first poll misclassifies the reference as missing and the next identical poll
+changes the projection. Build a fleet-wide upstream-ID lookup, with repository ownership,
+then distinguish same-project dependencies, known outside-project references and truly
+missing IDs. Keep known foreign Tracker IDs in unresolved details on the first poll.
+
+The native unresolved_preservation gate must create alpha/x referencing alpha/pre,
+beta/f-1 and missing, with alpha processed before beta and all records new. After the
+first snapshot, pre is a normal Tracker-ID dependency, f-1 is outside_project with the
+known beta Tracker ID, and missing is missing. An identical second snapshot must not
+change any revision, raw reference, resolved/unresolved projection or task event count.
+Repeat with reversed discovery and task order and after restart. Existing write/poll
+stability and atomic rollback requirements remain mandatory.
+
+## Admit full fleet response sizes
+
+Use a 256 MiB aggregate response-body limit for production MAC HTTP transport.
+The captured fleet has 9,717 records in an 80,765,554-byte JSON task response;
+a 48 MiB limit rejected that valid response even though adapter-level snapshot
+checks passed. Task count alone does not establish transport capacity. Keep byte
+accounting bounded and destroy owned handles on overflow, while accepting valid
+collections of at least80 MiB through the default production client. Do not drop
+metadata, truncate collections, or shrink the fixture to pass the limit.
+
+The native complete_reconciliation gate must also execute a separate authenticated
+HTTP /tasks read with at least80 MiB of synthetic valid JSON under the production
+client's default size limit and ordinary read deadline. Construct the data
+programmatically with a measured margin: for example 10,000 short tasks each with
+9,216 ASCII padding characters exceeds 80 * 1024 * 1024 bytes. Merely using 8,192
+characters per task yields about 79.35 MiB with ordinary fields and fails the threshold.
+Assert Buffer.byteLength of the fully serialized JSON is at least 83,886,080 bytes
+before serving it, then assert the received serialized byte count and the complete decoded record count and
+preserved padding. Exercise the actual client and adapter; do not inject a fake
+transport or an enlarged test-only size limit. This focused transport fixture need
+not insert its padding into SQLite: retain the separate ordinary10,000-task/201-project
+snapshot, lifecycle, rollback and stability checks. Release large fixture data
+and connections promptly so the entire native suite stays within its runner budget.
+
+Independent final service acceptance replays the captured80,765,554-byte snapshot
+through actual HTTP and verifies every project-scoped task and relationship in the
+read store. Raw captures remain private; only aggregate sizes/counts are public.
+The largest captured record is120,931 bytes (title719 characters, description up
+to106,757 characters), so retain the existing720/110,000-character unchanged-text
+mutation fixture and do not reduce the outbound body budget below that scenario.
+
+## Own the transport until the response completes
+
+Use Node's built-in HTTP/HTTPS request and response handles for production MAC
+transport. A verified Node22 fetch candidate rejected at its default60-second
+deadline but left the original HTTP1 socket open after65 seconds; catching a
+locked ReadableStream.cancel rejection merely prevented a crash. Abort delivery
+and body-stream cancellation do not prove resource release.
+
+Retain the actual ClientRequest and IncomingMessage until completion. One absolute
+wall-clock deadline must cover connection establishment, headers and the entire body.
+On expiry, reject the caller and explicitly destroy both owned request and response
+handles (and their connection) before releasing ownership. Observe error events on
+both so destruction cannot cause an uncaught exception. Clear the deadline exactly
+once on terminal success/failure, bound accumulated response bytes, and ensure late
+callbacks cannot resolve twice or persist partial data. Disable authenticated redirects.
+An inactivity timeout alone is insufficient: a trickling body must still meet the
+absolute deadline. Preserve authenticated HTTP and HTTPS, JSON/non-JSON error handling,
+60-second reads and the specified bounded writes. This transport change does not
+alter any task, synchronization, protocol or browser semantics.
+
+Both the short native timeout regression and independent actual default60 service
+acceptance must use this same production transport against real loopback HTTP,
+including healthy follow-up requests. Test seams must not replace the production
+transport in these checks. Retain all prior regression scenarios below.
+
+## Genuine relationship changes advance revisions and notify clients
+
+Avoid duplicate post-edit events by comparing complete task projections, never
+by suppressing revisions on changed relationships. A prior candidate imported
+an upstream dependency-only change but kept revision1 and emitted zero durable
+or live task events. Existing tasks must advance once when their fields or their
+dependency/reference projection changes. Construct the complete desired task,
+including resolved and unresolved references, before comparing and updating it.
+Apply at most one revision increment and one task-change event per changed task
+per successful snapshot. If an event includes a task object, that object must
+reflect the final committed relationship projection.
+
+Identity seeding for a newly discovered task may establish its initial revision
+before relationships are resolved. That does not authorize keepRevision-style
+suppression when an existing task's relationships change. Preserve the atomic
+fleet transaction and publish only after the complete snapshot commits.
+
+The native mac-selfcheck dependency_identity gate must exercise an upstream-only
+change through the real authenticated HTTP fixture, synchronization and store:
+start with existing alpha tasks a and p, with a having no dependencies. Change
+only a's upstream dependencies to `[p]`, then synchronize. The new tracker-ID
+relationship must be present, a's revision must advance by exactly one, and its
+durable event rows and connected listeners must each contain exactly one committed
+task change. Repeat the identical poll and require no further revision or event.
+Then change a's title and remove the dependency in one upstream snapshot: require
+exactly one revision/event again, and any emitted full task object must contain
+the new title and empty relationship list. Inspect results for a, not merely
+global event totals. Retain the mutation-response/unchanged-poll checks below.
+
 ## Enforce the response-body deadline
 
 A read timeout must bound the entire client operation, including consuming a
@@ -18,16 +147,29 @@ resources, clear its timer, and permit later requests and synchronization attemp
 Enforce the deadline independently of whether fetch or its body promise settles.
 Keep successful reads delayed beyond eight seconds valid within that budget.
 
-The native mac-selfcheck serialized_reads gate must execute the actual default
-read path against an authenticated disposable HTTP fixture with that incomplete
-HTTP200 body. Do not shorten the client timeout, substitute a fetch mock, or count
-an emitted abort signal as successful timeout behavior. Observe settlement of the
-client promise, its timeout/unavailability classification, closure of the stalled
-HTTP1 connection by the same deadline margin, and a healthy follow-up read. A
-fixture watchdog at70 seconds exists only to clean up a failed test; if it
-must close the socket to settle the client, the check is false. Assert elapsed
-time below65 seconds for the default60-second request and close all owned fixture
-connections even on failure. Retain the manual/timer overlap and slow-read tests.
+Timeout cleanup must not crash the service. A response body may be locked by its
+active reader; calling body.cancel() in a synchronous try/catch can still produce
+an unhandled rejected promise. Own and settle all asynchronous cleanup operations,
+including cancellation failures and losing deadline-race promises. Release the
+original HTTP connection, not just the caller promise, and keep the service alive
+for a healthy follow-up request. Do not suppress global unhandled rejections.
+
+The packaged native test runner has a fixed 60-second total process budget. Its
+mac-selfcheck serialized_reads gate therefore uses a short configurable read deadline
+against the same authenticated incomplete-body fixture, asserts caller rejection,
+connection closure before fixture cleanup, process survival and healthy follow-up.
+Retain the successful 8500ms read and overlap tests; bound and close every fixture.
+Keep the entire native suite and each diagnostic under the runner's budget.
+
+Separately, delivery acceptance MUST execute the actual default 60-second read path
+through the exported service against an authenticated disposable HTTP fixture:
+HTTP200, Content-Length100, single byte `[`, then no body completion. Do not shorten
+that independent check's deadline or substitute a fetch mock. Require caller failure
+and original HTTP1 connection closure before65 seconds, cached tasks/revisions
+preserved, truthful failed health, continued process survival, and healthy later
+synchronization. A watchdog at70 seconds is only failed-test cleanup; it must never
+supply a passing result. A native short-deadline pass alone does not prove this
+separate default-budget acceptance. Neither test contacts the real fleet.
 
 ## Stable dependency projection after writes
 

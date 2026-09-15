@@ -81,6 +81,17 @@ under TRACK-004. Earlier scoped evidence is in
 - **Conclusion:** Live import aborts on valid upstream dependency IDs after three projects; requests also time out. Correct upstream/local identity translation, complete fleet reconciliation and observable synchronization failures. Use isolated read-only live verification; production writes remain deliberate UI actions.
 - **Depends on:** none
 - **Implementation:**
+  - [ ] Reject stale discovery as proof of absence after a healthy-to-unavailable MAC transition; new unmatched registrations remain unresolved and cannot create local shadow tasks.
+  - [ ] Correct candidate16 session expiry: a persisted stale session must project as stale, never stopped, across events, REST and browser views; retain exactly-once expiry and heartbeat reactivation checks.
+  - [ ] Give every checklist completion checkbox an accessible name, including newly added rows.
+  - [ ] Preserve upstream MAC identity and owner fields in public task list/detail projections. Candidate16 stored these fields but omitted them from REST responses, preventing external reconciliation.
+  - [ ] Prevent obsolete asynchronous route renders from reopening registration dialogs after successful saves and navigation.
+  - [ ] Make status-only toasts non-intercepting; verify immediate mobile Settings saves during visible notifications.
+  - [x] Rebind the reviewed persistent-service contract without changing its probes or isolated data directory. Candidate15 then passed the supported build using the retained generation checkpoint (7 native groups); independent UI findings still block final acceptance.
+  - [ ] Correct candidate14's late fleet identity-index regression: insertion and lookup must use the same composite key; retain real dependency-only update assertions.
+  - [ ] Return a useful client-validation error for invalid local dependencies, preserving rows, revisions and events on rejection.
+  - [ ] Keep the mobile navigation drawer dismissible and close it after navigation; verify Activity and Settings remain reachable.
+  - [ ] Re-run the complete native lifecycle after these corrections. Candidate14 was rejected; provisional earlier-source checks do not establish acceptance.
   - [x] Specify order-independent upstream dependency import and outbound identity translation with fleet-scale reconciliation.
   - [ ] Regenerate the exported application through the supported lifecycle. Candidate
     7a1f3cd0aa4d08717013 passes 46 native tests, fleet import, atomic rollback,
@@ -104,27 +115,88 @@ under TRACK-004. Earlier scoped evidence is in
     unchanged poll. Candidate five temporarily drops a cross-project link from
     that projection, then restores it with an extra revision. Raw upstream
     references remain intact. See [candidate-five evidence](../../verification/track004-candidate5.json).
+  - [ ] Advance revisions and publish one committed event for genuine dependency-only
+    upstream changes. Candidate six fixes the default body deadline and connection
+    cleanup, but suppresses revisions/events while applying changed relationships.
+    Verify both dependency-only and combined field/dependency changes. See
+    [candidate-six evidence](../../verification/track004-candidate6.json).
+  - [ ] Handle rejected asynchronous timeout cleanup without crashing. Candidate seven
+    passes focused dependency/event and Git collision checks, but its timeout
+    cleanup crashes and its native suite exceeds the fixed 60-second runner limit.
+    Use short native timeout coverage plus full default-budget exported-service
+    acceptance. See [candidate-seven evidence](../../verification/track004-candidate7.json).
+  - [ ] Own MAC request/response handles through an absolute deadline. Candidate
+    eight rejects at60seconds without an asynchronous cancellation crash, but the
+    original connection remains open past65seconds. Use the built-in HTTP/HTTPS
+    transport with explicit handle destruction and retain both timeout test scopes.
+    See [candidate-eight evidence](../../verification/track004-candidate8.json).
+  - [ ] Accept the full byte volume of a fleet response through the actual HTTP
+    transport. Candidate nine passes default deadline/socket/follow-up, Git,
+    dependency events and adapter-level snapshot checks, but its48MiB cap rejects
+    the80,765,554-byte captured collection. Require256MiB production capacity,
+    native >=80MiB synthetic transport coverage and final actual-service replay.
+    See [candidate-nine evidence](../../verification/track004-candidate9.json).
+  - [ ] Establish task identities across all discovered projects before resolving
+    cross-project references, and preserve populated local workflow membership on
+    rename. Candidate ten passes full captured HTTP replay, default transport cleanup,
+    synthetic writes and backend protocols, but native MAC acceptance rejects a
+    later-project reference initially classified as missing. Its synthetic response
+    fixture also measures below 80 MiB. A populated-state rename leaves tasks in a
+    nonexistent state. See [candidate-ten evidence](../../verification/track004-candidate10.json).
+  - [ ] Reconcile disappeared upstream task IDs across every cached MAC repository,
+    including projects absent from the latest successful discovery snapshot, while
+    preserving local tasks and repository metadata. Candidate eleven fixes first-poll
+    foreign references and populated-state rename, but leaves tasks from disappeared
+    projects in the read store. Its native rollback assertion also incorrectly expects
+    zero historical task events instead of zero new task events. Retain existing
+    events and assert against the pre-failure cursor/count. See
+    [candidate-eleven evidence](../../verification/track004-candidate11.json).
+  - [ ] Verify dependency preservation from actual upstream and cached task state,
+    allowing unchanged fields to be omitted from an update request. Candidate twelve
+    passes removed-project cleanup, empty-fleet local retention, default timeout,
+    all eleven independent HTTP write checks and native protocol checks, but its
+    native explicit-removal test requires an unchanged dependency field in the PUT
+    payload. Correct that assertion without weakening preserved-edge, explicit
+    removal, new-edge translation or unchanged-poll checks. See
+    [candidate-twelve evidence](../../verification/track004-candidate12.json).
+  - [ ] Track the exact socket serving the native stalled-response request, including
+    keep-alive reuse. Candidate thirteen passes eight native MAC groups but the
+    timeout assertion inspects only newly accepted connections. An independent
+    actual-client probe confirms reuse, deadline rejection, closure of that exact
+    socket before fixture cleanup, and healthy recovery. Preserve these positive
+    assertions in the native diagnostic. See
+    [candidate-thirteen evidence](../../verification/track004-candidate13.json).
+  - [ ] Deliver the accepted repair through the supported committed-source cache;
+    verify portable isolated acceptance and cache reuse in a fresh GitHub checkout.
+    These runtime-delivery checks remain here after the workspace import lands.
 - **Evidence:**
   - [ ] Native authenticated fixtures cover reverse-order dependencies, missing and cross-project references, unchanged polls, deletion beyond 200 tasks, failure recovery and nonoverlapping slow synchronization.
   - [ ] Replay the real hub snapshot and verify complete project/task counts and dependency preservation.
   - [ ] Verify an isolated exported tracker completes live read-only synchronization and renders MAC tasks.
 
-### [ ] TRACK-005 — Persist the Project Tracker workspace on GitHub
+### [x] TRACK-005 — Persist the Project Tracker workspace on GitHub
 
 - **Priority:** P0
 - **Owner:** repository
 - **Direction:** Use git@github.com:jordanhubbard/project-tracker.git to persist this project.
-- **Conclusion:** Origin is reachable and contains an unrelated starter commit. Preserve its ancestry and BSD license while retaining the established LitAI project authority; publish through the repository review workflow without force-pushing.
+- **Conclusion:** The development workspace is persisted on main through
+  [PR #1](https://github.com/jordanhubbard/project-tracker/pull/1), merge
+  f455508a85b487d9290375993fec16420a93763f. Starter ancestry and the BSD license are
+  preserved. A fresh main clone passes integrity checks and matches the imported
+  tree. Runtime repair and accepted-cache delivery remain open under TRACK-004;
+  the import makes no final application-acceptance claim.
 - **Depends on:** none
 - **Implementation:**
   - [x] Configure origin and back up the previously verified workspace history.
-  - [ ] Integrate starter ancestry and land the verified repaired workspace through a GitHub pull request.
-  - [ ] Make acceptance storage portable and isolated across repeated checkout runs.
-  - [ ] Publish the accepted source through the supported project cache and verify
-    a fresh GitHub checkout can reuse it and pass current acceptance.
+  - [x] Integrate starter ancestry and land the validated workspace through a GitHub pull request.
 - **Evidence:**
   - [x] Verify workspace-import exists on GitHub at 6ef7b8b4f39be4c23aec55d47414029c190aca4b.
-  - [ ] Verify the merged GitHub main and local main agree after landing.
+  - [x] Verify merged GitHub main and local main both equal f455508a85b487d9290375993fec16420a93763f before follow-up repair work.
+  - [x] Verify a fresh main clone with git fsck, starter/workspace ancestry, and an identical imported tree.
+
+Documentation draft review passes `project validate`, including local links, anchors,
+reachability and authority review. Python and shell examples pass syntax checks.
+Runtime example checks and final acceptance claims remain pending with TRACK-004.
 
 ## Scope and retained history
 
@@ -134,3 +206,51 @@ TRACK-005 adds the requested GitHub persistence; origin now points to the user-s
 repository. Production fleet writes, background-service registration and fleet-wide
 installation remain outside this work. Historical candidates and results remain in
 Git history and ignored diagnostics; current repair status is recorded above.
+
+### [ ] TRACK-006 — Complete Project Tracker documentation
+
+- **Priority:** P1
+- **Owner:** documentation
+- **Direction:** Write all project documentation alongside the MAC integration repair.
+- **Conclusion:** Provide a coherent product and contributor manual grounded in authored contracts and verified behavior; distinguish supported setup from pending runtime acceptance.
+- **Depends on:** TRACK-004
+- **Implementation:**
+  - [x] Write setup, configuration, project/task workflows, Git and fleet guides, API examples, architecture, development, backup and troubleshooting documentation.
+  - [x] Replace stale completion claims and connect every guide from the documentation index and README.
+- **Evidence:**
+  - [ ] Validate documentation links and project authority; check commands and examples against the accepted artifact and supported CLI.
+  - [ ] Persist reviewed documentation on GitHub with the repair and record the final verification scope.
+
+### [ ] TRACK-007 — Publish the first Project Tracker release
+
+- **Priority:** P0
+- **Owner:** project
+- **Direction:** Make the first release on GitHub. The user explicitly authorizes native npm packaging with archive verification and GitHub upload for this cut.
+- **Conclusion:** Publish v1.0.0 from an accepted application and complete documentation. Replace the inherited sample release gate with tracker acceptance, resolve current native failures, package and verify artifacts, land the repair, and verify remote release publication.
+- **Packaging follow-up:** Literate AI 1.0.1 cannot build npm packages. Filed [upstream issue #411](https://github.com/NVIDIA-dev/literate-ai/issues/411), assigned to milestone 1.1. Use native `npm pack` for this release, bind it to accepted source and verify extraction, installation, runtime and uploaded bytes.
+- **Depends on:** TRACK-004, TRACK-006
+- **Implementation:**
+  - [x] Configure the tracker release policy and verified native npm packaging. Candidate15 archive passed exact47-file verification, fresh installation,7 native groups,22 service checks,6 rejected-write checks and byte-for-byte GitHub draft download verification. See [candidate15 evidence](../../verification/track004-candidate15.json).
+  - [ ] Resolve native acceptance failures and finish final service, browser, live and portable-cache checks.
+  - [ ] Prepare, check and publish v1.0.0 with truthful notes and verified release artifacts.
+- **Evidence:**
+  - [ ] Current native and independent runtime acceptance passes for the exact release revision.
+  - [ ] The GitHub release, tag, downloadable artifacts and source revision are verified remotely.
+
+### [x] TRACK-008 — Deploy published v1.0.0 to puck.local
+
+- **Priority:** P0
+- **Owner:** operations
+- **Direction:** Deploy the published release to puck.local.
+- **Conclusion:** Install unchanged verified release assets with durable private storage, managed startup, protected browser access and read-only MAC synchronization; verify actual health and remote access.
+- **Depends on:** none
+- **Implementation:**
+  - [x] Inspect host prerequisites and existing configuration; verify the published archive and install locked dependencies.
+  - [x] Install and start a managed service with separate persistent data and private credentials.
+- **Evidence:**
+  - [x] Confirm native diagnostics, remote HTTP readiness, authenticated browser access, managed restart and MAC synchronization when configured.
+
+Deployment completed: unchanged v1.0.0 archive,7 native groups, authenticated browser
+access, graceful managed restart and exact MAC comparison of28 repositories/8947tasks
+passed. See [deployment evidence](../../verification/deployment-puck-v1.0.0.json) and
+[operator guide](../user/deployment.md). The existing release UI limitations remain.

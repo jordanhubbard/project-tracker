@@ -1,0 +1,44 @@
+{
+  "candidate": "5ec4a158936af7e50a5e99b181576aed3dc79293d9d0e53e17135a7eb7c7696a",
+  "authority_commit": "9da7aecf2d2a12554533fd5805914a869f792983",
+  "accepted": false,
+  "build": "Supported lifecycle rejected native mac_regression_gate; no final export.",
+  "native_mac_checks": {
+    "ok": false,
+    "checks": {
+      "dependency_identity": true,
+      "unresolved_preservation": true,
+      "explicit_removal": true,
+      "snapshot_rollback": true,
+      "commit_events": true,
+      "non_json_outage": true,
+      "complete_reconciliation": true,
+      "serialized_reads": false,
+      "restart_persistence": true
+    }
+  },
+  "native_failure": "serialized_reads: The original connection must be released",
+  "confirmed_cause": "The native fixture considers only sockets accepted after stalling begins; HTTP keep-alive reuses an earlier socket, excluding the actual stalled connection.",
+  "independent_exact_socket_probe": {
+    "ok": true,
+    "reused_connection": true,
+    "new_connections_during_stall": 0,
+    "caller_ms": 1502,
+    "exact_socket_close_ms": 1503,
+    "healthy_followup": true
+  },
+  "scope_limits": [
+    "Unmodified generated snapshot; provisional diagnostics do not replace native lifecycle acceptance.",
+    "Socket probe observes the precise request socket closing before fixture cleanup.",
+    "No production MAC writes."
+  ],
+  "provisional_service_default_timeout": {
+    "ok": true,
+    "checks": {
+      "default_body_timeout_closes_connection": true,
+      "failure_preserves_cached_task": true,
+      "later_synchronization_recovers_without_task_churn": true
+    },
+    "body_timeout_seconds": 60.0
+  }
+}

@@ -1,0 +1,242 @@
+{
+  "candidate": "0f1b81375998a420ea6f9772538e58eeb929541e798c3327ea4b3348d735a641",
+  "authority_commit": "fc3aa06b351d5f9431ef6ec07fd76c30abac5ec6",
+  "accepted": false,
+  "native_build": {
+    "command": "build",
+    "error": {
+      "code": "standard_rebuild.lifecycle_failed",
+      "message": "Standard lifecycle did not produce an accepted project: test:generated-test.failed for sha256:0f1b81375998a420ea6f9772538e58eeb929541e798c3327ea4b3348d735a641 (evidence sha256:0dc89663c4abd777cada9a43cb0d8cefc2648bf888e655665829892354b222f1): generated-test.failed: local command failed (1): (node:42736) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n1 generated case(s) failed\ninvariant-mac-selfcheck:"
+    },
+    "ok": false,
+    "schema": "literate-ai/cli-error@1"
+  },
+  "native_mac_selfcheck": {
+    "ok": false,
+    "checks": {
+      "dependency_identity": true,
+      "unresolved_preservation": false,
+      "explicit_removal": true,
+      "snapshot_rollback": true,
+      "commit_events": true,
+      "non_json_outage": true,
+      "complete_reconciliation": false,
+      "serialized_reads": true,
+      "restart_persistence": true
+    }
+  },
+  "confirmed_defects": [
+    {
+      "case": "cross_project_forward_reference",
+      "finding": "Per-project seed/project order classifies alpha dependency on new beta task as missing on first poll. Native unresolved_preservation fails."
+    },
+    {
+      "case": "large_response_fixture",
+      "finding": "10000 records with8192 ASCII padding bytes produce less than83886080 bytes; the test returns false before transport. Production256MiB client itself passes actual80765554byte capture."
+    },
+    {
+      "case": "populated_workflow_rename",
+      "provisional": true,
+      "ok": false,
+      "before_state": "open",
+      "after_state": "open",
+      "new_state_exists": true,
+      "task_has_visible_state": false
+    }
+  ],
+  "provisional_passes": {
+    "timeout": {
+      "ok": true,
+      "provisional": true,
+      "settled_seconds": 60.003109958,
+      "unavailable": true,
+      "socket_closed_before_cleanup": true,
+      "socket_closed_seconds": 60.00395833299999,
+      "healthy_followup": true
+    },
+    "captured_http_snapshot": {
+      "ok": true,
+      "provisional": true,
+      "taskResponseBytes": 80765554,
+      "projects": 28,
+      "tasks": 9077,
+      "edges": 8210,
+      "unchanged_poll": true,
+      "first": {
+        "ok": true,
+        "configured": true,
+        "repositories": 28,
+        "tasks": 9077,
+        "changes": 9077,
+        "last_sync_at": "2026-09-14T14:09:24Z"
+      },
+      "second": {
+        "ok": true,
+        "configured": true,
+        "repositories": 28,
+        "tasks": 9077,
+        "changes": 0,
+        "last_sync_at": "2026-09-14T14:09:28Z"
+      },
+      "requests": [
+        "/projects",
+        "/bridge/repositories",
+        "/tasks",
+        "/projects",
+        "/bridge/repositories",
+        "/tasks"
+      ]
+    },
+    "dependency_events": {
+      "ok": true,
+      "provisional": true,
+      "authenticated_real_http": true,
+      "cases": [
+        {
+          "name": "dependency_only",
+          "ok": true,
+          "revision": 2,
+          "durable_events": 1,
+          "live_events": 1
+        },
+        {
+          "name": "unchanged",
+          "ok": true,
+          "revision": 2,
+          "durable_events": 0,
+          "live_events": 0
+        },
+        {
+          "name": "combined",
+          "ok": true,
+          "revision": 3,
+          "durable_events": 1,
+          "live_events": 1
+        },
+        {
+          "name": "unchanged_again",
+          "ok": true,
+          "revision": 3,
+          "durable_events": 0,
+          "live_events": 0
+        }
+      ]
+    },
+    "rollback": {
+      "ok": true,
+      "provisional": true,
+      "authenticated_real_http": true,
+      "cases": [],
+      "rollback": true,
+      "recovery_task_events": 2
+    },
+    "backend_service_checks": 22,
+    "documented_examples": {
+      "documented_json_service_startup": true,
+      "python_create_edit_example": true,
+      "official_mcp_example": true
+    },
+    "synthetic_mac_writes": [
+      {
+        "name": "create translates tracker dependency IDs to MAC IDs",
+        "ok": true
+      },
+      {
+        "name": "dependency-only and combined upstream changes advance exactly one revision, then remain stable",
+        "ok": true
+      },
+      {
+        "name": "title-only edit retains raw dependencies and foreign metadata",
+        "ok": true
+      },
+      {
+        "name": "full editor dependency submission retains unresolved references",
+        "ok": true
+      },
+      {
+        "name": "transition uses upstream lifecycle endpoint",
+        "ok": true
+      },
+      {
+        "name": "explicit removal removes only the selected unresolved reference",
+        "ok": true
+      },
+      {
+        "name": "adding a new dependency to an existing task translates its ID",
+        "ok": true
+      },
+      {
+        "name": "desktop browser preserves imported fields and explicitly removes one reference",
+        "ok": true
+      },
+      {
+        "name": "mobile browser preserves imported fields and explicitly removes one reference",
+        "ok": true
+      },
+      {
+        "name": "json outage rejects mutation with 503 and preserves cache",
+        "ok": true
+      },
+      {
+        "name": "html outage rejects mutation with 503 and preserves cache",
+        "ok": true
+      },
+      {
+        "name": "empty outage rejects mutation with 503 and preserves cache",
+        "ok": true
+      },
+      {
+        "name": "malformed_json outage rejects mutation with 503 and preserves cache",
+        "ok": true
+      }
+    ],
+    "browser_mac_recovery": {
+      "ok": true,
+      "status_without_reload": true,
+      "no_duplicate_events": true,
+      "failed_write_rejected": true,
+      "page_errors": []
+    },
+    "additional_browser_phases": [
+      "protected_login",
+      "peer_ui",
+      "session_expiry_90_seconds",
+      "git_states",
+      "equal_timestamp_graph",
+      "irregular_timestamp_graph"
+    ],
+    "board_prior_assertions": {
+      "desktop": 15,
+      "mobile": 15,
+      "document_overflow": false,
+      "note": "Semantic destination-region/menu/label adapters preserve all prior assertions. Newly added populated-rename membership assertion intentionally detects candidate10 defect and remains required for next export."
+    },
+    "service_default_timeout": {
+      "default_body_timeout_closes_connection": true,
+      "failure_preserves_cached_task": true,
+      "later_synchronization_recovers_without_task_churn": true
+    },
+    "lifecycle_service": {
+      "all_native_and_observed_imported_states": true,
+      "supported_empty_columns": true,
+      "later_observed_state_and_stable_workflow_ids": true,
+      "unchanged_poll": true,
+      "restart": true
+    },
+    "live_readonly": {
+      "projects": 28,
+      "tasks": 9085,
+      "missing_ids": 0,
+      "extra_ids": 0,
+      "sync_errors": 0,
+      "stable_snapshot": true,
+      "owned_service_stopped": true
+    }
+  },
+  "scope": "Unmodified provisional source snapshots. Private harness adapters match actual health, settings-clear and accessible labels; no assertions removed. Not final export or delivery acceptance; browser diagnostics still pending.",
+  "negative_browser_control": {
+    "desktop": "only populated rename membership fails",
+    "mobile": "only populated rename membership fails",
+    "all_other_checks_each_viewport": 14
+  }
+}

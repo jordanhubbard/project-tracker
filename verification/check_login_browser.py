@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Verify the visible cookie-login flow on an isolated token-protected backend."""
+from test_tools import NODE, CHROME
 import argparse,json,os,re,socket,subprocess,tempfile,time,urllib.request,urllib.error,uuid
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
-p=argparse.ArgumentParser(description=__doc__);p.add_argument('entrypoint',type=Path);p.add_argument('--output',type=Path,required=True);p.add_argument('--node',default='/opt/homebrew/opt/node@22/bin/node');a=p.parse_args()
+p=argparse.ArgumentParser(description=__doc__);p.add_argument('entrypoint',type=Path);p.add_argument('--output',type=Path,required=True);p.add_argument('--node',default=NODE);a=p.parse_args()
 a.output.mkdir(parents=True,exist_ok=True)
 with tempfile.TemporaryDirectory() as tmp:
  with socket.socket() as s:s.bind(('127.0.0.1',0));port=s.getsockname()[1]
@@ -30,7 +31,7 @@ with tempfile.TemporaryDirectory() as tmp:
    assert error.code==403,error.code
   results=[]
   with sync_playwright() as pw:
-   browser=pw.chromium.launch(executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
+   browser=pw.chromium.launch(executable_path=CHROME)
    for name,width in [('desktop',1440),('mobile',390)]:
     context=browser.new_context(viewport={'width':width,'height':1000});page=context.new_page();page.set_default_timeout(5000);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     try:

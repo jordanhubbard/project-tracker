@@ -4,15 +4,29 @@
   "version_authority": {
     "path": "literate.project.json",
     "format": "json-pointer",
-    "selectors": ["/version"]
+    "selectors": [
+      "/version"
+    ]
   },
   "version_mirrors": [],
   "contributions": {
     "current_milestone": "{version}"
   },
-  "allowed_transitions": ["patch", "minor", "major", "prerelease", "explicit"],
+  "allowed_transitions": [
+    "patch",
+    "minor",
+    "major",
+    "prerelease",
+    "explicit"
+  ],
   "gate": {
-    "argv": ["litai", "test", "samples/hello-component", "--target", "host"],
+    "argv": [
+      "./scripts/litai-service.sh",
+      "test",
+      "components/tracker",
+      "--target",
+      "host"
+    ],
     "timeout_seconds": 86400
   },
   "changelog": {
@@ -24,5 +38,8 @@
     "signed": false
   },
   "remote": "origin",
-  "provider": null
+  "provider": {
+    "kind": "github",
+    "repository": "jordanhubbard/project-tracker"
+  }
 }

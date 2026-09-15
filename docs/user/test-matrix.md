@@ -1,72 +1,42 @@
-# Private test matrix
+# Test matrix
 
-`litai init` creates two synthetic files for optional cross-platform fanout and reports
-their platform-resolved durable user destinations. Run `litai config paths` to refresh
-that report. Copy `literate.workers.example.json` to `worker_config` and replace its SSH
-placeholders. Copy `literate.test.example.json` to the project-scoped `test_config` and
-select exact worker IDs with matching platform Flavors.
+[Documentation](../README.md)
 
-Never commit either private file. Worker names, credentials, dynamic provisioning
-skills, and private routes are operator/session configuration rather than application
-authority. Set `LITAI_TEST_CONFIG=/absolute/path/to/private-matrix.json` to override the
-project-scoped default and
-`LITAI_WORKER_CONFIG=/absolute/path/to/private-workers.json` for its worker catalog.
+The current product verification target is the local macOS host with the declared
+Node/Git toolchain. It does not establish Windows/Linux runtime support, remote worker
+readiness, or a passing multi-platform CI matrix.
 
-Live `litai rebuild` / sample generation in an initialized project fails closed unless
-project-scoped user `test.json` (or `--coding-cli` / `--model`, or `CODING_CLI` /
-`LITAI_LIVE_MODEL`) names both a coding CLI and a model. Copy the inert
-`coding_cli` and `model` placeholders from `literate.test.example.json`. Remote
-workers require `opencode` and `OPENAI_API_KEY` in the login environment.
+## Local layers
 
-A one-shot local override does not rewrite user `test.json`:
+| Layer | Evidence |
+| --- | --- |
+| Authority | `project validate`, generated lock/plan and reviewed documentation |
+| Supported lifecycle | Source/dependency admission, build, native tests, persistent-service acceptance and receipt |
+| Independent service | Actual REST, SQLite restart, official MCP clients, A2A, MAC/LLM fixtures and child processes |
+| Independent browser | Chrome at desktop 1440px and mobile 390px, live updates and graph interactions |
+| MAC scale and recovery | Complete captured snapshot, synthetic edits, lifecycle and default-timeout fixtures |
+| Live MAC | Isolated read-only synchronization against the real hub |
+| Portable delivery | Fresh GitHub checkout, exact source-cache reuse and fresh current acceptance |
 
-```console
-LITAI_SESSION_ID=dev make samples \
-  SAMPLE_FLAVORS='--sample hello-component --coding-cli cursor-agent --model gpt-5.6-sol-high'
-```
+See [development](development.md#independent-checks) for execution and
+[verification](verification.md) for actual results. Each result is tied to its own
+artifact; passing an older candidate does not automatically validate a regenerated one.
 
-When POSIX SSH workers exist with those remote prerequisites and the JSON names that
-pair, the bound live gate is:
+## Optional private workers
 
-```console
-litai worker probe --all
-litai release check PLAN.json --target local --project .
-```
+`literate.workers.example.json` and `literate.test.example.json` are inert examples.
+Use `litai config paths` to identify the operator's durable configuration destinations.
+Keep real worker names, endpoints and credentials out of Git. `LITAI_TEST_CONFIG` and
+`LITAI_WORKER_CONFIG` can select private files.
 
-Without user `workers.json` the gate fails closed (`release.target_unconfigured`).
+Use the installed `litai worker probe --all` before capability-gated remote work.
+Observed worker health does not change declared platform requirements. Do not claim
+remote acceptance until the configured worker has built and tested the exact artifact
+and returned evidence through the supported lifecycle.
 
-Before capability-gated work, run `litai worker probe --all`. It probes configured SSH
-workers concurrently and atomically writes `worker-observations.json` beneath the
-resolved user state root. An absent `nvidia-smi` means no discoverable NVIDIA
-GPU; an installed command whose device query fails is degraded and must not be treated
-as GPU-capable. These observations never overwrite minimum routing requirements.
+This derived project uses installed `litai` commands. Examples requiring the framework's
+own Makefile or sample-suite checkout do not apply here.
 
-The framework's sample suite defaults unpinned samples to exactly
-`flavor://literate-ai/lang-python`, `flavor://literate-ai/build-make`, and the current
-host OS. Explicit sample pins remain authoritative. Opt into the full supported matrix
-with:
-
-```console
-make samples-platform-regression \
-  TEST_CONFIG=/path/to/matrix.json SAMPLE='*' \
-  SAMPLE_FLAVORS="--flavor flavor://literate-ai/os-* \
---flavor flavor://literate-ai/lang-* \
---flavor flavor://literate-ai/build-*"
-```
-
-The exact expanded Flavor selectors participate in the remote checkpoint identity, and
-the persistent worker cache retains generated-source and build results between runs.
-Supply `WORKER_CONFIG=/path/to/workers.json` alongside the matrix command.
-
-For an external dispatcher, add a `kind: command` worker whose `command` is a direct
-argument array. It receives one canonical request on standard input (or at the exact
-`{request_file}` argument), returns one typed result, and reads credentials only through
-declared environment bindings. Successful builds/tests publish an immutable,
-credential-free artifact URI and exact content identity. LitAI validates this protocol;
-the external command remains responsible for scheduling and provisioning.
-
-A derived
-project may connect the same private matrix to its CI or task router and run `litai
-rebuild` for the selected Component and platform Flavor on each worker. The packaged
-CLI does not yet claim a generic derived-project fanout verb; consult `litai help` for
-the commands actually supported by the installed release.
+The lifecycle fixture also removes a whole MAC project, then returns a successful empty
+fleet snapshot. It requires disappeared MAC tasks to leave the cache while preserving
+local work and repository records.

@@ -1,62 +1,25 @@
-# Writing readable specifications
+# Readable specifications
 
-[Project guide](../README.md) → readable specifications
+[Documentation](../README.md)
 
-Use specifications for observable product behavior, Flavors for OS/language/build
-choices, and exact skills for reusable conversion guidance. Start every normal Component
-with one `component.md`: strict frontmatter carries portable Component metadata and the
-Markdown body is its default `literate-markdown` behavioral specification.
+The application is authored as behavioral requirements rather than maintained generated
+source. Begin with `components/tracker/component.md`, then its named
+runtime, MAC integration, quality and visual documents. These specify externally observable
+behavior and the scenarios needed to establish it.
 
-```markdown
----
-namespace: example
-version: 1.0.0
-display_name: Scene Viewer
-profiles: []
-sample: false
-provides: []
-requires: []
-authoring_inputs: []
-workflow_definition:
-  uri: ../../workflows/production/staging/dev/workflow.md
-routing_policy:
-  uri: ../../routing/production/staging/dev/routing.json
-flavor_slots: []
-entrypoints: []
-acceptance_contracts: []
-source_dependencies: []
----
-# Scene Viewer
+A useful requirement names a trigger and result: for example, an unchanged upstream poll
+must leave task revisions and event counts unchanged, while a dependency-only change
+advances exactly once. Distinguish confirmed upstream absence from an unavailable fleet;
+those cases authorize different behavior.
 
-Load one reviewed scene and expose clear failures for missing or invalid assets.
-```
+Keep product behavior in the Component, target policy in selected Flavors, and conversion
+technique in exact skills. Keep real credentials, private snapshots and temporary diagnostic
+paths out of specification authority. `component.lock.json` records framework resolution;
+it is not a second handwritten dependency specification.
 
-Do not create `component.json`, `openspec/app.json`, `openspec/spec.md`, or an
-`acceptance/` directory as peer authoring files for a simple Component. Repository test
-vectors and private oracles belong outside the Component tree. Add another specification
-or interface document only for a named domain, module, protocol, or independently
-consumed public Component boundary.
+When a generated candidate fails, preserve the evidence, identify the owning requirement,
+and refine that authority where needed. Regenerate and verify the exact new export. A
+passing helper or provisional module does not prove the final service and browser.
 
-An additional `literate-markdown` node begins with narrow frontmatter:
-
-```markdown
----
-name: Scene loading
-summary: Load and validate one factory scene
-kind: component
-references:
-  - product.core.scene-contract
----
-```
-
-Only `name`, `summary`, and `kind` are required. Paths derive IDs and parents;
-`references` imports local constraints. Do not add dates, hand-bumped revisions,
-toolchains, or generic test/build guidance. Content identities and Git own history;
-Flavors and skills own reusable technique. When explicit additional roots are selected,
-the first is still `component.md`; nested node folders use their own `spec.md` only when
-they represent a genuine named boundary.
-
-Run `litai plan COMPONENT ...` to validate the exact corpus and inspect its
-deterministic context graph before generation. See the
-[mission-specification map](../architecture/mission-specification-composition.md) for
-the distinction between local node nesting and independently generatable Components.
+The [design traceability rule](../architecture/design-traceability.md) links explanation
+to authority. [Development](development.md) covers the complete workflow.

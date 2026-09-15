@@ -1,4 +1,5 @@
 """Isolated MAC outage/recovery through already-open browser views."""
+from test_tools import NODE, CHROME
 import sys,json,os,re,socket,subprocess,tempfile,time,urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
@@ -11,7 +12,7 @@ with tempfile.TemporaryDirectory() as tmp, MacFixture() as fleet:
  base=f'http://127.0.0.1:{port}'
  env={k:v for k,v in os.environ.items() if not k.startswith(('TRACKER_','MAC_','OPENAI_'))}
  env.update(TRACKER_DATA_DIR=tmp,TRACKER_MAC_URL=fleet.url,TRACKER_MAC_TOKEN=fleet.token)
- log=(out/'server.log').open('w');proc=subprocess.Popen(['/opt/homebrew/opt/node@22/bin/node',str(entry),'--litai-serve','--host','127.0.0.1','--port',str(port)],env=env,stdout=log,stderr=log)
+ log=(out/'server.log').open('w');proc=subprocess.Popen([NODE,str(entry),'--litai-serve','--host','127.0.0.1','--port',str(port)],env=env,stdout=log,stderr=log)
  def request(path):
   with urllib.request.urlopen(base+path,timeout=5) as r:return entity_response(json.load(r))
  try:
@@ -27,18 +28,18 @@ with tempfile.TemporaryDirectory() as tmp, MacFixture() as fleet:
    time.sleep(.1)
   tasks=request(f"/api/repos/{repo['id']}/tasks")['items'];task=tasks[0]
   with sync_playwright() as pw:
-   browser=pw.chromium.launch(executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
+   browser=pw.chromium.launch(executable_path=CHROME)
    context=browser.new_context(viewport={'width':1440,'height':1000});overview=context.new_page();inspector=context.new_page();board=context.new_page()
    errors=[]
    for page in [overview,inspector,board]:
     page.set_default_timeout(15000);page.on('pageerror',lambda e:errors.append(str(e)));page.goto(base)
     expect(page.get_by_text('Connected',exact=True)).to_be_visible()
    inspector.locator('.repo-card').filter(has=inspector.get_by_role('heading',name=repo['name'],exact=True)).get_by_role('button',name='Inspector',exact=True).click()
-   board.locator('.repo-card').filter(has=board.get_by_role('heading',name=repo['name'],exact=True)).get_by_role('button',name='Open board',exact=True).click()
+   card_to_open=board.locator('.repo-card').filter(has=board.get_by_role('heading',name=repo['name'],exact=True)); (card_to_open if card_to_open.get_attribute('role')=='button' or card_to_open.evaluate('(e) => e.tagName')=='BUTTON' else card_to_open.get_by_role('button',name='Open board',exact=True)).click()
    card=overview.locator('.repo-card').filter(has=overview.get_by_role('heading',name=repo['name'],exact=True))
    sync_value=inspector.locator('main:visible')
-   expect(sync_value).to_contain_text(re.compile('Last (?:synchronized|synced)',re.I));expect(sync_value).not_to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I));expect(card).not_to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I))
-   overview.evaluate("""() => { window.probeEvents=[]; window.probeSource=new EventSource('/api/events'); window.probeReady=false; probeSource.onopen=()=>window.probeReady=true; for (const eventName of ['repository-changed','repository.updated']) probeSource.addEventListener(eventName,e=>probeEvents.push({id:e.lastEventId,data:JSON.parse(e.data)})); }""")
+   expect(sync_value).to_contain_text(re.compile('Last (?:synchronized|synced|sync)',re.I));expect(sync_value).not_to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I));expect(card).not_to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I))
+   overview.evaluate("""() => { window.probeEvents=[]; window.probeSource=new EventSource('/api/events'); window.probeReady=false; probeSource.onopen=()=>window.probeReady=true; for (const eventName of ['repository-changed','repository.updated','repository.changed','repo.changed']) probeSource.addEventListener(eventName,e=>probeEvents.push({id:e.lastEventId,data:JSON.parse(e.data)})); }""")
    overview.wait_for_function('window.probeReady');overview.evaluate('window.probeEvents=[]')
    writes=len(fleet.writes);fleet.unavailable=True
    expect(card).to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I),timeout=20000);expect(sync_value).to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I),timeout=20000)
@@ -46,7 +47,7 @@ with tempfile.TemporaryDirectory() as tmp, MacFixture() as fleet:
    outage_events=overview.evaluate('window.probeEvents');assert outage_events,outage_events
    overview.wait_for_timeout(11000)
    assert overview.evaluate('window.probeEvents')==outage_events,'Repeated failure emitted duplicate repo updates'
-   board.locator('.card-title').filter(has_text=re.compile('^'+re.escape(task['title'])+'$')).or_(board.get_by_role('button',name='Open the task '+task['title'],exact=True)).click();dialog=board.get_by_role('dialog')
+   board.locator('.card-title').filter(has_text=re.compile('^'+re.escape(task['title'])+'$')).or_(board.get_by_role('button',name='Open the task '+task['title'],exact=True)).or_(board.get_by_role('button',name='Edit '+task['title'],exact=True)).click();dialog=board.get_by_role('dialog')
    dialog.get_by_label('Title',exact=True).fill('Outage must reject this edit');dialog.get_by_role('button',name='Save',exact=True).click()
    expect(dialog.get_by_role('alert')).to_contain_text(re.compile('unavailable|offline|503|outage|failed',re.I))
    assert request(f"/api/repos/{repo['id']}/tasks")['items']==tasks
