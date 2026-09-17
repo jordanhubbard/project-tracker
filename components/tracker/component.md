@@ -53,6 +53,10 @@ SQLite store, MAC adapter, Git reader, protocol adapters and static frontend mod
 No browser build tool is required. Use Node 22.23.2 or newer with node:sqlite and the official MIT MCP JavaScript SDK.
 The exact npm manifest and complete lock are specified in runtime.md. Serve an OpenAPI
 document at /openapi.json describing the REST request and response schemas.
+The generated source must include both a regular `package.json` and regular
+`package-lock.json`. The lock must resolve every declared dependency. Under the selected
+`package-npm` flavor, keep the manifest to ordinary runtime `dependencies`; do not add
+`scripts`, development, optional, peer, bundled, file, path or Git dependency entries.
 This component specification overrides inherited read-only/worker-only-write guidance:
 operator and peer commands intentionally mutate tasks through one shared service layer.
 
