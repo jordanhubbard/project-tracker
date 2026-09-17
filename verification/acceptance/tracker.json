@@ -1,6 +1,6 @@
 {
   "schema": "literate-ai/persistent-service-acceptance@1",
-  "specification_set_identity": "sha256:08adc898e9475e5d7e5e2f854ab30ef549b735f11f433fe45c3c87ab2929de5b",
+  "specification_set_identity": "sha256:a35ce23c005423324fae98be131006254ab9fe368b59cde293a33d20f81650df",
   "process": {
     "environment": {
       "TRACKER_DATA_DIR": "../acceptance-data-{port}",
@@ -38,6 +38,10 @@
     },
     {
       "path": "/api/sessions",
+      "expected_status": 200
+    },
+    {
+      "path": "/api/agent-sessions",
       "expected_status": 200
     },
     {

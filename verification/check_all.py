@@ -21,6 +21,14 @@ def main():
     scripts = Path(__file__).resolve().parent
     phases = [
         ('service', [str(scripts / 'check_service.py'), '--', args.node, str(entrypoint)]),
+        ('mac-project-details', [str(scripts / 'check_project_details.py'), str(entrypoint.parent),
+                                 '--output', str(output / 'mac-project-details')]),
+        ('mac-project-details-ui', [str(scripts / 'check_project_details_browser.py'), str(entrypoint),
+                                    '--node', args.node,
+                                    '--output', str(output / 'mac-project-details-ui')]),
+        ('live-operations', [str(scripts / 'check_live_operations.py'), str(entrypoint),
+                             '--node', args.node,
+                             '--output', str(output / 'live-operations')]),
         ('browser-login', [str(scripts / 'check_login_browser.py'), str(entrypoint),
                            '--node', args.node, '--output', str(output / 'browser-login')]),
         ('mac-status-ui', [str(scripts / 'check_mac_status_browser.py'), str(entrypoint),

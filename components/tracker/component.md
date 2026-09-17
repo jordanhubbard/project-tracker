@@ -3,7 +3,7 @@ namespace: project-tracker
 version: 1.0.0
 display_name: Project Tracker
 profiles: ["application", "service", "full-stack"]
-specification_roots: ["component.md", "runtime.md", "mac-integration.md", "project-details.md", "quality.md", "visual.md"]
+specification_roots: ["component.md", "runtime.md", "mac-integration.md", "project-details.md", "live-operations.md", "quality.md", "visual.md"]
 sample: false
 inheritable: false
 provides:
@@ -60,7 +60,8 @@ operator and peer commands intentionally mutate tasks through one shared service
 
 `service --host 127.0.0.1 --port 8765` runs the full app. Recognize framework
 `--litai-serve --host HOST --port PORT` with identical behavior and `/health` readiness.
-Provide `service mcp` stdio transport and `service session` heartbeat reporter modes.
+Provide `service mcp` stdio transport, `service session` heartbeat reporter and
+`service agent-session` live conversation adapter modes.
 Use TRACKER_DATA_DIR (default platform user application-data directory), never generated
 source, for SQLite WAL storage and private settings. Create directory mode 0700 and
 secret settings mode 0600. Never seed fake projects in ordinary startup. Provide an
@@ -263,6 +264,8 @@ At 390px viewport use collapsible sidebar and locally horizontally scrolling boa
 no page-level horizontal overflow. Accessible form labels, semantic landmarks, focus
 trap/escape for dialogs, keyboard operable controls, reduced-motion support.
 Settings UI manages MAC and LLM URLs, write-only credentials, peers, connection tests.
+The global Live view, first-class agent sessions and authenticated steering behavior
+follow `live-operations.md`.
 
 
 The complete verification and implementation requirements in quality.md also apply.

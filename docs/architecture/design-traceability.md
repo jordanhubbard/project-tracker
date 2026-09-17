@@ -1,6 +1,6 @@
 # Design traceability
 
-<!-- literate-ai:authority-reviewed sha256:0bfb8c2e1034bf37873cb2bd90fc0485ee680b7239c98d62e33a06447f650dd3 -->
+<!-- literate-ai:authority-reviewed sha256:12236857cedc21241adca5363edfaa071789e2cc84c14ccfdca90264888336b0 -->
 
 [Project guide](../README.md) → design traceability
 
@@ -50,3 +50,11 @@ Dependency-preservation tests inspect the upstream and cached task after an upda
 and again after synchronization. Unchanged fields may be omitted from an outgoing
 update; that omission must not be mistaken for deletion. Explicit removals and newly
 selected prerequisites still require checks of the actual transmitted MAC IDs.
+
+The live operations console consumes MAC's canonical event stream and reconciles it
+against authoritative snapshots. Agent sessions remain distinct from agent registrations,
+task assignments and debug shells. Visible conversations come from attributed MAC task
+transcripts, authorized AgentBus streams or the tracker-owned PTY adapter; Hermes identity
+linkage alone does not authorize transcript access or steering. Commands use advertised
+capabilities, sequence acknowledgements and append-only audits so the UI cannot report
+terminal input as delivered before the remote adapter accepts it.
