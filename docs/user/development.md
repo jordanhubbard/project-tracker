@@ -25,17 +25,21 @@ The framework owns lock resolution, candidate admission and receipts.
 ## Local lifecycle
 
 ```sh
-./scripts/litai-service.sh project validate
-./scripts/litai-service.sh lock components/tracker
-./scripts/litai-service.sh plan components/tracker --model claude-fable-5-1
-./scripts/litai-service.sh build components/tracker --model claude-fable-5-1 --update-receipt
-./scripts/litai-service.sh verify
+make check
+make plan
+make build
 ```
 
 Review the plan and authorize generated host execution before running it. The wrapper
-selects Claude Code and the shown model by default, checks the observed Node/Git versions,
-and exposes the supported installed `litai` interface. Do not assume the framework's own
-Makefile or contributor commands exist in this derived project.
+selects Claude Code and the shown model by default, checks the exact Node version and
+minimum supported Git version,
+and exposes the supported installed `litai` interface. The repository Makefile is only a
+developer facade over that wrapper; it is not the generated application's build system.
+Use `make help` for targets and overrides. For troubleshooting, the authoritative direct
+commands remain `./scripts/litai-service.sh lock components/tracker`,
+`./scripts/litai-service.sh plan components/tracker --model claude-fable-5-1`,
+`./scripts/litai-service.sh build components/tracker --model claude-fable-5-1 --update-receipt`,
+and `./scripts/litai-service.sh verify`.
 
 `build --update-receipt` is the delivery path: it admits, builds, tests and exports the
 application and refreshes the receipt. A failed build is not accepted. `rebuild` is not a

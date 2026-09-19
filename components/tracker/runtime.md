@@ -36,7 +36,8 @@ to the independently observed host Git 2.50.1 (`git --version` reports
 purl pkg:generic/git@2.50.1, isExternal true and exact version 2.50.1. Classify it as
 system with runtime scope. Do not replace this observed exact version with only a
 range: the installed npm adapter cannot independently resolve host Git ranges.
-The lifecycle wrapper checks that this exact host version is still installed.
+The lifecycle wrapper enforces the declared 2.30.0 minimum and accepts newer Git
+versions; the exact SBOM version records the accepted build observation, not a ceiling.
 Use node:sqlite DatabaseSync with WAL and busy_timeout; bound operations so requests
 remain responsive. The HTTP service may use specified timers, network IO and subprocess
 argv as required by the product; portable JSON-only restrictions do not remove these

@@ -8,12 +8,13 @@ that backend. MAC, an LLM gateway and peer instances are optional connections.
 
 ## Requirements
 
-The currently selected build targets macOS. Its observed toolchain is Node.js **22.23.2**,
-Git **2.50.1**, and the installed Literate AI **1.0.1** CLI. The lifecycle wrapper checks
-Node and Git versions and fails if they differ. The application uses Node's built-in
-SQLite and the locked official MCP JavaScript SDK dependency tree.
+The currently selected build targets macOS. It requires Node.js **22.23.2**, Git
+**2.30.0 or newer**, and the installed Literate AI **1.0.1** CLI. Git 2.50.1 is the
+version recorded by the accepted build evidence; newer compatible Git releases are
+allowed. The application uses Node's built-in SQLite and the locked official MCP
+JavaScript SDK dependency tree.
 
-Install the matching toolchain and your configured Literate AI distribution before
+Install the required toolchain and your configured Literate AI distribution before
 building. Confirm `litai --version`, `git --version`, and the Node version selected by
 `scripts/litai-service.sh`. The wrapper prefers Homebrew's `/opt/homebrew/opt/node@22/bin`
 when present. This repository is a development workspace; it does not provide a signed
@@ -24,9 +25,8 @@ macOS installer or claim validation on Windows or Linux. See [verification](veri
 ```sh
 git clone git@github.com:jordanhubbard/project-tracker.git
 cd project-tracker
-./scripts/litai-service.sh lock components/tracker
-./scripts/litai-service.sh plan components/tracker --model claude-fable-5-1
-./scripts/litai-service.sh build components/tracker --model claude-fable-5-1 --update-receipt
+make plan
+make build
 ```
 
 Building may invoke the configured coding provider and requires its authenticated
@@ -43,6 +43,13 @@ Choose an absolute directory for your data, then launch the foreground service:
 
 ```sh
 export TRACKER_DATA_DIR="$HOME/Library/Application Support/project-tracker"
+make run
+```
+
+Use `make demo` for an isolated sample workspace or `make help` to list the available
+shortcuts and overrides. The underlying supported run command remains:
+
+```sh
 ./scripts/litai-service.sh run components/tracker '["service","--host","127.0.0.1","--port","8765"]'
 ```
 

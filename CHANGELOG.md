@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Repository: add a documented root Makefile facade for project validation, planning,
+  build, test, verification, and foreground or demo runs while preserving the selected
+  JavaScript/npm lifecycle as application build authority. Accept Git 2.30.0 and newer
+  instead of rejecting compatible versions newer than the observed build toolchain.
+
 - Packaging: add verified native npm archives with locked dependencies, complete file
   checksums, specifications and both source/resolved SBOMs. A private GitHub draft
   passed download verification; stable release publication remains pending UI fixes.

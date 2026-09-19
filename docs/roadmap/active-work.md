@@ -291,3 +291,32 @@ passed. See [deployment evidence](../../verification/deployment-puck-v1.0.0.json
   - Subsequent multi-frontend qualification also produced no deployable artifact. Codex `gpt-6-astra` exited without source after a sandbox/tool-policy conflict; Claude Code generated an artifact that failed persistent-service acceptance with a missing route and independently lacked the agent-session API and required safe-detail markers; OpenCode `gpt-5.6-sol` and `gpt-5.6-terra` generated candidates rejected at build intent for invalid or missing npm lock data. Exact diagnostics are retained in `_build/track010-build5.log` through `_build/track010-build9.log`. The existing puck.local v1.0.0 deployment was intentionally left untouched.
   - A second OpenCode sweep confirmed that package admission needed stronger authored guidance: `gpt-5.5` added unsupported npm script metadata, while `gpt-5.6-sol` omitted the required source-BOM edge from `@modelcontextprotocol/sdk` to `@hono/node-server` even after receiving the exact lock. The component contract now explicitly requires regular manifest/lock files, complete dependency resolution and runtime-dependency-only manifest metadata. A pinned Cursor regeneration against that contract exceeded its 30-minute generation timeout and left no candidate receipt. Diagnostics are retained in `_build/track010-build10.log` through `_build/track010-build12.log`.
   - [ ] Generated native acceptance and independent `verification/check_live_operations.py` pass for the exact artifact.
+
+### [ ] TRACK-011 — Add a developer Makefile facade
+
+- **Priority:** P1
+- **Owner:** components/tracker/runtime.md and repository
+- **Direction:** Make the project easy to build and run with GNU Make.
+- **Conclusion:** Add a repository-root developer facade over the supported scripts/litai-service.sh lifecycle while keeping the generated application on its selected JavaScript/npm build strategy; expose discoverable validation, lock, plan, build, test, verify, run, and demo targets without duplicating lifecycle logic. Enforce Git 2.30.0 as a minimum, not an exact ceiling: retain 2.50.1 as the independently observed SBOM version while allowing newer compatible Git releases.
+- **Depends on:** none
+- **Implementation:**
+  - [x] Add a phony, configurable root Makefile whose targets delegate to the supported lifecycle wrapper.
+  - [x] Document the short Make commands while retaining the authoritative direct commands for troubleshooting.
+  - [x] Replace the exact Git wrapper check with a tested minimum-version check and align runtime documentation.
+  - [x] Review and rebind the unchanged persistent-service acceptance probes to the current specification set.
+  - [ ] Complete the supported rebuild and refresh the current test receipt before landing.
+- **Evidence:**
+  - [x] `make help`, warning-enabled dry runs for build, plan, run and overridden demo,
+    and `make validate` pass.
+  - [x] `make test-toolchain` proves Git 2.30.0, observed 2.50.1, installed 2.54.0,
+    and 3.0.0 pass while 2.29.9 and malformed output fail. The real wrapper reaches
+    LitAI and `make lock` succeeds; project validation plus authority and lock gates pass.
+  - The first full rebuild selected Claude Code with `claude-fable-5-1` and was rejected
+    after its configured one-hour run. Candidate `2378a425a1770fcc1fb1965cb3820652ce1d0a6e7b556554662d6dba4be5c190`
+    failed generated MAC dependency preservation and reporter-finalization checks; it
+    was not exported, committed, pushed, or deployed.
+  - A Codex retry first exposed the stale persistent-service acceptance binding. After
+    review and rebind, lifecycle execution reached independent readiness acceptance but
+    the generated entrypoint exited because it accepted only a JSON argument array, not
+    the required `--host` and `--port` service arguments. No replacement was exported or
+    deployed, and the existing service remains untouched.
