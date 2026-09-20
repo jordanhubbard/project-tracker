@@ -90,6 +90,12 @@ not kill the child; reconnect resumes uploads and command reads from acknowledge
 sequences. `TRACKER_URL` and `TRACKER_ACCESS_TOKEN` configure the adapter, and credentials
 must never appear in argv, transcript, logs or browser data.
 
+The reporter must handle SIGINT and SIGTERM as orderly shutdown requests: forward the
+signal to the child, wait for its exit, stop heartbeat and command polling, flush bounded
+visible output, and make one bounded final stopped report before the reporter exits.
+Process termination must not bypass that cleanup merely because JavaScript `finally`
+handlers do not run for an unhandled signal.
+
 The child must observe a terminal on stdin, stdout and stderr; ordinary `pipe` stdio is
 not a PTY and does not satisfy this adapter. Preserve terminal byte order when combining
 stdout/stderr and operator input. The generated native test launches a child that exits

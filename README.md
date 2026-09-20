@@ -13,20 +13,23 @@ verification record before treating an export as the accepted application.
 
 ## Build and run
 
-The current toolchain is macOS, Node.js 22.23.2, Git 2.50.1 and installed Literate AI 1.0.1.
+The current toolchain is macOS, Node.js 22.23.2, Git 2.30.0 or newer, and installed
+Literate AI 1.0.1. Git 2.50.1 is the version recorded by the accepted build evidence.
 The wrapper selects Claude Code by default; the coding provider must be configured for
 generation. See [setup](docs/user/getting-started.md) for requirements and limitations.
 
 ```sh
-./scripts/litai-service.sh lock components/tracker
-./scripts/litai-service.sh build components/tracker --model claude-fable-5-1 --update-receipt
+make build
 export TRACKER_DATA_DIR="$HOME/Library/Application Support/project-tracker"
-./scripts/litai-service.sh run components/tracker '["service","--host","127.0.0.1","--port","8765"]'
+make run
 ```
 
 After a successful build, open `http://127.0.0.1:8765`. `GET /health` reports service
 readiness; repository sync status reports MAC health. Add `"--demo"` inside the argument
-array for an isolated sample workspace. Stop the foreground service with Ctrl-C.
+array, or use `make demo`, for an isolated sample workspace. Stop the foreground service
+with Ctrl-C. Run `make help` for lifecycle shortcuts and configurable host, port, model,
+and Component values. The Makefile delegates to `scripts/litai-service.sh`; it does not
+replace the selected JavaScript/npm application build strategy.
 
 ## Work with projects and tasks
 

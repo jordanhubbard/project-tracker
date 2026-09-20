@@ -355,6 +355,16 @@ the same MAC-aware service mutations; no protocol adapter may call the local sto
 directly for a MAC task. Initialize required MAC readiness for stdio as for HTTP.
 Implement MAC field edits and transitions completely; returning 501 for the named
 MAC edit flow is not an acceptable partial implementation.
+Close the official stdio MCP transport with a one-shot, non-reentrant cleanup path.
+Native coverage must connect with the official client, complete a round trip, close from
+the client side, and prove prompt child exit without an `onclose` handler calling
+`transport.close()` recursively. A stack overflow followed by a live-condition timeout
+is a native-test failure, not successful cleanup.
+
+The Standard persistent-service verifier invokes the generated `main.js` entrypoint
+directly with `--litai-serve --host HOST --port PORT`. That exact path must start the
+full service and reach `/health`; putting the service implementation behind only a
+sibling executable or accepting only the one-JSON-array form on `main.js` is incomplete.
 
 ## Concrete regression scenarios
 

@@ -36,7 +36,8 @@ to the independently observed host Git 2.50.1 (`git --version` reports
 purl pkg:generic/git@2.50.1, isExternal true and exact version 2.50.1. Classify it as
 system with runtime scope. Do not replace this observed exact version with only a
 range: the installed npm adapter cannot independently resolve host Git ranges.
-The lifecycle wrapper checks that this exact host version is still installed.
+The lifecycle wrapper enforces the declared 2.30.0 minimum and accepts newer Git
+versions; the exact SBOM version records the accepted build observation, not a ceiling.
 Use node:sqlite DatabaseSync with WAL and busy_timeout; bound operations so requests
 remain responsive. The HTTP service may use specified timers, network IO and subprocess
 argv as required by the product; portable JSON-only restrictions do not remove these
@@ -1225,11 +1226,23 @@ transports correctly, and enforce the same HTTP authentication before MCP transp
 handling. Use no handwritten initialization/version-negotiation protocol shim. Node's
 HTTP req/res can be passed directly to transport.handleRequest; no additional web
 framework dependency is required. Read and validate bounded JSON for REST and A2A.
+Treat MCP transport completion as a one-shot lifecycle event. An `onclose` callback may
+finish application-owned cleanup, but it must not call `transport.close()` again and
+re-enter itself. Explicit shutdown may close the transport first and then run the same
+idempotent cleanup path. Both peer-initiated EOF and application-initiated shutdown must
+settle once without recursion, stack overflow, duplicate close work or a hanging stdio
+client.
 
 #### Scenario: SDK client
 
 - **WHEN** an official SDK client connects to /mcp and lists tools and calls get_task
 - **THEN** it negotiates a supported version and receives the actual shared database task
+
+#### Scenario: Stdio close is non-reentrant
+
+- **WHEN** an official stdio SDK client closes its transport or the service shuts it down
+- **THEN** the connection and application cleanup each settle once without recursively
+  closing the already-closing transport, overflowing the stack or timing out
 
 The operator normalized orphan optional peer metadata for node_modules/debug. These entries named no declared peer dependency; no package, integrity, version or dependency edge was changed. The normalized lock is verified by npm ci before generation.
 

@@ -11,11 +11,7 @@ if [[ -x /opt/homebrew/opt/node@22/bin/node ]]; then
   export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 fi
 node -e 'if (process.versions.node !== "22.23.2") throw Error("Node differs from observed 22.23.2 build authority; refresh runtime.md before rebuilding")'
-tracker_git_version="$(git --version)"
-case "$tracker_git_version" in
-  'git version 2.50.1'|'git version 2.50.1 '*) ;;
-  *) echo 'Git version differs from the observed 2.50.1 build authority; refresh runtime.md before rebuilding.' >&2; exit 1 ;;
-esac
+"$tracker_root/scripts/check-git-version.sh" "$(git --version)"
 if [[ $# -eq 0 ]]; then
   set -- rebuild components/tracker --allow-host-execution --keep-runtime
   if [[ "$CODING_CLI" == claude ]]; then
