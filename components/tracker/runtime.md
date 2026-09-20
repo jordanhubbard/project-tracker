@@ -48,7 +48,7 @@ explicit persistent-service operations.
 ```json
 {
   "name": "project-tracker",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "private": true,
   "type": "module",
   "dependencies": {
@@ -67,13 +67,13 @@ explicit persistent-service operations.
 ```json
 {
   "name": "project-tracker",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "project-tracker",
-      "version": "1.0.0",
+      "version": "1.1.1",
       "dependencies": {
         "@modelcontextprotocol/sdk": "1.30.0"
       }

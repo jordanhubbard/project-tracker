@@ -1,6 +1,6 @@
 ---
 namespace: project-tracker
-version: 1.0.0
+version: 1.1.1
 display_name: Project Tracker
 profiles: ["application", "service", "full-stack"]
 specification_roots: ["component.md", "runtime.md", "mac-integration.md", "project-details.md", "live-operations.md", "quality.md", "visual.md"]

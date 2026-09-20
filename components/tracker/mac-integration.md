@@ -261,6 +261,9 @@ Snapshot commit is fleet-wide. Start from alpha/task-a titled Old alpha and
 beta/task-b titled Old beta. The next snapshot changes both titles. Inject a storage
 failure while applying beta, after alpha's update has executed. The failed sync must
 leave both old titles and revisions intact, and emit/persist zero task-change events.
+If the fixture implements phase-selective fault injection, an earlier checkpoint must
+not consume or clear a fault intended for a later phase; consume it only when its named
+phase is reached so the rollback path is actually exercised.
 Per-repository transactions are insufficient: they leave New alpha committed when
 beta fails. Cover repository discovery, workflow changes, task upserts, dependency
 data, deletion and success timestamps in the same atomic snapshot boundary. Nested
