@@ -25,7 +25,10 @@
       "test",
       "components/tracker",
       "--target",
-      "host"
+      "host",
+      "--model",
+      "claude-fable-5-1",
+      "--from-accepted-source"
     ],
     "timeout_seconds": 86400
   },
