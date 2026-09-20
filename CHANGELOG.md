@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## 1.1.1 - 2026-09-20
+
+[README.md](https://github.com/jordanhubbard/project-tracker/blob/v1.1.1/README.md)
+
+- Packaging: align the tracker component, generated `package.json`, lockfile and project
+  release at 1.1.1, then publish the documented archive, manifest and checksum assets.
+
+- Verification: strengthen the fleet snapshot rollback fixture so a phase-selective
+  injected failure is consumed only at its named phase. The regenerated Claude candidate
+  passes the complete native suite and independent service readiness with `--host` and
+  `--port`.
+
+- Documentation: identify v1.1.0 as a source-only release and direct archive installs to
+  v1.1.1 or newer.
+
 ## 1.1.0 - 2026-09-20
 
 [README.md](https://github.com/jordanhubbard/project-tracker/blob/v1.1.0/README.md)
