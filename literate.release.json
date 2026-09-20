@@ -27,8 +27,7 @@
       "--target",
       "host",
       "--model",
-      "claude-fable-5-1",
-      "--from-accepted-source"
+      "claude-fable-5-1"
     ],
     "timeout_seconds": 86400
   },
