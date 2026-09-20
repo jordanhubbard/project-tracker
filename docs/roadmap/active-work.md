@@ -292,7 +292,7 @@ passed. See [deployment evidence](../../verification/deployment-puck-v1.0.0.json
   - A second OpenCode sweep confirmed that package admission needed stronger authored guidance: `gpt-5.5` added unsupported npm script metadata, while `gpt-5.6-sol` omitted the required source-BOM edge from `@modelcontextprotocol/sdk` to `@hono/node-server` even after receiving the exact lock. The component contract now explicitly requires regular manifest/lock files, complete dependency resolution and runtime-dependency-only manifest metadata. A pinned Cursor regeneration against that contract exceeded its 30-minute generation timeout and left no candidate receipt. Diagnostics are retained in `_build/track010-build10.log` through `_build/track010-build12.log`.
   - [ ] Generated native acceptance and independent `verification/check_live_operations.py` pass for the exact artifact.
 
-### [ ] TRACK-011 — Add a developer Makefile facade
+### [x] TRACK-011 — Add a developer Makefile facade
 
 - **Priority:** P1
 - **Owner:** components/tracker/runtime.md and repository
@@ -304,7 +304,7 @@ passed. See [deployment evidence](../../verification/deployment-puck-v1.0.0.json
   - [x] Document the short Make commands while retaining the authoritative direct commands for troubleshooting.
   - [x] Replace the exact Git wrapper check with a tested minimum-version check and align runtime documentation.
   - [x] Review and rebind the unchanged persistent-service acceptance probes to the current specification set.
-  - [ ] Complete the supported rebuild and refresh the current test receipt before landing.
+  - [x] Complete the supported rebuild and refresh the current test receipt before landing.
 - **Evidence:**
   - [x] `make help`, warning-enabled dry runs for build, plan, run and overridden demo,
     and `make validate` pass.
@@ -320,3 +320,21 @@ passed. See [deployment evidence](../../verification/deployment-puck-v1.0.0.json
     the generated entrypoint exited because it accepted only a JSON argument array, not
     the required `--host` and `--port` service arguments. No replacement was exported or
     deployed, and the existing service remains untouched.
+  - Root-cause review found that the Claude candidate preserved the pure dependency
+    merge invariant but failed its real fixture path, and its reporter relied on
+    `finally` without handling SIGINT/SIGTERM, so process termination bypassed the final
+    stopped report. The Codex candidate implemented only diagnostic commands and placed
+    service startup behind a sibling executable even though Standard acceptance invokes
+    `main.js --litai-serve`. Tighten those reusable contracts, force fresh generation,
+    and require both native and independent service acceptance before closing this item.
+  - A forced Claude regeneration fixed the prior MAC reconciliation and reporter
+    finalization failures: those suites plus Git, project detail and service protocols
+    pass. It also starts `main.js --litai-serve --host 127.0.0.1 --port PORT`, reaches
+    `/health` on the selected nondefault port and exits zero on SIGTERM. Its remaining
+    native failure is a re-entrant stdio MCP close callback: `onclose` calls
+    `transport.close()` again until `RangeError: Maximum call stack size exceeded`, then
+    live readiness times out. Specify one-shot transport cleanup and regenerate.
+  - The regenerated source `a20b58380776d329fd73432b1cf2a158068fb41538b1361f67001d7b202cbe59`
+    passes all 24 Standard lifecycle tests, including native MCP shutdown and independent
+    persistent-service readiness. The accepted source was reused without repair, and the
+    project receipt was atomically refreshed.
