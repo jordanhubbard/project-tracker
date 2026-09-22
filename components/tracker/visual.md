@@ -146,13 +146,31 @@ acceptance tests.
 ## Responsive workspace header
 
 At 390px, account for the combined widths of the menu, workspace title, connection
-status, Create, Settings, search, padding and gaps. Every visible header control
+status, Fleet selector, Create, Settings, search, padding and gaps. Every visible header control
 must remain within the viewport, and document.scrollWidth must equal the viewport
 width. Use wrapping rows or move an accessible Settings control into the sidebar
 when necessary. A grid with inflexible button tracks that total more than the
 available width is not responsive. Check Connecting, Connected and Offline text;
 search may occupy its own row. Do not hide or clip the overflow at the body/root
 level or leave the Settings control beyond the right edge.
+
+## Global fleet selector
+
+Render one labelled native select or accessible popup in the global header with All
+fleets, Local and each configured named fleet. It is available from overview, board,
+Activity, Agents & peers, Fleet, Live, Graph, Timeline and Inspector views. Selection
+updates `fleet` in the URL without discarding the current view when that view remains in
+scope; otherwise navigate to the scoped overview with a visible explanation. Reload and
+Back/Forward restore both view and scope. Do not store the choice only in a JavaScript
+variable or localStorage.
+
+All-fleet tables, cards, activity rows, live lanes and graph/timeline associations show
+a compact text fleet badge whose accessible name includes the full fleet name. Color may
+reinforce but never replace text. Same-named projects from different fleets must remain
+distinct and selecting either opens its own detail. Show independent health beside each
+fleet in the selector/popup or an adjacent summary; one failed fleet yields Partial
+outage, not global Offline. At 390px the selector stays labelled, operable and inside the
+viewport, and its menu does not sit behind the drawer or dialogs.
 
 ## Workflow deletion from the board
 

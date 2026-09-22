@@ -69,6 +69,15 @@ class MacFixture:
                 return 200, deepcopy(self.tasks)
             if path in ['/agents', '/machines']:
                 return 200, []
+            if path == '/events/stream':
+                # This fixture models an older hub without the canonical stream.
+                # Keep the probe classified as a read so the tracker can prove its
+                # documented bounded-polling fallback without a false mutation.
+                return 404, {'detail': 'Event stream not available'}
+            if path == '/events':
+                # Bounded gap filling is also a read, even when this older fixture
+                # does not implement the endpoint.
+                return 404, {'detail': 'Events endpoint not available'}
             if path.startswith('/tasks/'):
                 task = next((t for t in self.tasks if t['id'] == path.split('/')[2]), None)
                 return (200, deepcopy(task)) if task else (404, {'detail': 'Task not found'})

@@ -157,6 +157,14 @@ operable. Never let incoming rendering replace a draft or steal focus. At 390px 
 stack, filters collapse behind a labelled control, conversation wraps or scrolls locally,
 and the document has no horizontal overflow.
 
+The global Fleet selector scopes Live without restarting ingestion. In All fleets, each
+lane item, conversation identity and connection indicator shows its fleet badge, and the
+summary reports health separately per fleet instead of collapsing partial failure into a
+single Connected/Offline value. A selected fleet shows only its projects, tasks, agents,
+machines, sessions and events; Local shows tracker-owned sessions. Preserve the selected
+fleet in Live and session-detail URLs and browser Back/Forward. Steering a selected
+session must route through its stored fleet identity, never the displayed selector value.
+
 ## Required generated acceptance scenarios
 
 Generated native tests must launch the real service, a synthetic authenticated MAC hub
@@ -181,6 +189,10 @@ and a real disposable `service agent-session` child. They must verify:
    resume from a cursor, retain an unsent steering draft while new records arrive, use
    every control by keyboard, and prove no page-level horizontal overflow or browser
    exception.
+6. Connect two named fleets with overlapping project, task, agent, machine and sequence
+   IDs. Switch between All fleets, each fleet and Local; verify badges, aggregate counts,
+   stable deep links and Back/Forward. Take one fleet offline while the other emits events
+   and prove its lane stays live while only the failed fleet becomes stale.
 
 The native MAC fixture must record requests and require at least one authenticated
 `/events/stream` connection plus an encoded transcript request for every eligible task.

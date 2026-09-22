@@ -5,6 +5,37 @@ kind: verification
 ---
 # Product verification and completeness
 
+## Multi-fleet identity, isolation and selector
+
+Start the real service with two authenticated MAC fixtures whose projects, tasks, agents,
+machines, upstream events and transcripts deliberately reuse the same IDs. Verify safe
+`GET /api/fleets`, fleet-qualified collection/detail projections and two distinct durable
+namespaces after restart. Mutate one task in each fleet through REST and prove each write
+uses only its owner's URL and bearer token. A cross-fleet dependency or identity lookup
+must not bind by bare ID. Take one fixture offline while the other changes: only the
+failed fleet becomes stale, the healthy change commits and streams, aggregate counts stay
+correct, and recovery produces no duplicate rows or events.
+
+At desktop1440 and mobile390x844, use the visible global Fleet selector to choose All
+fleets, each named fleet and Local. Assert the URL, repository/task/session/activity/live
+contents, fleet badges and per-fleet health after every choice. Reload and exercise
+Back/Forward; open two same-named projects and prove their stable URLs and details remain
+distinct. With one fleet offline, All fleets must say Partial outage and retain its
+last-good rows while the healthy fleet remains live. Exercise the selector by keyboard,
+verify its accessible label and option names, and require no overflow, console, page,
+request or HTTP errors. These checks must run through the generated native lifecycle and
+independent service/browser acceptance, not a standalone DOM mock.
+
+The independent service check must also manage fleets through the public authenticated
+API, not by constructing a synchronizer directly: create two named fleet records, observe
+both fixtures without restarting, rename one, rotate the other's token, remove one and
+verify retained stale cache, then re-add its stable ID and recover. The browser must
+perform the add, rename and confirmed remove through labelled Settings controls and keep
+every write-only token field blank after saving and reopening. Reject a candidate whose
+Settings page merely lists file-configured fleets or whose backend exposes only
+`GET /api/fleets`. Separately start the real entrypoint with 0600, 0640, 0644 and symlink
+fleet files and prove only the secure regular file is accepted, with sanitized errors.
+
 ## MAC project-detail metadata
 
 Use an authenticated synthetic MAC fixture with two discovered projects. Its project
@@ -96,7 +127,14 @@ return 400, 409 or 422 with a useful validation message, never generic HTTP500.
 Reject atomically: retain all existing task fields, revisions and durable/live
 change events, and create no task on an invalid create. Native service acceptance
 must exercise these HTTP contracts as well as direct validation. Preserve imported
-MAC dependency semantics; upstream cycles remain readable upstream data.
+MAC dependency semantics; upstream cycles remain readable upstream data. Scope the
+graph used to validate a local mutation to the target repository while retaining
+enough identity information to reject a newly selected cross-repository target.
+Existing edges in unrelated local repositories or any MAC fleet must never poison
+creation or mutation in the target local repository. Native acceptance must first
+import MAC tasks with same-project and cross-project dependency projections, then
+create an independent local repository and task successfully before exercising the
+local rejection cases.
 
 At mobile390x844, an open navigation drawer must retain a visible, clickable close
 control. Menu toggling, Escape and backdrop dismissal must work and aria-expanded
@@ -233,12 +271,22 @@ in mac-integration.md. Verify full dependency selection preserves both unresolve
 references, then explicitly remove just missing and verify foreign remains. Observe
 both durable event rows and connected service listeners during an injected failure
 after alpha changed but before beta commits; zero task events may escape rollback.
+Require the failed synchronization to drain every already-started bounded worker before
+returning; closing the disposable store immediately afterward must produce no late store
+access, uncaught exception or unhandled rejection.
 Recover and require exactly one committed change per changed task. Exercise JSON,
 HTML, empty and malformed JSON HTTP503 bodies. Complete-reconciliation coverage must
 include 10,000 tasks, 201 projects, updates and deletions beyond item200, stable repeat
 polls and late dependency resolution. Serialized-read coverage overlaps manual/timer
 polls, delays a response beyond eight seconds and verifies a bounded body-read timeout.
 Restart the store and verify relationships survive. Keep native fixtures synthetic.
+Creation detection in these native checks must be explicit and deterministic; timestamp
+equality is not a creation marker. Run identical polls quickly enough that equal clock
+values cannot cause duplicate `task.created` events, and require rollback recovery to
+emit one `task.updated` with one revision advance for each previously committed task.
+A reported dependency cycle is the minimal closed path: list the starting node once at
+the beginning and once at the end, with no duplicate closing node (`["a","b","a"]`, not
+`["a","b","a","a"]`).
 
 Dependency-preservation assertions observe the actual upstream task after the write,
 the returned Tracker task, and a subsequent complete synchronization. A full editor
@@ -327,7 +375,10 @@ board, and observe each change within two seconds without navigation or reload.
 The outbound peer endpoint accepts `{message: <A2A Message>}`. Validate and forward
 that complete message to the registered peer using JSON-RPC message/send. Preserve
 its messageId and DataPart contents so retries create one remote task and return
-the same remote A2A Task ID. Do not replace it with an empty `input.data` object or
+the same remote A2A Task object and ID. The outbound peer endpoint must return the
+same task-shaped result on the first send and every replay; a replay-only wrapper such
+as `{message_id,remote_task_id,outcome,replayed}` is not a substitute even when its ID
+matches. Do not replace the request with an empty `input.data` object or
 mint a new messageId for each retry. The browser peer form must construct this same
 documented shape. Test two actual local service processes with a token on the
 receiving process, register the peer, send a create_task message, retry it, and
@@ -353,6 +404,15 @@ Treating the complete JSON string as an unknown argv item and starting the defau
 HTTP server is a regression. Standard I/O MCP, HTTP MCP, A2A and REST must all invoke
 the same MAC-aware service mutations; no protocol adapter may call the local store
 directly for a MAC task. Initialize required MAC readiness for stdio as for HTTP.
+In particular, `service mcp` must resolve `TRACKER_MAC_FLEETS_FILE`, the legacy
+`TRACKER_MAC_URL`/`TRACKER_MAC_TOKEN` fleet and durable saved fleet records through the
+same configuration path as HTTP startup, construct `MacSync` with those resolved fleets,
+and complete initial discovery before serving mutation tools. Constructing the stdio
+synchronizer with an empty fleet list, or repeatedly returning `mac_unavailable` for a
+configured reachable fleet until an external HTTP process populates state, is a
+regression. An official stdio client started in a fresh data directory with only the
+legacy fleet environment must create a MAC-owned task within ten seconds and the fixture
+must observe the upstream write.
 Implement MAC field edits and transitions completely; returning 501 for the named
 MAC edit flow is not an acceptable partial implementation.
 Close the official stdio MCP transport with a one-shot, non-reentrant cleanup path.
@@ -533,8 +593,11 @@ variables, a real assistant request succeeds against a disposable gateway and
 Settings GET reports the effective URL/model and llm_key_configured true without
 returning the key. Project the same effective configuration used by the request,
 not only persisted database settings. Blank secret edits retain the effective
-credential; an explicit clear must suppress the environment fallback until the
-operator configures a replacement. Test these behaviors through HTTP.
+credential. An explicit clear sent as `clear_llm_key: true` with
+`clear: ["llm_key"]` must persist a clear marker and suppress the environment fallback
+after restart until the operator configures a replacement; implementations may also
+accept `llm_key_clear: true`, but silently ignoring the established clear fields fails.
+Test these behaviors through HTTP.
 
 
 ## Actual empty Git history regression

@@ -50,6 +50,7 @@ Read [projects and tasks](docs/user/projects-and-tasks.md) and
 | `TRACKER_DATA_DIR` | Private database/settings directory |
 | `TRACKER_ACCESS_TOKEN` | Browser sign-in and client bearer authentication |
 | `TRACKER_MAC_URL`, `TRACKER_MAC_TOKEN` | Backend MAC connection |
+| `TRACKER_MAC_FLEETS_FILE` | Private JSON file for multiple named MAC fleet connections |
 | `TRACKER_LLM_URL`, `TRACKER_LLM_KEY`, `TRACKER_LLM_MODEL` | Backend assistant gateway |
 | `TRACKER_URL` | Host-side reporter destination |
 

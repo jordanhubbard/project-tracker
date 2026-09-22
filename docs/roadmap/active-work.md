@@ -338,3 +338,15 @@ passed. See [deployment evidence](../../verification/deployment-puck-v1.0.0.json
     passes all 24 Standard lifecycle tests, including native MCP shutdown and independent
     persistent-service readiness. The accepted source was reused without repair, and the
     project receipt was atomically refreshed.
+
+### [ ] TRACK-012 — Add multi-fleet monitoring and fleet selector
+
+- **Priority:** P1
+- **Owner:** component://project-tracker/tracker
+- **Direction:** Support multiple named MAC fleet connections in one Project Tracker and provide a global fleet selector with an All fleets view across tables, live views, timelines and graphs.
+- **Conclusion:** Model fleet identity as a first-class namespace, key upstream entities by fleet plus upstream ID, synchronize and report health independently per fleet, and persist a URL-addressable global selector without exposing credentials or allowing cross-fleet identity collisions.
+- **Depends on:** TRACK-004
+- **Implementation:**
+  - [ ] Specify named fleet configuration, namespaced persistence and per-fleet synchronization; add aggregate and selected-fleet API projections with independent health/staleness; add a global selector with All fleets and per-fleet choices plus fleet badges in multi-fleet views; regenerate through the supported lifecycle and verify collisions, partial outages, URL persistence, desktop/mobile interaction and accessibility.
+- **Evidence:**
+  - [ ] Native multi-fleet fixtures prove overlapping upstream IDs remain distinct and one fleet outage does not suppress healthy fleets; independent service checks exercise named configuration and selected/aggregate projections; browser acceptance verifies selector behavior, badges, deep links and responsive keyboard-accessible UI.
