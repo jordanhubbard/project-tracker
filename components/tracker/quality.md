@@ -29,12 +29,19 @@ independent service/browser acceptance, not a standalone DOM mock.
 The independent service check must also manage fleets through the public authenticated
 API, not by constructing a synchronizer directly: create two named fleet records, observe
 both fixtures without restarting, rename one, rotate the other's token, remove one and
-verify retained stale cache, then re-add its stable ID and recover. The browser must
+verify retained stale cache, then POST that same stable ID again, require 201 rather than
+duplicate-ID 409, and recover the existing namespace. The browser must
 perform the add, rename and confirmed remove through labelled Settings controls and keep
 every write-only token field blank after saving and reopening. Reject a candidate whose
 Settings page merely lists file-configured fleets or whose backend exposes only
 `GET /api/fleets`. Separately start the real entrypoint with 0600, 0640, 0644 and symlink
 fleet files and prove only the secure regular file is accepted, with sanitized errors.
+
+For task creation, only `title` is required; an omitted description defaults to the empty
+string and other optional fields use their documented defaults. Exercise this exact
+minimal create through REST, the official MCP stdio client and A2A. All three transports
+share the service contract and must not materialize an omitted optional field as `null`
+when the service rejects null for that field.
 
 ## MAC project-detail metadata
 
