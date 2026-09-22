@@ -47,9 +47,12 @@ refresh with the replacement URL/token, and DELETE stops requests for that fleet
 Fleet ownership is explicit. File and legacy-environment rows are read-only in the UI:
 show their source and do not render Rename, Replace token or Remove controls that will
 fail. `PATCH` or `DELETE` for those rows returns a useful conflict directing the operator
-to its source. `POST` rejects an ID already present in any effective source, including a
-file, environment or retained unconfigured record; it never silently shadows or replaces
-that row. Fleets created through Settings use source `settings` and support the complete
+to its source. `POST` rejects an ID already present in any configured source, including a
+file, environment or configured Settings record; it never silently shadows or replaces
+that row. A `POST` using the same ID as a retained, unconfigured Settings record is the
+explicit reactivation path: update that record with the supplied name, URL and token,
+resume its existing namespace and return 201. Fleets created through Settings support the
+complete
 rename, URL update, token rotation/clear and confirmed removal flow above. File records
 and Settings records with different stable IDs may coexist.
 

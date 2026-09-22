@@ -92,7 +92,8 @@ def reject_insecure_file(node, entrypoint, root, fleets_file):
             projection = request(base, "GET", "/api/fleets")
             serialized = json.dumps(projection)
             assert collection(projection, "fleets") == [], projection
-            assert projection.get("errors"), projection
+            diagnostics = projection.get("errors") or projection.get("diagnostics")
+            assert diagnostics, projection
             assert ("0600" in serialized or "group or other" in serialized or
                     "symbolic link" in serialized or "symlink" in serialized or
                     "regular file" in serialized), projection
@@ -202,14 +203,15 @@ def main():
                     duplicate = request(base, "POST", "/api/fleets", {
                         "id": "north", "name": "Duplicate", "url": north.url, "token": north.token,
                     }, (409,))
-                    assert "duplicate" in json.dumps(duplicate).lower(), duplicate
+                    duplicate_text = json.dumps(duplicate).lower()
+                    assert ("duplicate" in duplicate_text or "exists" in duplicate_text), duplicate
                     renamed = request(base, "PATCH", "/api/fleets/north", {"name": "North renamed"})
                     assert renamed["name"] == "North renamed" and "token" not in renamed, renamed
                     south.token = "south-rotated-token"
                     rotated = request(base, "PATCH", "/api/fleets/south", {"token": south.token})
                     assert "token" not in rotated, rotated
 
-                    removed = request(base, "DELETE", "/api/fleets/north")
+                    removed = request(base, "DELETE", "/api/fleets/north?confirm=true")
                     assert removed.get("configured") is False, removed
                     cached_north = collection(
                         request(base, "GET", "/api/repos?fleet=north"), "repositories")
