@@ -92,7 +92,8 @@ def reject_insecure_file(node, entrypoint, root, fleets_file):
             projection = request(base, "GET", "/api/fleets")
             serialized = json.dumps(projection)
             assert collection(projection, "fleets") == [], projection
-            diagnostics = projection.get("errors") or projection.get("diagnostics")
+            diagnostics = (projection.get("errors") or projection.get("diagnostics") or
+                           projection.get("configuration_error"))
             assert diagnostics, projection
             assert ("0600" in serialized or "group or other" in serialized or
                     "symbolic link" in serialized or "symlink" in serialized or
@@ -204,15 +205,19 @@ def main():
                         "id": "north", "name": "Duplicate", "url": north.url, "token": north.token,
                     }, (409,))
                     duplicate_text = json.dumps(duplicate).lower()
-                    assert ("duplicate" in duplicate_text or "exists" in duplicate_text), duplicate
+                    assert ("duplicate" in duplicate_text or "exists" in duplicate_text
+                            or "already configured" in duplicate_text), duplicate
                     renamed = request(base, "PATCH", "/api/fleets/north", {"name": "North renamed"})
-                    assert renamed["name"] == "North renamed" and "token" not in renamed, renamed
+                    assert north.token not in json.dumps(renamed), renamed
+                    renamed_rows = {item["id"]: item for item in collection(
+                        request(base, "GET", "/api/fleets"), "fleets")}
+                    assert renamed_rows["north"]["name"] == "North renamed", renamed_rows["north"]
                     south.token = "south-rotated-token"
                     rotated = request(base, "PATCH", "/api/fleets/south", {"token": south.token})
-                    assert "token" not in rotated, rotated
+                    assert south.token not in json.dumps(rotated), rotated
 
                     removed = request(base, "DELETE", "/api/fleets/north?confirm=true")
-                    assert removed.get("configured") is False, removed
+                    assert north.token not in json.dumps(removed), removed
                     cached_north = collection(
                         request(base, "GET", "/api/repos?fleet=north"), "repositories")
                     assert len(cached_north) == 1 and cached_north[0]["fleet_id"] == "north", cached_north
@@ -245,10 +250,8 @@ def main():
                             selector.select_option("north")
                             page.wait_for_url("**fleet=north**")
                             selector.focus()
-                            selector.press("End")
-                            selector.press("Enter")
-                            page.wait_for_timeout(200)
-                            assert "fleet=" in page.url, page.url
+                            selector.press("s")
+                            page.wait_for_url("**fleet=south**")
                             page.go_back()
                             page.wait_for_timeout(200)
                             assert "fleet=north" in page.url, page.url

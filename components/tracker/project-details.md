@@ -49,6 +49,11 @@ not merely to an individual string or upstream HTTP response. Apply deterministi
 truncation until the serialized value is at most 65,536 bytes. Secret-shaped keys at or
 beyond a truncation boundary remain redacted; neither SQLite, repository API responses,
 browser DOM nor browser storage may contain an original secret value.
+Reduce oversized strings, arrays and over-depth descendants before removing ordinary
+object members. An unrelated bulk sibling must not cause bounded output to discard
+finite numbers (including zero), booleans (including false), null, or empty object/array
+members that already fit their individual limits. Preserve those JSON types exactly;
+never replace them with truthy fallbacks or omit them merely to halve an object's keys.
 
 Measure serialized size as the UTF-8 byte length of compact `JSON.stringify` output. For
 example, sanitizing `{"api_key":"secret","name":"alpha"}` produces
@@ -61,6 +66,10 @@ Expose the safe snapshot only on authenticated `GET /api/repos/{id}` as
 `mac_project_detail`; keep repository collection responses compact. The value contains
 project name and ID, repository URL, fetched time, freshness/error state and bounded
 metadata. Local and unresolved repositories return null.
+Map the upstream detail's `project`, `project_id` and `repository_url` to those top-level
+fields and sanitize its `metadata` object into `mac_project_detail.metadata`. Do not place
+the entire upstream detail response inside that metadata field (which would incorrectly
+produce paths such as `mac_project_detail.metadata.metadata.api_key`).
 
 `mac_project_detail.fetched_at`, `.fresh` and `.error` describe the current cache status
 in every repository-detail response. After a failed refresh with last-good metadata,

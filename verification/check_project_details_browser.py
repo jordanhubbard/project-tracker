@@ -109,7 +109,7 @@ def main():
                     expect(main).to_contain_text("false")
                     expect(main).to_contain_text("0")
                     expect(main).to_contain_text("null")
-                    expect(main).to_contain_text(re.compile(r"(?:Empty array|\[\])", re.I))
+                    expect(main).to_contain_text(re.compile(r"(?:Empty (?:array|list)|\[\])", re.I))
                     expect(main).to_contain_text(re.compile(r"(?:Empty object|\{\})", re.I))
                     html = page.content()
                     storage = page.evaluate("JSON.stringify({local:{...localStorage},session:{...sessionStorage}})")

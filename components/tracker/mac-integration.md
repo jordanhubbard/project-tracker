@@ -147,6 +147,10 @@ including resolved and unresolved references, before comparing and updating it.
 Apply at most one revision increment and one task-change event per changed task
 per successful snapshot. If an event includes a task object, that object must
 reflect the final committed relationship projection.
+The post-commit record published to connected service listeners retains the same
+top-level `fleet_id`, `repo_id` and `task_id` identity fields as its durable event
+row; do not return or publish a reduced record that leaves those fields only inside
+`payload`.
 
 Identity seeding for a newly discovered task may establish its initial revision
 before relationships are resolved. That does not authorize keepRevision-style
@@ -247,6 +251,13 @@ later poll; verify its exact state, one revision change, stable workflow IDs, no
 churn on the following unchanged poll, and preservation after restart. Check task
 detail as well as rows, so a projector fallback cannot hide corruption. Retain
 the existing scale, dependency, rollback and mutation scenarios.
+
+Stable workflow IDs means that every state which existed before the poll retains
+the same ID afterwards. It does not require newly observed states to be appended:
+the workflow's deterministic ordering may insert `provider_later` before an
+existing `provider_extra`. Native acceptance must compare the name-to-ID mapping
+for preexisting states and separately verify the required deterministic order;
+it must not treat the prior comma-joined ID sequence as a required prefix.
 
 ## Newly selected dependency regression
 

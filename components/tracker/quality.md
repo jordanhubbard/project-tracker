@@ -21,7 +21,9 @@ fleets, each named fleet and Local. Assert the URL, repository/task/session/acti
 contents, fleet badges and per-fleet health after every choice. Reload and exercise
 Back/Forward; open two same-named projects and prove their stable URLs and details remain
 distinct. With one fleet offline, All fleets must say Partial outage and retain its
-last-good rows while the healthy fleet remains live. Exercise the selector by keyboard,
+last-good rows while the healthy fleet remains live. Exercise the selector by native
+type-ahead or Arrow-key selection while live renders continue, and prove that render
+work does not replace the focused control or discard its pending selection;
 verify its accessible label and option names, and require no overflow, console, page,
 request or HTTP errors. These checks must run through the generated native lifecycle and
 independent service/browser acceptance, not a standalone DOM mock.
@@ -432,6 +434,11 @@ The Standard persistent-service verifier invokes the generated `main.js` entrypo
 directly with `--litai-serve --host HOST --port PORT`. That exact path must start the
 full service and reach `/health`; putting the service implementation behind only a
 sibling executable or accepting only the one-JSON-array form on `main.js` is incomplete.
+In `main.js`, inspect the complete raw `process.argv.slice(2)` and dispatch a leading
+`--litai-serve` with all trailing host/port arguments before checking whether an ordinary
+portable invocation supplied exactly one JSON-array argument. Apply the same precedence
+to raw `--litai-test` and `--litai-smoke`. A top-level length check such as
+`process.argv.length !== 3` before raw framework-mode dispatch is a native startup bug.
 
 ## Concrete regression scenarios
 
@@ -654,6 +661,10 @@ port and require /health there, with no silent fallback to port8765. Preserve th
 complete raw argv for framework modes as well as decoding complete JSON arrays
 for service, MCP and reporter commands. Include this startup regression in native
 tests while retaining the supported JSON service path.
+
+Native startup coverage must decode a complete JSON array beginning with
+`["service","agent-session",...]` and prove that it enters the live PTY adapter,
+not the HTTP listener. Testing only a top-level `agent-session` alias is insufficient.
 
 Browser review includes the entire short list names at desktop1440/mobile390,
 without truncation by action buttons. It also observes a MAC fleet outage and

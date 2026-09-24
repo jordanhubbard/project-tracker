@@ -254,9 +254,10 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             while not pid_file.exists() and time.monotonic() < deadline:
                                 page.wait_for_timeout(100)
                             child_pid = int(pid_file.read_text())
-                            page.get_by_role("button", name="Fleet", exact=True).or_(
-                                page.get_by_role("link", name="Fleet", exact=True)
-                            ).or_(page.get_by_role("tab", name="Fleet", exact=True)).click()
+                            repository_view = page.locator("#view-root")
+                            repository_view.get_by_role("button", name="Fleet", exact=True).or_(
+                                repository_view.get_by_role("link", name="Fleet", exact=True)
+                            ).or_(repository_view.get_by_role("tab", name="Fleet", exact=True)).click()
                             pid_cell = page.get_by_role("cell", name=str(child_pid), exact=True)
                             host_cell = page.get_by_role('cell', name=socket.gethostname(), exact=True)
                             host_cell.wait_for(timeout=10000)
@@ -276,7 +277,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                                 issues.append('Graph omits the active coding-session host association')
                             page.screenshot(path=str(out / 'desktop-active-session-graph.png'), full_page=True)
                             page.get_by_role('button', name=re.compile(r'^(?:Back to board|Board)$')).or_(page.get_by_role('tab', name='Board', exact=True)).or_(page.get_by_role('link', name='Board', exact=True)).first.click()
-                            page.get_by_role('button', name='Fleet', exact=True).or_(page.get_by_role('tab', name='Fleet', exact=True)).or_(page.get_by_role('link', name='Fleet', exact=True)).click()
+                            repository_view.get_by_role('button', name='Fleet', exact=True).or_(repository_view.get_by_role('tab', name='Fleet', exact=True)).or_(repository_view.get_by_role('link', name='Fleet', exact=True)).click()
                             release_file.touch()
                             assert reporter.wait(timeout=8) == 0
                             row.get_by_text(re.compile(r"^stopped$", re.I)).wait_for(timeout=4000)

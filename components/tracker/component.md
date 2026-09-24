@@ -50,7 +50,9 @@ source_dependencies: []
 Implement a complete usable application, with a Node.js HTTP backend and semantic HTML,
 CSS and browser JavaScript frontend served at `/`. Keep distinct backend service,
 SQLite store, MAC adapter, Git reader, protocol adapters and static frontend modules.
-No browser build tool is required. Use Node 22.23.2 or newer with node:sqlite and the official MIT MCP JavaScript SDK.
+No browser build tool is required. Use Node 22.23.2 or newer with node:sqlite, the official
+MIT MCP JavaScript SDK and the specified macOS system Python PTY helper for the live CLI
+adapter.
 The exact npm manifest and complete lock are specified in runtime.md. Serve an OpenAPI
 document at /openapi.json describing the REST request and response schemas.
 The generated source must include both a regular `package.json` and regular

@@ -64,6 +64,13 @@ derived session carries `fleet_id`. Internal and public identity uses
 identity across polling and restart, include it in REST, SSE, MCP and A2A projections,
 and qualify links and writes with the owning fleet. Relationships resolve only inside
 the owning fleet unless a future explicit cross-fleet contract exists.
+On startup, migrate every previously released single-fleet database before creating
+fleet-qualified indexes or issuing fleet-qualified queries. Add missing `fleet_id`
+columns to existing repository, task, session, event and other affected tables without
+dropping rows, then backfill the documented legacy/default ownership as applicable.
+`CREATE TABLE IF NOT EXISTS` is not a column migration. Native acceptance must open a
+populated prior-schema fixture, complete migration, and start `/health` without a
+`no such column: fleet_id` error.
 Repository matching is fleet-scoped too. A canonical Git remote may help match a local
 registration to one MAC project, but it must never cause a MAC-owned repository from one
 fleet to be reused or reassigned by another fleet. Lookups for an existing MAC repository
@@ -97,6 +104,9 @@ upstream cursors remain per fleet.
 The labelled header selector contains **All fleets**, **Local**, and every configured
 fleet by display name. It persists as `fleet=all|local|FLEET_ID` in the URL, restores on
 reload and Back/Forward, and visibly falls back to All fleets if a saved fleet disappears.
+Live-data renders must not replace a focused selector or otherwise discard its focus or
+pending native keyboard selection; native type-ahead or Arrow-key selection must
+reliably change the fleet even while synchronization and SSE updates trigger renders.
 It scopes repository cards, boards, tasks, Activity, Fleet, Live, agent/session tables,
 Timeline and Graph without changing stored records. All fleets is a real aggregate, not
 an alias for the first connection. Local shows tracker-owned entities. A named fleet

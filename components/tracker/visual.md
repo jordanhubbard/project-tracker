@@ -162,7 +162,8 @@ Activity, Agents & peers, Fleet, Live, Graph, Timeline and Inspector views. Sele
 updates `fleet` in the URL without discarding the current view when that view remains in
 scope; otherwise navigate to the scoped overview with a visible explanation. Reload and
 Back/Forward restore both view and scope. Do not store the choice only in a JavaScript
-variable or localStorage.
+variable or localStorage. Live refreshes must preserve the focused selector DOM node and
+its pending native type-ahead or Arrow-key selection.
 
 All-fleet tables, cards, activity rows, live lanes and graph/timeline associations show
 a compact text fleet badge whose accessible name includes the full fleet name. Color may

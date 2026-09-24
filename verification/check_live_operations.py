@@ -177,7 +177,11 @@ def main():
                 match = next((item for item in sessions
                               if item.get("source") == "mac-task-transcript"
                               and item.get("mac_project") == "live-project"
-                              and item.get("task_id")), None)
+                              and item.get("repo_id")
+                              and item.get("task_id")
+                              and item.get("agent_id") == "agent_live"
+                              and item.get("machine_id") == "machine_live"
+                              and item.get("hermes_instance_id") == "hermes_live"), None)
                 assert match, sessions
                 return match
 
