@@ -20,6 +20,13 @@ directory is insufficient. Reject a symlink or non-regular file and return a san
 configuration error that does not include file contents or tokens. Either refuse startup
 with that diagnostic or, if the service remains available, expose the diagnostic through
 the safe fleet/settings projection; silently starting with an empty fleet list is invalid.
+When the service stays available, `GET /api/fleets` returns an empty `items` array plus a
+top-level sanitized `configuration_error` string (and may also include structured safe
+`diagnostics`). It must not make the invalid configuration indistinguishable from a valid
+zero-fleet installation.
+The safe diagnostic for an insecure mode includes the exact human-readable phrase
+`group or other permission bits` so an operator can distinguish the complete `mode & 077`
+policy from a narrower owner/group/world shorthand.
 
 Settings manages named rows with URL and write-only token input. Adding, renaming or
 removing a fleet is explicit; removal requires confirmation, never exposes its token,

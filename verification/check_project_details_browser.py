@@ -103,7 +103,7 @@ def main():
                     ).click()
                     heading = page.get_by_role("heading", name="MAC project details", exact=True)
                     expect(heading).to_be_visible()
-                    main = page.locator("main")
+                    main = page.locator("main:visible")
                     expect(main).to_contain_text("[redacted]")
                     expect(main).to_contain_text("[truncated]")
                     expect(main).to_contain_text("false")
@@ -140,8 +140,8 @@ def main():
                 stale_heading.locator("xpath=ancestor::article[1]").get_by_role(
                     "button", name="Inspector", exact=True
                 ).click()
-                expect(page.locator("main")).to_contain_text(re.compile(r"false|stale", re.I))
-                expect(page.locator("main")).to_contain_text(re.compile(r"failure|error|unavailable", re.I))
+                expect(page.locator("main:visible")).to_contain_text(re.compile(r"false|stale", re.I))
+                expect(page.locator("main:visible")).to_contain_text(re.compile(r"failure|error|unavailable", re.I))
                 page.screenshot(path=str(args.output / "mobile-stale-detail.png"), full_page=True)
                 context.close()
                 browser.close()

@@ -232,7 +232,7 @@ def main():
                     states = {item["id"]: item.get("state", item.get("sync_state"))
                               for item in collection(request(base, "GET", "/api/fleets"), "fleets")}
                     assert states["north"] in {"live", "healthy", "ok"}, states
-                    assert states["south"] in {"stale", "failed", "unavailable"}, states
+                    assert states["south"] in {"stale", "failed", "unavailable", "sync_failed"}, states
 
                     with sync_playwright() as playwright:
                         browser = playwright.chromium.launch(headless=True, executable_path=CHROME)

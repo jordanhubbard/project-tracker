@@ -254,7 +254,7 @@ with tempfile.TemporaryDirectory(prefix="tracker-browser-") as data:
                             while not pid_file.exists() and time.monotonic() < deadline:
                                 page.wait_for_timeout(100)
                             child_pid = int(pid_file.read_text())
-                            repository_view = page.locator("#view-root")
+                            repository_view = page.locator("main:visible")
                             repository_view.get_by_role("button", name="Fleet", exact=True).or_(
                                 repository_view.get_by_role("link", name="Fleet", exact=True)
                             ).or_(repository_view.get_by_role("tab", name="Fleet", exact=True)).click()

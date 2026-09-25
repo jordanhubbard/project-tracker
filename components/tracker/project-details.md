@@ -14,6 +14,16 @@ details promptly, refresh existing details no more than once per minute, and let
 explicit operator synchronization request refresh details immediately. Bound detail
 fetch concurrency to four.
 
+Treat the complete discovery routing name as the path-segment value, including names
+that contain `/`: a discovered `nested/project` must produce exactly
+`/projects/nested%2Fproject`, not two path segments, and it must not be skipped while
+ordinary or space-containing names are fetched. An initial five-project snapshot must
+schedule all five detail reads before synchronization can report success.
+Drain and await every scheduled detail worker and its response body before returning from
+synchronization, including when concurrency four leaves a fifth item queued or another
+detail fails. Do not report fleet success while a queued fifth read can still be canceled
+by service or fixture shutdown.
+
 The synchronizer must actually schedule these detail reads after each successful
 discovery snapshot. For every discovered project, percent-encode the discovery routing
 name as one URL path segment and request `/projects/{encoded-project}`. A successful

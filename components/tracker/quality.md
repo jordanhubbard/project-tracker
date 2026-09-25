@@ -89,6 +89,9 @@ non-running values to stopped. Expire a running session using the service's cloc
 boundary, assert its emitted and persisted projections are stale, assert a repeated
 expiry emits nothing, then verify a fresh heartbeat restores active and an explicit
 exit becomes stopped. The full generated native self-check must pass these assertions.
+The repository sidebar renders the active-session count in its own badge with separated
+text, for example `1 active`; never concatenate it directly after a task count as
+`0 tasks1 active`. Expiry must change that numeric active badge to zero without reload.
 
 Every checklist completion checkbox must have a programmatic accessible name such as
 "Checklist item 1 complete", including newly added rows. A named text input beside an
@@ -457,6 +460,9 @@ Persist A2A Task records and messageId-to-Task associations in SQLite. After a f
 service restart, tasks/get returns the same Task, and retrying message/send with the
 same messageId returns that Task without creating a second board task. An in-memory
 Map alone does not meet durable peering behavior.
+
+The published agent card's `url` is an absolute URL derived from the validated request
+origin and ending in `/a2a`; a relative `/a2a` value is not a usable agent endpoint.
 
 Register a peer with a disposable bearer token, then inspect both the POST response
 and GET listing. Neither may contain the token; expose only credential presence.
