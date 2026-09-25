@@ -34,9 +34,10 @@ with tempfile.TemporaryDirectory() as tmp, MacFixture() as fleet:
    for page in [overview,inspector,board]:
     page.set_default_timeout(15000);page.on('pageerror',lambda e:errors.append(str(e)));page.goto(base)
     expect(page.get_by_text('Connected',exact=True)).to_be_visible()
-   inspector.locator('.repo-card').filter(has=inspector.get_by_role('heading',name=repo['name'],exact=True)).get_by_role('button',name='Inspector',exact=True).click()
-   card_to_open=board.locator('.repo-card').filter(has=board.get_by_role('heading',name=repo['name'],exact=True)); (card_to_open if card_to_open.get_attribute('role')=='button' or card_to_open.evaluate('(e) => e.tagName')=='BUTTON' else card_to_open.get_by_role('button',name='Open board',exact=True)).click()
-   card=overview.locator('.repo-card').filter(has=overview.get_by_role('heading',name=repo['name'],exact=True))
+   inspector_card=inspector.get_by_role('heading',name=repo['name'],exact=True).locator('xpath=ancestor::article[1]')
+   inspector_card.get_by_role('button',name='Inspector',exact=True).click()
+   card_to_open=board.get_by_role('heading',name=repo['name'],exact=True).locator('xpath=ancestor::article[1]'); (card_to_open if card_to_open.get_attribute('role')=='button' or card_to_open.evaluate('(e) => e.tagName')=='BUTTON' else card_to_open.get_by_role('button',name='Open board',exact=True)).click()
+   card=overview.get_by_role('heading',name=repo['name'],exact=True).locator('xpath=ancestor::article[1]')
    sync_value=inspector.locator('main:visible')
    expect(sync_value).to_contain_text(re.compile('Last (?:synchronized|synced|sync)',re.I));expect(sync_value).not_to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I));expect(card).not_to_contain_text(re.compile('unavailable|503|outage|sync fail',re.I))
    overview.evaluate("""() => { window.probeEvents=[]; window.probeSource=new EventSource('/api/events'); window.probeReady=false; probeSource.onopen=()=>window.probeReady=true; for (const eventName of ['repository-changed','repository.updated','repository.changed','repo.changed']) probeSource.addEventListener(eventName,e=>probeEvents.push({id:e.lastEventId,data:JSON.parse(e.data)})); }""")
@@ -47,7 +48,7 @@ with tempfile.TemporaryDirectory() as tmp, MacFixture() as fleet:
    outage_events=overview.evaluate('window.probeEvents');assert outage_events,outage_events
    overview.wait_for_timeout(11000)
    assert overview.evaluate('window.probeEvents')==outage_events,'Repeated failure emitted duplicate repo updates'
-   board.locator('.card-title').filter(has_text=re.compile('^'+re.escape(task['title'])+'$')).or_(board.get_by_role('button',name='Open the task '+task['title'],exact=True)).or_(board.get_by_role('button',name='Edit '+task['title'],exact=True)).click();dialog=board.get_by_role('dialog')
+   board.locator('.card-title').filter(has_text=re.compile('^'+re.escape(task['title'])+'$')).or_(board.get_by_role('button',name='Open the task '+task['title'],exact=True)).or_(board.get_by_role('button',name='Edit '+task['title'],exact=True)).first.click();dialog=board.get_by_role('dialog')
    dialog.get_by_label('Title',exact=True).fill('Outage must reject this edit');dialog.get_by_role('button',name='Save',exact=True).click()
    expect(dialog.get_by_role('alert')).to_contain_text(re.compile('unavailable|offline|503|outage|failed',re.I))
    assert request(f"/api/repos/{repo['id']}/tasks")['items']==tasks

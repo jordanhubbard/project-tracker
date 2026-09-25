@@ -146,13 +146,44 @@ acceptance tests.
 ## Responsive workspace header
 
 At 390px, account for the combined widths of the menu, workspace title, connection
-status, Create, Settings, search, padding and gaps. Every visible header control
+status, Fleet selector, Create, Settings, search, padding and gaps. Every visible header control
 must remain within the viewport, and document.scrollWidth must equal the viewport
 width. Use wrapping rows or move an accessible Settings control into the sidebar
 when necessary. A grid with inflexible button tracks that total more than the
 available width is not responsive. Check Connecting, Connected and Offline text;
 search may occupy its own row. Do not hide or clip the overflow at the body/root
 level or leave the Settings control beyond the right edge.
+
+The connection status begins with the exact visible text **Connecting**, changes to the
+exact visible text **Connected** after the authenticated event stream opens, and changes
+to **Offline** when that connection is lost. A separate `Live` sync badge does not replace
+this connection-state control. Apply the same transition after browser login and on
+overview, repository, MAC status and peer views.
+
+After authentication succeeds, the login form, its password input and its login `main`
+landmark are removed from the rendered/accessible interaction tree (for example with
+`display:none` or the effective `hidden` attribute). They must not match `:visible`,
+compete with the application `main` landmark, or remain a second visible Access token
+input while the workspace is open. Returning to an unauthenticated state reverses this.
+
+## Global fleet selector
+
+Render one labelled native select or accessible popup in the global header with All
+fleets, Local and each configured named fleet. It is available from overview, board,
+Activity, Agents & peers, Fleet, Live, Graph, Timeline and Inspector views. Selection
+updates `fleet` in the URL without discarding the current view when that view remains in
+scope; otherwise navigate to the scoped overview with a visible explanation. Reload and
+Back/Forward restore both view and scope. Do not store the choice only in a JavaScript
+variable or localStorage. Live refreshes must preserve the focused selector DOM node and
+its pending native type-ahead or Arrow-key selection.
+
+All-fleet tables, cards, activity rows, live lanes and graph/timeline associations show
+a compact text fleet badge whose accessible name includes the full fleet name. Color may
+reinforce but never replace text. Same-named projects from different fleets must remain
+distinct and selecting either opens its own detail. Show independent health beside each
+fleet in the selector/popup or an adjacent summary; one failed fleet yields Partial
+outage, not global Offline. At 390px the selector stays labelled, operable and inside the
+viewport, and its menu does not sit behind the drawer or dialogs.
 
 ## Workflow deletion from the board
 
@@ -164,6 +195,22 @@ reject deleting the last list. Verify through the visible UI: add a list, move i
 left, reload, create a task in it, delete with a destination and confirm both the
 remaining ordered states and migrated task through the API. A rename-only menu
 or a backend-only delete capability does not satisfy editable workflow states.
+Both Add list and Rename list dialogs expose their text input with the visible and
+programmatic label **List name**. Dragging a card with real pointer events must expose
+every visible list as a drop destination, persist the move through the backend, and
+settle without leaving an interaction-blocking overlay; keyboard Move remains an
+equivalent accessible path, not a substitute for working pointer drag and drop.
+
+After successful task creation, render the returned task card in its destination list
+before dismissing the dialog; after a successful task update or incoming SSE update,
+replace that card in the current board and Activity view without requiring navigation or
+reload. A later background render must not overwrite the committed mutation with a stale
+pre-mutation snapshot. The card's `.card-title` equivalent exposes the exact saved title.
+
+Allocate list headings enough inline space that their complete visible names do not
+overlap list controls or overflow their heading box at desktop or 390px, including
+`in_progress` and longer renamed states such as `Ready desktop`. Put controls on a
+separate row or let the title area grow; truncation hidden under the menu is not legible.
 
 ## Actual navigation destinations
 
@@ -200,6 +247,10 @@ Verify backend persistence and a second-client event while observing the page.
 
 Graph and Timeline retain visible navigation back to the board and between modes.
 Render these controls before any empty, unborn, checkout-needed or error return.
+A repository-scoped Fleet tab remains present in Graph and Timeline and is distinct
+from the global sidebar Fleet destination. It is a visible interactive button, link or
+tab with the exact accessible name **Fleet** inside the selected repository's content
+view, not merely a global navigation item elsewhere on the page.
 A remote-only repository explains the checkout requirement and still offers Back
 to board plus Inspector so the operator can supply a path. Test clicking Graph
 from a remote-only board and returning through its visible control; browser Back

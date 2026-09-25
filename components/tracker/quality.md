@@ -5,6 +5,46 @@ kind: verification
 ---
 # Product verification and completeness
 
+## Multi-fleet identity, isolation and selector
+
+Start the real service with two authenticated MAC fixtures whose projects, tasks, agents,
+machines, upstream events and transcripts deliberately reuse the same IDs. Verify safe
+`GET /api/fleets`, fleet-qualified collection/detail projections and two distinct durable
+namespaces after restart. Mutate one task in each fleet through REST and prove each write
+uses only its owner's URL and bearer token. A cross-fleet dependency or identity lookup
+must not bind by bare ID. Take one fixture offline while the other changes: only the
+failed fleet becomes stale, the healthy change commits and streams, aggregate counts stay
+correct, and recovery produces no duplicate rows or events.
+
+At desktop1440 and mobile390x844, use the visible global Fleet selector to choose All
+fleets, each named fleet and Local. Assert the URL, repository/task/session/activity/live
+contents, fleet badges and per-fleet health after every choice. Reload and exercise
+Back/Forward; open two same-named projects and prove their stable URLs and details remain
+distinct. With one fleet offline, All fleets must say Partial outage and retain its
+last-good rows while the healthy fleet remains live. Exercise the selector by native
+type-ahead or Arrow-key selection while live renders continue, and prove that render
+work does not replace the focused control or discard its pending selection;
+verify its accessible label and option names, and require no overflow, console, page,
+request or HTTP errors. These checks must run through the generated native lifecycle and
+independent service/browser acceptance, not a standalone DOM mock.
+
+The independent service check must also manage fleets through the public authenticated
+API, not by constructing a synchronizer directly: create two named fleet records, observe
+both fixtures without restarting, rename one, rotate the other's token, remove one and
+verify retained stale cache, then POST that same stable ID again, require 201 rather than
+duplicate-ID 409, and recover the existing namespace. The browser must
+perform the add, rename and confirmed remove through labelled Settings controls and keep
+every write-only token field blank after saving and reopening. Reject a candidate whose
+Settings page merely lists file-configured fleets or whose backend exposes only
+`GET /api/fleets`. Separately start the real entrypoint with 0600, 0640, 0644 and symlink
+fleet files and prove only the secure regular file is accepted, with sanitized errors.
+
+For task creation, only `title` is required; an omitted description defaults to the empty
+string and other optional fields use their documented defaults. Exercise this exact
+minimal create through REST, the official MCP stdio client and A2A. All three transports
+share the service contract and must not materialize an omitted optional field as `null`
+when the service rejects null for that field.
+
 ## MAC project-detail metadata
 
 Use an authenticated synthetic MAC fixture with two discovered projects. Its project
@@ -49,6 +89,9 @@ non-running values to stopped. Expire a running session using the service's cloc
 boundary, assert its emitted and persisted projections are stale, assert a repeated
 expiry emits nothing, then verify a fresh heartbeat restores active and an explicit
 exit becomes stopped. The full generated native self-check must pass these assertions.
+The repository sidebar renders the active-session count in its own badge with separated
+text, for example `1 active`; never concatenate it directly after a task count as
+`0 tasks1 active`. Expiry must change that numeric active badge to zero without reload.
 
 Every checklist completion checkbox must have a programmatic accessible name such as
 "Checklist item 1 complete", including newly added rows. A named text input beside an
@@ -96,7 +139,14 @@ return 400, 409 or 422 with a useful validation message, never generic HTTP500.
 Reject atomically: retain all existing task fields, revisions and durable/live
 change events, and create no task on an invalid create. Native service acceptance
 must exercise these HTTP contracts as well as direct validation. Preserve imported
-MAC dependency semantics; upstream cycles remain readable upstream data.
+MAC dependency semantics; upstream cycles remain readable upstream data. Scope the
+graph used to validate a local mutation to the target repository while retaining
+enough identity information to reject a newly selected cross-repository target.
+Existing edges in unrelated local repositories or any MAC fleet must never poison
+creation or mutation in the target local repository. Native acceptance must first
+import MAC tasks with same-project and cross-project dependency projections, then
+create an independent local repository and task successfully before exercising the
+local rejection cases.
 
 At mobile390x844, an open navigation drawer must retain a visible, clickable close
 control. Menu toggling, Escape and backdrop dismissal must work and aria-expanded
@@ -233,12 +283,22 @@ in mac-integration.md. Verify full dependency selection preserves both unresolve
 references, then explicitly remove just missing and verify foreign remains. Observe
 both durable event rows and connected service listeners during an injected failure
 after alpha changed but before beta commits; zero task events may escape rollback.
+Require the failed synchronization to drain every already-started bounded worker before
+returning; closing the disposable store immediately afterward must produce no late store
+access, uncaught exception or unhandled rejection.
 Recover and require exactly one committed change per changed task. Exercise JSON,
 HTML, empty and malformed JSON HTTP503 bodies. Complete-reconciliation coverage must
 include 10,000 tasks, 201 projects, updates and deletions beyond item200, stable repeat
 polls and late dependency resolution. Serialized-read coverage overlaps manual/timer
 polls, delays a response beyond eight seconds and verifies a bounded body-read timeout.
 Restart the store and verify relationships survive. Keep native fixtures synthetic.
+Creation detection in these native checks must be explicit and deterministic; timestamp
+equality is not a creation marker. Run identical polls quickly enough that equal clock
+values cannot cause duplicate `task.created` events, and require rollback recovery to
+emit one `task.updated` with one revision advance for each previously committed task.
+A reported dependency cycle is the minimal closed path: list the starting node once at
+the beginning and once at the end, with no duplicate closing node (`["a","b","a"]`, not
+`["a","b","a","a"]`).
 
 Dependency-preservation assertions observe the actual upstream task after the write,
 the returned Tracker task, and a subsequent complete synchronization. A full editor
@@ -327,7 +387,10 @@ board, and observe each change within two seconds without navigation or reload.
 The outbound peer endpoint accepts `{message: <A2A Message>}`. Validate and forward
 that complete message to the registered peer using JSON-RPC message/send. Preserve
 its messageId and DataPart contents so retries create one remote task and return
-the same remote A2A Task ID. Do not replace it with an empty `input.data` object or
+the same remote A2A Task object and ID. The outbound peer endpoint must return the
+same task-shaped result on the first send and every replay; a replay-only wrapper such
+as `{message_id,remote_task_id,outcome,replayed}` is not a substitute even when its ID
+matches. Do not replace the request with an empty `input.data` object or
 mint a new messageId for each retry. The browser peer form must construct this same
 documented shape. Test two actual local service processes with a token on the
 receiving process, register the peer, send a create_task message, retry it, and
@@ -353,6 +416,15 @@ Treating the complete JSON string as an unknown argv item and starting the defau
 HTTP server is a regression. Standard I/O MCP, HTTP MCP, A2A and REST must all invoke
 the same MAC-aware service mutations; no protocol adapter may call the local store
 directly for a MAC task. Initialize required MAC readiness for stdio as for HTTP.
+In particular, `service mcp` must resolve `TRACKER_MAC_FLEETS_FILE`, the legacy
+`TRACKER_MAC_URL`/`TRACKER_MAC_TOKEN` fleet and durable saved fleet records through the
+same configuration path as HTTP startup, construct `MacSync` with those resolved fleets,
+and complete initial discovery before serving mutation tools. Constructing the stdio
+synchronizer with an empty fleet list, or repeatedly returning `mac_unavailable` for a
+configured reachable fleet until an external HTTP process populates state, is a
+regression. An official stdio client started in a fresh data directory with only the
+legacy fleet environment must create a MAC-owned task within ten seconds and the fixture
+must observe the upstream write.
 Implement MAC field edits and transitions completely; returning 501 for the named
 MAC edit flow is not an acceptable partial implementation.
 Close the official stdio MCP transport with a one-shot, non-reentrant cleanup path.
@@ -365,6 +437,11 @@ The Standard persistent-service verifier invokes the generated `main.js` entrypo
 directly with `--litai-serve --host HOST --port PORT`. That exact path must start the
 full service and reach `/health`; putting the service implementation behind only a
 sibling executable or accepting only the one-JSON-array form on `main.js` is incomplete.
+In `main.js`, inspect the complete raw `process.argv.slice(2)` and dispatch a leading
+`--litai-serve` with all trailing host/port arguments before checking whether an ordinary
+portable invocation supplied exactly one JSON-array argument. Apply the same precedence
+to raw `--litai-test` and `--litai-smoke`. A top-level length check such as
+`process.argv.length !== 3` before raw framework-mode dispatch is a native startup bug.
 
 ## Concrete regression scenarios
 
@@ -383,6 +460,9 @@ Persist A2A Task records and messageId-to-Task associations in SQLite. After a f
 service restart, tasks/get returns the same Task, and retrying message/send with the
 same messageId returns that Task without creating a second board task. An in-memory
 Map alone does not meet durable peering behavior.
+
+The published agent card's `url` is an absolute URL derived from the validated request
+origin and ending in `/a2a`; a relative `/a2a` value is not a usable agent endpoint.
 
 Register a peer with a disposable bearer token, then inspect both the POST response
 and GET listing. Neither may contain the token; expose only credential presence.
@@ -533,8 +613,11 @@ variables, a real assistant request succeeds against a disposable gateway and
 Settings GET reports the effective URL/model and llm_key_configured true without
 returning the key. Project the same effective configuration used by the request,
 not only persisted database settings. Blank secret edits retain the effective
-credential; an explicit clear must suppress the environment fallback until the
-operator configures a replacement. Test these behaviors through HTTP.
+credential. An explicit clear sent as `clear_llm_key: true` with
+`clear: ["llm_key"]` must persist a clear marker and suppress the environment fallback
+after restart until the operator configures a replacement; implementations may also
+accept `llm_key_clear: true`, but silently ignoring the established clear fields fails.
+Test these behaviors through HTTP.
 
 
 ## Actual empty Git history regression
@@ -584,6 +667,10 @@ port and require /health there, with no silent fallback to port8765. Preserve th
 complete raw argv for framework modes as well as decoding complete JSON arrays
 for service, MCP and reporter commands. Include this startup regression in native
 tests while retaining the supported JSON service path.
+
+Native startup coverage must decode a complete JSON array beginning with
+`["service","agent-session",...]` and prove that it enters the live PTY adapter,
+not the HTTP listener. Testing only a top-level `agent-session` alias is insufficient.
 
 Browser review includes the entire short list names at desktop1440/mobile390,
 without truncation by action buttons. It also observes a MAC fleet outage and

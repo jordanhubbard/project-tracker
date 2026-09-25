@@ -3,7 +3,7 @@ namespace: project-tracker
 version: 1.1.1
 display_name: Project Tracker
 profiles: ["application", "service", "full-stack"]
-specification_roots: ["component.md", "runtime.md", "mac-integration.md", "project-details.md", "live-operations.md", "quality.md", "visual.md"]
+specification_roots: ["component.md", "runtime.md", "mac-integration.md", "multi-fleet.md", "project-details.md", "live-operations.md", "quality.md", "visual.md"]
 sample: false
 inheritable: false
 provides:
@@ -50,7 +50,9 @@ source_dependencies: []
 Implement a complete usable application, with a Node.js HTTP backend and semantic HTML,
 CSS and browser JavaScript frontend served at `/`. Keep distinct backend service,
 SQLite store, MAC adapter, Git reader, protocol adapters and static frontend modules.
-No browser build tool is required. Use Node 22.23.2 or newer with node:sqlite and the official MIT MCP JavaScript SDK.
+No browser build tool is required. Use Node 22.23.2 or newer with node:sqlite, the official
+MIT MCP JavaScript SDK and the specified macOS system Python PTY helper for the live CLI
+adapter.
 The exact npm manifest and complete lock are specified in runtime.md. Serve an OpenAPI
 document at /openapi.json describing the REST request and response schemas.
 The generated source must include both a regular `package.json` and regular
@@ -84,9 +86,10 @@ paths and remote URLs; canonicalize SSH and HTTPS identities, remove trailing .g
 but do not equate unrelated repos just because basenames match. Inspect Git using
 subprocess argv with timeouts, never shell interpolation or network clone on user input.
 
-Configure TRACKER_MAC_URL and TRACKER_MAC_TOKEN on backend, with settings UI for URL
-and write-only password input. Synchronize `/projects`, `/bridge/repositories`,
-`/tasks`, `/agents`, `/machines` on startup and every 5 seconds via a background job.
+Configure one or more named MAC fleets and synchronize `/projects`,
+`/bridge/repositories`, `/tasks`, `/agents` and `/machines` on startup and every five
+seconds. Configuration, identity, isolation, aggregation and selection follow
+`multi-fleet.md`.
 MAC `/projects` returns summaries with project/project_id/repository_url/metadata;
 bridge repositories have id/name/path/source/project/metadata. `source` is a kind such
 as "git", not a repository URL. Prefer metadata.repository_url, then project summary
@@ -246,7 +249,8 @@ workspace title and toolbar; blue action buttons. Calm subtle landscape-like CSS
 background, no external image dependency. Do not reproduce browser tabs or the Trello
 billing warning. Use system sans-serif, comfortable 14px body text, strong focus rings.
 
-Header Project Tracker, global search, connection status, Create and Settings. Left
+Header Project Tracker, global search, connection status, global Fleet selector, Create
+and Settings. Fleet selection and aggregate badges follow `multi-fleet.md`. Left
 sidebar Repositories with All projects and selectable repo rows, active session counts,
 Activity and Agents & peers. Main overview shows repo cards with task-state counts,
 authority and host activity; click leads to that repo board and Inspector button. Board
@@ -267,7 +271,8 @@ unsaved edit; flag conflicting edits. Distinct loading/empty/offline/stale/error
 At 390px viewport use collapsible sidebar and locally horizontally scrolling board;
 no page-level horizontal overflow. Accessible form labels, semantic landmarks, focus
 trap/escape for dialogs, keyboard operable controls, reduced-motion support.
-Settings UI manages MAC and LLM URLs, write-only credentials, peers, connection tests.
+Settings UI manages named MAC fleets and LLM URLs, write-only credentials, peers and
+per-fleet connection tests.
 The global Live view, first-class agent sessions and authenticated steering behavior
 follow `live-operations.md`.
 

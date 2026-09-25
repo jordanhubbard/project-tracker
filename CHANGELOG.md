@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Project Tracker: specify named MAC fleets with isolated repository, task, session and
+  event identities; add an accessible global fleet selector with URL-backed navigation,
+  Settings-based fleet management, independent health, and aggregate or scoped views.
+
+- Verification: add independent multi-fleet service and browser acceptance covering
+  secure configuration, immediate first-fleet discovery, token-safe CRUD, write routing,
+  one-sided outages, cached-data retention, stable deep links, and desktop/mobile use.
+  Tighten MAC repository registration and local dependency validation regressions.
+
 ## 1.1.1 - 2026-09-20
 
 [README.md](https://github.com/jordanhubbard/project-tracker/blob/v1.1.1/README.md)

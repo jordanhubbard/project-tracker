@@ -21,6 +21,8 @@ def main():
     scripts = Path(__file__).resolve().parent
     phases = [
         ('service', [str(scripts / 'check_service.py'), '--', args.node, str(entrypoint)]),
+        ('multi-fleet', [str(scripts / 'check_multi_fleet.py'), str(entrypoint),
+                         '--node', args.node, '--output', str(output / 'multi-fleet')]),
         ('mac-project-details', [str(scripts / 'check_project_details.py'), str(entrypoint.parent),
                                  '--output', str(output / 'mac-project-details')]),
         ('mac-project-details-ui', [str(scripts / 'check_project_details_browser.py'), str(entrypoint),

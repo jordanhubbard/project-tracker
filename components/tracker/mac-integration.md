@@ -5,6 +5,37 @@ kind: integration
 ---
 # MAC integration behavior
 
+## Isolate and aggregate multiple named fleets
+
+Treat a fleet as the authority boundary and the first segment of every upstream identity.
+Two fixtures named North and South both expose project `shared`, task `task-1`, agent
+`agent-1`, machine `host-1`, event sequence `1` and transcript sequence `1`. Import both
+in one tracker database and prove they create distinct repositories, tasks, agents,
+machines, events and sessions with the correct `fleet_id`. Relationships and task writes
+must resolve only within the owning fleet unless a future explicit cross-fleet contract
+exists; never infer such a relationship from matching bare IDs.
+
+Each fleet owns its own discovery completeness, snapshot transaction, cursor, request
+budget, health and last-good cache. Synchronize fleets with bounded concurrency. Start
+North healthy and South unavailable, then reverse their states: healthy data continues
+to update, failed data remains last-good and visibly stale, and neither fleet's failure
+changes the other's revisions, events or health. Removing a fleet configuration stops
+new requests and marks its retained cache unconfigured/stale; it must not delete rows or
+make them local. Re-adding the same stable fleet ID resumes that namespace.
+
+All collection APIs accept `fleet=all`, `fleet=local` or an existing fleet ID and return
+the effective scope. Detail routes resolve fleet-qualified tracker IDs and expose
+`fleet_id`; an unknown fleet filter is a useful 404/validation error, never an empty
+success that looks like a healthy fleet. Aggregate counts equal the sum of visible
+namespaces without deduplicating matching names or upstream IDs. SSE events include
+`fleet_id`, and reconnect cursors remain tracker-global while upstream cursors are stored
+per fleet.
+
+Native `multi_fleet_identity` and `multi_fleet_isolation` gates must exercise the real
+authenticated HTTP clients and SQLite store across restart. Independent service checks
+must use two simultaneously running fixtures, overlapping IDs, a one-sided outage and a
+write routed to each fixture. No request or bearer token may cross between fixtures.
+
 ## Reconcile disappeared task records across cached MAC repositories
 
 After projects, registry and the complete task collection all succeed, sweep MAC-owned
@@ -116,6 +147,10 @@ including resolved and unresolved references, before comparing and updating it.
 Apply at most one revision increment and one task-change event per changed task
 per successful snapshot. If an event includes a task object, that object must
 reflect the final committed relationship projection.
+The post-commit record published to connected service listeners retains the same
+top-level `fleet_id`, `repo_id` and `task_id` identity fields as its durable event
+row; do not return or publish a reduced record that leaves those fields only inside
+`payload`.
 
 Identity seeding for a newly discovered task may establish its initial revision
 before relationships are resolved. That does not authorize keepRevision-style
@@ -217,6 +252,13 @@ churn on the following unchanged poll, and preservation after restart. Check tas
 detail as well as rows, so a projector fallback cannot hide corruption. Retain
 the existing scale, dependency, rollback and mutation scenarios.
 
+Stable workflow IDs means that every state which existed before the poll retains
+the same ID afterwards. It does not require newly observed states to be appended:
+the workflow's deterministic ordering may insert `provider_later` before an
+existing `provider_extra`. Native acceptance must compare the name-to-ID mapping
+for preexisting states and separately verify the required deterministic order;
+it must not treat the prior comma-joined ID sequence as a required prefix.
+
 ## Newly selected dependency regression
 
 For an existing MAC task whose raw dependencies are `[prerequisite, foreign]`,
@@ -271,6 +313,13 @@ store helpers must cooperate with that boundary. Queue notifications until commi
 emitting an event inside a transaction that later rolls back is incorrect. On failure
 only the failed-attempt health/error status may change. Repeating the same snapshot
 without the injected fault applies both changes once and publishes committed events.
+When bounded or concurrent snapshot work encounters an error, stop launching new work
+and await every already-launched worker before the synchronization promise settles.
+No worker may continue reading or writing the store after the failed sync has returned;
+early rejection that leaves an orphan worker able to touch a rolled-back or closed
+database is a failed lifecycle. The native rollback fixture must close its store only
+after that synchronization promise settles and must fail on any unhandled rejection or
+post-return database access.
 
 Classify HTTP failure status independently of body format. A proxy may return an
 HTML, plain-text, empty or malformed-JSON body with HTTP503. Those are all MAC
@@ -298,7 +347,10 @@ graphs until the operator supplies a real local checkout.
 On successful complete project and registry reads:
 
 1. Upsert discovered repositories with MAC authority.
-2. Match local registrations against deduplicated canonical identities.
+2. Match local registrations against deduplicated canonical identities. Registering an
+   SSH/HTTPS-equivalent URL for an already discovered MAC repository is idempotent:
+   return that existing MAC row (or a useful409), never insert a second row, expose a
+   database uniqueness error or return500.
 3. With no match, choose local authority and allow local task creation.
 4. With a match and existing local tasks, preserve those tasks and mark migration
    required; do not silently reassign their authority or hide them.
@@ -460,6 +512,12 @@ failure-status propagation. Verify more than 200 tasks per repository and more t
 lookups and transactions or equivalent bounded work; avoid rescanning the entire
 fleet per imported task. A fleet of at least 10,000 tasks must remain practical.
 An unchanged complete poll emits no task changes and keeps revisions stable.
+Track whether a task identity was created by the current snapshot explicitly. Never
+infer "newly seeded" from timestamp equality such as `created_at == updated_at`: clock
+resolution can leave those values equal after the first import or after rollback. Emit
+`task.created` exactly once for a committed new identity. Every later changed snapshot
+emits `task.updated` and advances the revision exactly once; every later identical
+snapshot emits nothing, including after restart and rollback recovery.
 
 Serialize synchronization: at most one poll may be in flight, even when a poll
 takes longer than its interval or a manual refresh overlaps the timer. All exits,

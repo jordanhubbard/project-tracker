@@ -24,6 +24,19 @@ admission adapter matches manifest/import authority against component names;
 it does not combine CycloneDX group with name. Apply the same rule to every
 scoped transitive package, including @hono/node-server and @types/node.
 Use Node built-ins for HTTP, SQLite, Git subprocesses, filesystem, crypto and events.
+The live CLI adapter SHALL spawn `/usr/bin/python3 -I -S -c HELPER COMMAND...` with an
+embedded, constant Python helper that uses only `os`, `pty`, `select`, `signal`, `fcntl`,
+`termios`, `struct`, `json`, `errno` and `sys`. The helper uses `pty.fork()`, execs the
+requested command in the child, copies adapter stdin to the PTY master, copies the PTY
+master to adapter stdout, and propagates the exact wait status. Give it a separate fd 3
+newline-delimited JSON control pipe: resize applies `TIOCSWINSZ` to the master and signal
+messages target the child's process group. Node keeps those data and control pipes and
+uses them for steering; they are not the child's standard streams. Do not use an npm
+native or WebAssembly payload, child_process pipes as the child's stdio, inherited stdio
+or a `/usr/bin/script` wrapper.
+The selected host `/usr/bin/python3` is independently observed as Python 3.9.6. Record
+python as an external runtime source-SBOM component with exact version 3.9.6 and purl
+pkg:generic/python@3.9.6; no Python package-manager dependency is permitted.
 This build uses the independently observed Node.js 22.23.2 runtime. Its source
 SBOM component SHALL use name node, purl pkg:generic/node@22.23.2, isExternal true,
 and exact version 22.23.2 with runtime kind and scope. Do not emit a versionRange
@@ -31,9 +44,9 @@ for this component: the installed admission adapter does not resolve a generic
 Node runtime range from its toolchain observation. This exact declaration records
 the runtime actually used for the authorized build and independent execution checks.
 Git 2.30.0 or newer is a required host runtime dependency. This macOS build is bound
-to the independently observed host Git 2.50.1 (`git --version` reports
-`git version 2.50.1 (Apple Git-155)`). Its source SBOM component has
-purl pkg:generic/git@2.50.1, isExternal true and exact version 2.50.1. Classify it as
+to the independently observed host Git 2.54.0 (`git --version` reports
+`git version 2.54.0 (Apple Git-157)`). Its source SBOM component has
+purl pkg:generic/git@2.54.0, isExternal true and exact version 2.54.0. Classify it as
 system with runtime scope. Do not replace this observed exact version with only a
 range: the installed npm adapter cannot independently resolve host Git ranges.
 The lifecycle wrapper enforces the declared 2.30.0 minimum and accepts newer Git

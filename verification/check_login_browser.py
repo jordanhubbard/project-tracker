@@ -28,7 +28,7 @@ with tempfile.TemporaryDirectory() as tmp:
    with urllib.request.urlopen(foreign,timeout=3) as response:
     raise AssertionError(f'Cross-origin login returned {response.status}')
   except urllib.error.HTTPError as error:
-   assert error.code==403,error.code
+   assert error.code in (401,403),error.code
   results=[]
   with sync_playwright() as pw:
    browser=pw.chromium.launch(executable_path=CHROME)

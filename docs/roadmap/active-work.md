@@ -338,3 +338,19 @@ passed. See [deployment evidence](../../verification/deployment-puck-v1.0.0.json
     passes all 24 Standard lifecycle tests, including native MCP shutdown and independent
     persistent-service readiness. The accepted source was reused without repair, and the
     project receipt was atomically refreshed.
+
+### [x] TRACK-012 — Add multi-fleet monitoring and fleet selector
+
+- **Priority:** P1
+- **Owner:** component://project-tracker/tracker
+- **Direction:** Support multiple named MAC fleet connections in one Project Tracker and provide a global fleet selector with an All fleets view across tables, live views, timelines and graphs.
+- **Conclusion:** Model fleet identity as a first-class namespace, key upstream entities by fleet plus upstream ID, synchronize and report health independently per fleet, and persist a URL-addressable global selector without exposing credentials or allowing cross-fleet identity collisions.
+- **Depends on:** TRACK-004
+- **Implementation:**
+  - [x] Specify named fleet configuration, namespaced persistence and per-fleet synchronization; add aggregate and selected-fleet API projections with independent health/staleness; add a global selector with All fleets and per-fleet choices plus fleet badges in multi-fleet views; regenerate through the supported lifecycle and verify collisions, partial outages, URL persistence, desktop/mobile interaction and accessibility.
+  - [x] Reject finalized Codex candidate `sha256:8f6f1d3bb267d97302fceee952db7abbd8b4831c0fbbb90da67681e72d7bbe06`: its six native tests pass, but all 13 independent phases fail. It filters tracker-owned sessions out of `/api/agent-sessions`, retains a cleared LLM key, rejects confirmed fleet removal, returns 404 for encoded project detail, omits required login/connectivity feedback, duplicates ambiguous Fleet controls, rejects verifier cleanup deletes, and omits required Git boundary rendering. Regenerate without patching derived source and retain every independent assertion.
+  - [x] Reject finalized Claude candidate `sha256:cb4bebf8ff7ec4d33c48647a60e942acd96643ec0a2362274e45bb4ade4c5275`: all 36 native tests and focused live-operations acceptance pass, but only 3 of 13 independent phases pass. Require an absolute A2A card endpoint, surfaced invalid-fleet diagnostics, all encoded project-detail reads including slash-bearing IDs, authenticated SSE `Connected` state, repository-scoped Fleet navigation, labelled Add/Rename list inputs and working pointer drag/drop before accepting a regeneration.
+  - [x] Reject finalized Claude candidate `sha256:573dc5bb4c82446ff6ffcd942ada29f946ead4406a80471abbc3fdef1ea03963`: 33 native tests, persistent-service acceptance and focused live operations pass, while only 4 of 13 full independent phases pass. Its authenticated login landmark/input remain browser-visible, it completes only four of five detail reads, omits repository-content Fleet navigation, loses freshly created/updated cards from the current board render, squeezes list headings, concatenates sidebar counts and phrases the insecure-mode diagnostic ambiguously. Regenerate without patching derived source.
+  - [x] Accept finalized Claude candidate `sha256:6e606fb2ab061a255939b758106bc1e924ef54a44b212fe4f9d1c8c3170faeca`: all 38 native tests, persistent-service acceptance, focused live operations and all 13 independent phases pass. The independent harness uses contract-level state names and accessible visible landmarks instead of coupling acceptance to private CSS or DOM IDs.
+- **Evidence:**
+  - [x] Native multi-fleet fixtures prove overlapping upstream IDs remain distinct and one fleet outage does not suppress healthy fleets; independent service checks exercise named configuration and selected/aggregate projections; browser acceptance verifies selector behavior, badges, deep links and responsive keyboard-accessible UI. Exact full-suite evidence is `_build/independent-checks/claude-aff5700f-final/summary.json`.

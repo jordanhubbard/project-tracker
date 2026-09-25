@@ -2,7 +2,7 @@
 
 [Documentation](../README.md)
 
-Configuration belongs to the backend. The browser Settings view edits saved MAC and
+Configuration belongs to the backend. The browser Settings view edits saved named MAC and
 LLM connection settings; it never receives stored credential values.
 
 | Variable | Meaning |
@@ -11,6 +11,7 @@ LLM connection settings; it never receives stored credential values.
 | `TRACKER_ACCESS_TOKEN` | Backend access token for browser sign-in and bearer-authenticated clients |
 | `TRACKER_MAC_URL` | MAC HTTP(S) API base URL |
 | `TRACKER_MAC_TOKEN` | MAC bearer credential, used only by the backend |
+| `TRACKER_MAC_FLEETS_FILE` | Mode-0600 JSON file containing named `{id,name,url,token}` fleet records |
 | `TRACKER_LLM_URL` | Chat-completions gateway prefix, for example `http://127.0.0.1:9000/v1` |
 | `TRACKER_LLM_MODEL` | Model identifier sent to that gateway |
 | `TRACKER_LLM_KEY` | Backend-only gateway bearer credential |
@@ -26,6 +27,12 @@ Environment values supply defaults. Explicitly saved settings take precedence. L
 a credential field blank preserves the existing value; use the labelled clear control
 to remove it. An explicit clear must remain cleared even if an environment default
 exists. GET responses expose configured booleans instead of secrets.
+
+For multiple fleets, prefer `TRACKER_MAC_FLEETS_FILE`. Fleet IDs are stable URL-safe
+identifiers used in deep links and durable identity; changing a display name does not
+change its ID. The legacy URL/token pair supplies one fleet named `default` only when no
+file or saved fleet records exist. Do not configure both forms. Removing a saved fleet
+stops synchronization but retains its cached rows as stale until separately deleted.
 
 After changing a connection, inspect its connection feedback and repository sync status.
 A working browser connection does not establish upstream access. Stop and restart the

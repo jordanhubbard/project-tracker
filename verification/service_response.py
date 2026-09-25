@@ -24,6 +24,7 @@ def entity_response(value):
                 "tasks",
                 "states",
                 "sessions",
+                "agent_sessions",
                 "peers",
                 "events",
                 "activity",
